@@ -6,3 +6,11 @@ for Federated Learning.pdf
 /Screenshot from 2023-10-19 13-55-11.png
 /lab4
 /todos.txt
+*.pkl
+*.parquet
+*.xml
+*.pyc
+*.zip
+*.json
+*.tsv
+fedma/
