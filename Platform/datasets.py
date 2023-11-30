@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 import copy
 
-from Platform.federated_ml_task import FederatedMLTaskConfiguration
+from federated_ml_task import FederatedMLTaskConfiguration
 
 
 # Subset function

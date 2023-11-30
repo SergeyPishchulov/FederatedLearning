@@ -1,3 +1,6 @@
+from typing import List
+
+from Platform.nodes import ClientMLTask
 from datasets import Data, DataLoader
 
 
@@ -19,5 +22,5 @@ class FederatedMLTask:
         for i in range(node_cnt):
             sample_size.append(len(self.data.train_loader[i]))
         self.size_weights = [x / sum(sample_size) for x in sample_size]
-        self.central_node = None
-        self.client_nodes = None
+        self.central_node: ClientMLTask = None
+        self.client_nodes: List[ClientMLTask] = None
