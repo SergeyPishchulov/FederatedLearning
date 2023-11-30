@@ -8,10 +8,10 @@ from utils import init_optimizer, model_parameter_vector
 
 
 class Node(object):
-    def __init__(self, num_id, local_data, train_set, args):
+    def __init__(self, num_id, local_data, train_set, args, node_num):
         self.num_id = num_id
         self.args = args
-        self.node_num = self.args.node_num
+        self.node_num = node_num
         if num_id == -1:
             self.valid_ratio = args.server_valid_ratio
         else:

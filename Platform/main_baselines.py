@@ -55,12 +55,12 @@ if __name__ == '__main__':
 
     # Initialize the central node
     # num_id equals to -1 stands for central node
-    central_node = Node(-1, data.test_loader[0], data.test_set, args)
+    central_node = Node(-1, data.test_loader[0], data.test_set, args, node_num)
 
     # Initialize the client nodes
     client_nodes = {}
     for i in range(node_num):
-        client_nodes[i] = Node(i, data.train_loader[i], data.train_set, args)
+        client_nodes[i] = Node(i, data.train_loader[i], data.train_set, args,node_num)
 
         # Start the FL training
     final_test_acc_recorder = RunningAverage()
