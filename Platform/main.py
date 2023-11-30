@@ -1,9 +1,9 @@
-from Platform.args import args_parser
-from Platform.client_funct import Client_update, Client_validate
-from Platform.datasets import Data
-from Platform.nodes import Node
-from Platform.server_funct import receive_client_models, fedlaw_optimization, fedlaw_generate_global_model
-from Platform.utils import RunningAverage, lr_scheduler, generate_selectlist, validate
+from args import args_parser
+from client_funct import Client_update, Client_validate
+from datasets import Data
+from nodes import Node
+from server_funct import receive_client_models, fedlaw_optimization, fedlaw_generate_global_model
+from utils import RunningAverage, lr_scheduler, generate_selectlist, validate
 
 if __name__ == '__main__':
     args = args_parser()
