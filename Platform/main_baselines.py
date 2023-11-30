@@ -45,9 +45,11 @@ if __name__ == '__main__':
         nn_architecture='ResNet56',
         epochs='1'
     ))
+    print(args)
     node_num = 5
+    random_seed = 10
     conf = fedeareted_tasks_configs[0]
-    data = Data(conf.dataset, node_num, 0, args)
+    data = Data(conf.dataset, node_num, 0, random_seed)
     sample_size = []
     for i in range(node_num):
         sample_size.append(len(data.train_loader[i]))
