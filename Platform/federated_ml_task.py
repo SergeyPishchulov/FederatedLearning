@@ -1,6 +1,6 @@
 from typing import List
 
-from Platform.nodes import ClientMLTask
+from nodes import ClientMLTask
 from datasets import Data, DataLoader
 
 
