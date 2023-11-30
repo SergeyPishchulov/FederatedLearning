@@ -24,7 +24,6 @@ def read_parquet_dataset_from_local(path_to_dataset: str, start_from: int = 0,
         for chunk in chunks:
             print(chunk)
     for chunk_path in tqdm.tqdm_notebook(chunks, desc="Reading dataset with pandas"):
-        # raise Exception(chunk_path)#TODO delete
         chunk = pd.read_parquet(chunk_path,columns=columns)
         res.append(chunk)
     return pd.concat(res).reset_index(drop=True)
