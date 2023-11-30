@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 from utils import validate, model_parameter_vector
 import copy
-from nodes import Node
+from nodes import ClientMLTask
 
 ##############################################################################
 # General client function 
@@ -32,6 +32,7 @@ def Client_update(args, client_nodes, central_node):
         for i in range(len(client_nodes)):
             epoch_losses = []
             for epoch in range(args.E):
+                #train 1 epoch
                 loss = client_localTrain(args, client_nodes[i])
                 epoch_losses.append(loss)
             client_losses.append(sum(epoch_losses)/len(epoch_losses))
