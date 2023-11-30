@@ -30,6 +30,7 @@ if __name__ == '__main__':
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
     for rounds in range(args.T):
+    # for rounds in range(1):
         print('===============Stage 1 The {:d}-th round==============='.format(rounds + 1))
         lr_scheduler(rounds, client_nodes, args)
 
