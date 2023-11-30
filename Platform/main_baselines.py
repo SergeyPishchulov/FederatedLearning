@@ -49,7 +49,7 @@ if __name__ == '__main__':
     conf = fedeareted_tasks_configs[0]
     data = Data(conf.dataset, node_num, iid=1)
     sample_size = []
-    for i in range(args.node_num):
+    for i in range(node_num):
         sample_size.append(len(data.train_loader[i]))
     size_weights = [i / sum(sample_size) for i in sample_size]
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     # Initialize the client nodes
     client_nodes = {}
-    for i in range(args.node_num):
+    for i in range(node_num):
         client_nodes[i] = Node(i, data.train_loader[i], data.train_set, args)
 
         # Start the FL training
