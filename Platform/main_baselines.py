@@ -30,6 +30,12 @@ class FederatedMLTask:
         self.central_node: Node = None
         self.client_nodes: List[Node] = None
 
+    def init_nodes(self):
+        self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, args, self.node_cnt)
+        ft.client_nodes = {}
+        for i in range(self.node_cnt):
+            self.client_nodes[i] = Node(i, self.data.train_loader[i], self.data.train_set, args, self.node_cnt)
+
 
 if __name__ == '__main__':
     args = args_parser()
@@ -53,13 +59,9 @@ if __name__ == '__main__':
     random_seed = 10
     conf = fedeareted_tasks_configs[0]
     ft = FederatedMLTask(node_num, conf, random_seed)
+    ft.init_nodes()
 
-    ft.central_node = Node(-1, ft.data.test_loader[0], ft.data.test_set, args, node_num)
-    ft.client_nodes = {}
-    for i in range(ft.node_cnt):
-        ft.client_nodes[i] = Node(i, ft.data.train_loader[i], ft.data.train_set, args, node_num)
-
-        # Start the FL training
+    # Start the FL training
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
     for rounds in range(args.T):
