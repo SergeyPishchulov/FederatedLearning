@@ -5,8 +5,6 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 import copy
 
-from federated_ml_task import FederatedMLTaskConfiguration
-
 
 # Subset function
 class DatasetSplit(Dataset):
@@ -86,7 +84,7 @@ class Data(object):
 class DataLoader(object):
     """Prepares data for all the clients"""
 
-    def __init__(self, node_num, dataset, federated_task_config: FederatedMLTaskConfiguration):
+    def __init__(self, node_num, dataset, federated_task_config):
         # self.args = args
         if dataset == 'cifar10':
             # Data enhancement: None
