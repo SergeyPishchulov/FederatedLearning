@@ -1,3 +1,5 @@
+from typing import List
+
 from datasets import Data
 from nodes import Node
 from args import args_parser
@@ -16,7 +18,7 @@ class FederatedMLTaskConfiguration:
 
 
 class FederatedMLTask:
-    def __init__(self, node_cnt, conf: FederatedMLTaskConfiguration,random_seed):
+    def __init__(self, node_cnt, conf: FederatedMLTaskConfiguration, random_seed):
         self.data = Data(conf.dataset, node_cnt, 0, random_seed)  # TODO dumb
         self.conf = conf
         self.node_cnt = node_cnt
@@ -25,8 +27,9 @@ class FederatedMLTask:
         for i in range(node_cnt):
             sample_size.append(len(self.data.train_loader[i]))
         self.size_weights = [x / sum(sample_size) for x in sample_size]
-        # self.central_node: ClientMLTask = None
-        # self.client_nodes: List[ClientMLTask] = None
+        self.central_node: Node = None
+        self.client_nodes: List[Node] = None
+
 
 if __name__ == '__main__':
     args = args_parser()
@@ -49,43 +52,34 @@ if __name__ == '__main__':
     node_num = 5
     random_seed = 10
     conf = fedeareted_tasks_configs[0]
-    fed_task = FederatedMLTask(node_num, conf, random_seed)
-    # data = Data(conf.dataset, node_num, 0, random_seed)
-    # sample_size = []
-    # for i in range(node_num):
-        # sample_size.append(len(data.train_loader[i]))
-    # size_weights = [i / sum(sample_size) for i in sample_size]
+    ft = FederatedMLTask(node_num, conf, random_seed)
 
-    # Initialize the central node
-    # num_id equals to -1 stands for central node
-    central_node = Node(-1, fed_task.data.test_loader[0], fed_task.data.test_set, args, node_num)
-
-    # Initialize the client nodes
-    client_nodes = {}
-    for i in range(fed_task.node_cnt):
-        client_nodes[i] = Node(i, fed_task.data.train_loader[i], fed_task.data.train_set, args,node_num)
+    ft.central_node = Node(-1, ft.data.test_loader[0], ft.data.test_set, args, node_num)
+    ft.client_nodes = {}
+    for i in range(ft.node_cnt):
+        ft.client_nodes[i] = Node(i, ft.data.train_loader[i], ft.data.train_set, args, node_num)
 
         # Start the FL training
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
     for rounds in range(args.T):
         print('===============Stage 1 The {:d}-th round==============='.format(rounds + 1))
-        lr_scheduler(rounds, client_nodes, args)
+        lr_scheduler(rounds, ft.client_nodes, args)
 
         # Client update
-        client_nodes, train_loss = Client_update(args, client_nodes, central_node)
-        avg_client_acc = Client_validate(args, client_nodes)
+        ft.client_nodes, train_loss = Client_update(args, ft.client_nodes, ft.central_node)
+        avg_client_acc = Client_validate(args, ft.client_nodes)
         print(args.server_method + args.client_method + ', averaged clients personalization acc is ', avg_client_acc)
 
         # Partial select function
         if args.select_ratio == 1.0:
-            select_list = [idx for idx in range(len(client_nodes))]
+            select_list = [idx for idx in range(len(ft.client_nodes))]
         else:
-            select_list = generate_selectlist(client_nodes, args.select_ratio)
+            select_list = generate_selectlist(ft.client_nodes, args.select_ratio)
 
         # Server update
-        central_node = Server_update(args, central_node, client_nodes, select_list, fed_task.size_weights)
-        acc = validate(args, central_node, which_dataset='local')
+        ft.central_node = Server_update(args, ft.central_node, ft.client_nodes, select_list, ft.size_weights)
+        acc = validate(args, ft.central_node, which_dataset='local')
         print(args.server_method + args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
 
