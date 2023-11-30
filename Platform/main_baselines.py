@@ -47,7 +47,7 @@ if __name__ == '__main__':
     ))
     node_num = 5
     conf = fedeareted_tasks_configs[0]
-    data = Data(conf.dataset, node_num, iid=1)
+    data = Data(conf.dataset, node_num, 0, args)
     sample_size = []
     for i in range(node_num):
         sample_size.append(len(data.train_loader[i]))

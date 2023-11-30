@@ -22,7 +22,7 @@ class DatasetSplit(Dataset):
 
 # Main data loader
 class Data(object):
-    def __init__(self, dataset, node_num, iid):
+    def __init__(self, dataset, node_num, iid, args):
         if dataset == 'cifar10':
             # Data enhancement: None
             tra_transformer = transforms.Compose(
@@ -42,18 +42,18 @@ class Data(object):
                 root="/home/Dataset/cifar/", train=True, download=True, transform=tra_transformer
             )
             if iid == 0:  # noniid
-                raise NotImplemented()
-                # random_state = np.random.RandomState(int(args.random_seed))
-                # num_indices = len(self.train_set)
-                # if args.dirichlet_alpha2:
-                #     groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state, dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=10, num_indices=num_indices, n_workers=node_num)
-                # elif args.longtail_clients != 'none':
-                #     groups, proportion = build_non_iid_by_dirichlet_LT(random_state=random_state, dataset=self.train_set, lt_rho=args.longtail_clients, non_iid_alpha=args.dirichlet_alpha, num_classes=10, num_indices=num_indices, n_workers=node_num)
-                # else:
-                #     groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set, non_iid_alpha=args.dirichlet_alpha, num_classes=10, num_indices=num_indices, n_workers=node_num)
-                # self.train_loader = groups
-                # self.groups = groups
-                # self.proportion = proportion
+                # raise NotImplemented()
+                random_state = np.random.RandomState(int(args.random_seed))
+                num_indices = len(self.train_set)
+                if args.dirichlet_alpha2:
+                    groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state, dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=10, num_indices=num_indices, n_workers=node_num)
+                elif args.longtail_clients != 'none':
+                    groups, proportion = build_non_iid_by_dirichlet_LT(random_state=random_state, dataset=self.train_set, lt_rho=args.longtail_clients, non_iid_alpha=args.dirichlet_alpha, num_classes=10, num_indices=num_indices, n_workers=node_num)
+                else:
+                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set, non_iid_alpha=args.dirichlet_alpha, num_classes=10, num_indices=num_indices, n_workers=node_num)
+                self.train_loader = groups
+                self.groups = groups
+                self.proportion = proportion
             else:
                 data_num = [int(50000 / node_num) for _ in range(node_num)]
                 splited_set = torch.utils.data.random_split(self.train_set, data_num)
