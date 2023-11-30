@@ -30,7 +30,7 @@ def combine_lists(*l):
 if __name__ == '__main__':
     args = args_parser()
 
-    fl_config = FLConfig(node_cnt=3, aggr_algorithm='fedavg')
+    fl_config = FLConfig(node_cnt=20, aggr_algorithm='fedavg')
 
     fedeareted_tasks_configs = []
     fedeareted_tasks_configs.append(FederatedMLTaskConfiguration(
