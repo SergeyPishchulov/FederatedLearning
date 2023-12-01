@@ -82,8 +82,6 @@ class Client:
                 loss = self.client_localTrain(self.args, node)  # TODO check if not working
                 epoch_losses.append(loss)
             mean_loss = sum(epoch_losses) / len(epoch_losses)
-            # client_losses.append()
-            # train_loss = sum(client_losses) / len(client_losses)
         else:
             raise NotImplemented('Still only local_train =(')
         acc = validate(self.args, node)
