@@ -30,7 +30,7 @@ class FederatedMLTask:
             sample_size.append(len(self.data.train_loader[i]))
         self.size_weights = [x / sum(sample_size) for x in sample_size]
         self.central_node: Node = None
-        self.client_nodes: List[Node] = None
+        self.client_nodes = None
         self.init_nodes()
 
     def init_nodes(self):
@@ -121,7 +121,8 @@ if __name__ == '__main__':
     conf = fedeareted_tasks_configs[0]
     ft = FederatedMLTask(node_num, conf, random_seed, args=deepcopy(user_args))
     hub = Hub()
-    clients = [Client(hub, {ft: x}, ft.args) for x in ft.client_nodes]
+    clients = [Client(hub, {ft: x}, ft.args)
+               for x in ft.client_nodes.values()]
 
     # Start the FL training
     final_test_acc_recorder = RunningAverage()
