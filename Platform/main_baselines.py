@@ -16,7 +16,7 @@ class FederatedMLTaskConfiguration:
         self.epochs = epochs
         self.iid = 1  # data is iid
 
-
+#TODO подумать. Копировать args, заменять в них датасет, архитектуру и не париться
 class FederatedMLTask:
     def __init__(self, node_cnt, conf: FederatedMLTaskConfiguration, random_seed):
         self.data = Data(conf.dataset, node_cnt, 0, random_seed)  # TODO dumb
@@ -29,6 +29,7 @@ class FederatedMLTask:
         self.size_weights = [x / sum(sample_size) for x in sample_size]
         self.central_node: Node = None
         self.client_nodes: List[Node] = None
+        self.init_nodes()
 
     def init_nodes(self):
         self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, args, self.node_cnt)
@@ -54,12 +55,10 @@ if __name__ == '__main__':
         nn_architecture='ResNet56',
         epochs='1'
     ))
-    print(args)
     node_num = 5
     random_seed = 10
     conf = fedeareted_tasks_configs[0]
     ft = FederatedMLTask(node_num, conf, random_seed)
-    ft.init_nodes()
 
     # Start the FL training
     final_test_acc_recorder = RunningAverage()
@@ -67,7 +66,6 @@ if __name__ == '__main__':
     for rounds in range(args.T):
         print('===============Stage 1 The {:d}-th round==============='.format(rounds + 1))
         lr_scheduler(rounds, ft.client_nodes, args)
-
         # Client update
         ft.client_nodes, train_loss = Client_update(args, ft.client_nodes, ft.central_node)
         avg_client_acc = Client_validate(args, ft.client_nodes)
