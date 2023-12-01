@@ -9,11 +9,20 @@ from client_funct import *
 import os
 from copy import deepcopy
 
+from itertools import zip_longest
+
+
+def combine_lists(*l):
+    return [j for i in zip_longest(*l) for j in i if j]
+
+
 class FederatedMLTask:
-    def __init__(self, args):
+    def __init__(self, id, args):
         self.args = args
         self.data = Data(conf.dataset, args)  # TODO dumb
         self.node_cnt = args.node_num
+        self.id = id
+        self.name = f'Task {id} {args.dataset} {args.local_model}'
         self.done = False
         # Data-size-based aggregation weights
         sample_size = []
@@ -28,10 +37,9 @@ class FederatedMLTask:
 
 
 class Client:
-    def __init__(self, hub, node_by_ft, args):
-        # self.nodes:List[Node] = nodes#TODO delete?
+    def __init__(self, hub, node_by_ft):
         self.hub = hub
-        self.args = args
+        # self.args = args
         self.node_by_ft = node_by_ft
 
     def client_localTrain(self, args, node, loss=0.0):
@@ -56,19 +64,19 @@ class Client:
     def perform_one_round(self, ft: FederatedMLTask):
         node = self.node_by_ft[ft]
         central_node = self.hub.receive_server_model(ft)
-        if 'fedlaw' in self.args.server_method:
+        if 'fedlaw' in ft.args.server_method:
             node.model.load_param(copy.deepcopy(central_node.model.get_param(clone=True)))
         else:
             node.model.load_state_dict(copy.deepcopy(central_node.model.state_dict()))
         epoch_losses = []
-        if self.args.client_method == 'local_train':
-            for epoch in range(self.args.E):
-                loss = self.client_localTrain(self.args, node)  # TODO check if not working
+        if ft.args.client_method == 'local_train':
+            for epoch in range(ft.args.E):
+                loss = self.client_localTrain(ft.args, node)  # TODO check if not working
                 epoch_losses.append(loss)
             mean_loss = sum(epoch_losses) / len(epoch_losses)
         else:
             raise NotImplemented('Still only local_train =(')
-        acc = validate(self.args, node)
+        acc = validate(ft.args, node)
         node.epochs_performed += 1
         return mean_loss, acc
 
@@ -81,7 +89,6 @@ class Hub:
         return ft.central_node
 
 
-
 if __name__ == '__main__':
     user_args = args_parser()
     # print(get_configs(user_args))
@@ -92,15 +99,21 @@ if __name__ == '__main__':
 
     fedeareted_tasks_configs = get_configs(user_args)
     conf = fedeareted_tasks_configs[0]
-    ft = FederatedMLTask(args=fedeareted_tasks_configs[0])
+    tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
+    # ft = FederatedMLTask(args=fedeareted_tasks_configs[0])
     hub = Hub()
-    clients = [Client(hub, {ft: x}, ft.args)
-               for x in ft.client_nodes.values()]
+    clients = []
+    for cl_num in range(user_args.node_num):
+        clients.append(Client(hub, {ft: ft.client_nodes[cl_num] for ft in tasks}))
+    # clients = [Client(hub, {ft: x}, ft.args)
+    #            for ft in tasks for cn in ft.client_nodes.values()]
 
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
-    while not ft.done:
+    plan = combine_lists([tasks[0]] * 2 + [tasks[1]] * 2)
+    # while not all(ft.done for ft in tasks):
+    for ft in plan:
         client_losses = []
         client_acc = []
         for c in clients:
@@ -112,6 +125,7 @@ if __name__ == '__main__':
             ft.done = True
         train_loss = sum(client_losses) / len(client_losses)
         avg_client_acc = sum(client_acc) / len(client_acc)
+        print(f"============= {ft.name} ============= ")
         print(ft.args.server_method + ft.args.client_method + ', averaged clients personalization acc is ',
               avg_client_acc)
 
@@ -126,4 +140,4 @@ if __name__ == '__main__':
         print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
 
-    print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
+    # print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
