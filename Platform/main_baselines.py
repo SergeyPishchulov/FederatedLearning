@@ -46,6 +46,8 @@ class Client:
         self.hub = hub
         self.args = args
         self.node_by_ft = node_by_ft
+        print(f'Node by ft in init: {self.node_by_ft}')
+
 
     def client_localTrain(self, args, node, loss=0.0):
         node.model.train()
