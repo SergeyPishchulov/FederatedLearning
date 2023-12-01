@@ -35,17 +35,17 @@ class FederatedMLTask:
         self.init_nodes()
 
     def init_nodes(self):
-        self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, args, self.node_cnt)
+        self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
         ft.client_nodes = {}
         for i in range(self.node_cnt):
-            self.client_nodes[i] = Node(i, self.data.train_loader[i], self.data.train_set, args, self.node_cnt)
+            self.client_nodes[i] = Node(i, self.data.train_loader[i], self.data.train_set, self.args, self.node_cnt)
 
 
 if __name__ == '__main__':
-    args = args_parser()
-    setup_seed(args.random_seed)
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.device
-    torch.cuda.set_device('cuda:' + args.device)
+    user_args = args_parser()
+    setup_seed(user_args.random_seed)
+    os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
+    torch.cuda.set_device('cuda:' + user_args.device)
 
     fedeareted_tasks_configs = []
     fedeareted_tasks_configs.append(FederatedMLTaskConfiguration(
@@ -61,12 +61,12 @@ if __name__ == '__main__':
     node_num = 5
     random_seed = 10
     conf = fedeareted_tasks_configs[0]
-    ft = FederatedMLTask(node_num, conf, random_seed, args=deepcopy(args))
+    ft = FederatedMLTask(node_num, conf, random_seed, args=deepcopy(user_args))
 
     # Start the FL training
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
-    for rounds in range(args.T):
+    for rounds in range(ft.args.T):
         print('===============Stage 1 The {:d}-th round==============='.format(rounds + 1))
         lr_scheduler(rounds, ft.client_nodes, ft.args)
         # Client update
@@ -78,12 +78,12 @@ if __name__ == '__main__':
         if ft.args.select_ratio == 1.0:
             select_list = [idx for idx in range(len(ft.client_nodes))]
         else:
-            select_list = generate_selectlist(ft.client_nodes, args.select_ratio)
+            select_list = generate_selectlist(ft.client_nodes, ft.args.select_ratio)
 
         # Server update
         ft.central_node = Server_update(ft.args, ft.central_node, ft.client_nodes, select_list, ft.size_weights)
         acc = validate(ft.args, ft.central_node, which_dataset='local')
-        print(ft.args.server_method + args.client_method + ', global model test acc is ', acc)
+        print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
 
         # Final acc recorder
