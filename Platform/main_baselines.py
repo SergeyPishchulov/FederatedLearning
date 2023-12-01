@@ -10,14 +10,14 @@ import os
 from copy import deepcopy
 
 class FederatedMLTask:
-    def __init__(self, node_cnt, args):
+    def __init__(self, args):
         self.args = args
-        self.data = Data(conf.dataset, node_cnt, args)  # TODO dumb
-        self.node_cnt = node_cnt
+        self.data = Data(conf.dataset, args)  # TODO dumb
+        self.node_cnt = args.node_num
         self.done = False
         # Data-size-based aggregation weights
         sample_size = []
-        for i in range(node_cnt):
+        for i in range(self.node_cnt):
             sample_size.append(len(self.data.train_loader[i]))
         self.size_weights = [x / sum(sample_size) for x in sample_size]
         self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
@@ -91,9 +91,8 @@ if __name__ == '__main__':
     torch.cuda.set_device('cuda:' + user_args.device)
 
     fedeareted_tasks_configs = get_configs(user_args)
-    node_num = 5
     conf = fedeareted_tasks_configs[0]
-    ft = FederatedMLTask(node_num, args=fedeareted_tasks_configs[0])
+    ft = FederatedMLTask(args=fedeareted_tasks_configs[0])
     hub = Hub()
     clients = [Client(hub, {ft: x}, ft.args)
                for x in ft.client_nodes.values()]

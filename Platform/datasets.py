@@ -22,7 +22,7 @@ class DatasetSplit(Dataset):
 
 # Main data loader
 class Data(object):
-    def __init__(self, dataset, node_num, args):
+    def __init__(self, dataset, args):
         if dataset == 'cifar10':
             # Data enhancement: None
             tra_transformer = transforms.Compose(
@@ -57,12 +57,12 @@ class Data(object):
                                                                         dataset=self.train_set,
                                                                         non_iid_alpha=0.5,  # args.dirichlet_alpha,
                                                                         num_classes=10, num_indices=num_indices,
-                                                                        n_workers=node_num)
+                                                                        n_workers=args.node_num)
                 self.train_loader = groups
                 self.groups = groups
                 self.proportion = proportion
             else:
-                data_num = [int(50000 / node_num) for _ in range(node_num)]
+                data_num = [int(50000 / args.node_num) for _ in range(args.node_num)]
                 splited_set = torch.utils.data.random_split(self.train_set, data_num)
                 self.train_loader = splited_set
 
