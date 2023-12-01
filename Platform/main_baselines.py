@@ -94,8 +94,8 @@ class Hub:
 
 if __name__ == '__main__':
     user_args = args_parser()
-    # print(get_configs(user_args))
-    # exit()
+    print(get_configs(user_args))
+    exit()
     setup_seed(user_args.random_seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
     torch.cuda.set_device('cuda:' + user_args.device)
