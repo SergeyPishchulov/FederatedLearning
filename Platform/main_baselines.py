@@ -36,7 +36,7 @@ class FederatedMLTask:
 
     def init_nodes(self):
         self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
-        ft.client_nodes = {}
+        self.client_nodes = {}
         for i in range(self.node_cnt):
             self.client_nodes[i] = Node(i, self.data.train_loader[i], self.data.train_set, self.args, self.node_cnt)
 
