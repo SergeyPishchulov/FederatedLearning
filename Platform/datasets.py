@@ -22,7 +22,7 @@ class DatasetSplit(Dataset):
 
 # Main data loader
 class Data(object):
-    def __init__(self, dataset, node_num, iid, random_seed):
+    def __init__(self, dataset, node_num, iid, args):
         if dataset == 'cifar10':
             # Data enhancement: None
             tra_transformer = transforms.Compose(
@@ -43,19 +43,21 @@ class Data(object):
             )
             if iid == 0:  # noniid
                 # raise NotImplemented()
-                random_state = np.random.RandomState(int(random_seed))
+                random_state = np.random.RandomState(int(args.random_seed))
                 num_indices = len(self.train_set)
-                if False:# args.dirichlet_alpha2:
+                if False:  # args.dirichlet_alpha2:
                     # groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state,
                     #                                                        dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=10, num_indices=num_indices, n_workers=node_num)
                     pass
-                elif False: #args.longtail_clients != 'none':
+                elif False:  # args.longtail_clients != 'none':
                     pass
                     # groups, proportion = build_non_iid_by_dirichlet_LT(random_state=random_state, dataset=self.train_set, lt_rho=args.longtail_clients, non_iid_alpha=args.dirichlet_alpha, num_classes=10, num_indices=num_indices, n_workers=node_num)
                 else:
-                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set,
-                                                                        non_iid_alpha=0.5,#args.dirichlet_alpha,
-                                                                        num_classes=10, num_indices=num_indices, n_workers=node_num)
+                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state,
+                                                                        dataset=self.train_set,
+                                                                        non_iid_alpha=0.5,  # args.dirichlet_alpha,
+                                                                        num_classes=10, num_indices=num_indices,
+                                                                        n_workers=node_num)
                 self.train_loader = groups
                 self.groups = groups
                 self.proportion = proportion

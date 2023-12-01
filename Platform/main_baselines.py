@@ -1,5 +1,6 @@
 from typing import List
 
+from experiment_config import get_configs
 from datasets import Data
 from args import args_parser
 from utils import *
@@ -18,10 +19,10 @@ class FederatedMLTaskConfiguration:
 
 
 class FederatedMLTask:
-    def __init__(self, node_cnt, conf: FederatedMLTaskConfiguration, random_seed, args):
+    def __init__(self, node_cnt, args):
         self.args = args
-        self.data = Data(conf.dataset, node_cnt, 0, random_seed)  # TODO dumb
-        self.conf = conf
+        self.data = Data(conf.dataset, node_cnt, 0, args)  # TODO dumb
+        # self.conf = conf
         self.node_cnt = node_cnt
         self.done = False
         # Data-size-based aggregation weights
@@ -32,7 +33,8 @@ class FederatedMLTask:
         self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
         self.client_nodes = {}
         for i in range(self.node_cnt):
-            self.client_nodes[i] = Node(i, self.data.train_loader[i], self.data.train_set, self.args, self.node_cnt)
+            self.client_nodes[i] = Node(i, self.data.train_loader[i],
+                                        self.data.train_set, self.args, self.node_cnt)
 
 
 class Client:
@@ -89,27 +91,19 @@ class Hub:
         return ft.central_node
 
 
+
 if __name__ == '__main__':
     user_args = args_parser()
+    # print(get_configs(user_args))
+    # exit()
     setup_seed(user_args.random_seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
     torch.cuda.set_device('cuda:' + user_args.device)
 
-    fedeareted_tasks_configs = []
-    fedeareted_tasks_configs.append(FederatedMLTaskConfiguration(
-        dataset='cifar10',
-        nn_architecture='ResNet20',
-        epochs='2',
-    ))
-    fedeareted_tasks_configs.append(FederatedMLTaskConfiguration(
-        dataset='cifar10',
-        nn_architecture='ResNet56',
-        epochs='1'
-    ))
+    fedeareted_tasks_configs = get_configs(user_args)
     node_num = 5
-    random_seed = 10
     conf = fedeareted_tasks_configs[0]
-    ft = FederatedMLTask(node_num, conf, random_seed, args=deepcopy(user_args))
+    ft = FederatedMLTask(node_num, args=fedeareted_tasks_configs[0])
     hub = Hub()
     clients = [Client(hub, {ft: x}, ft.args)
                for x in ft.client_nodes.values()]
