@@ -91,8 +91,8 @@ class Client:
 class Hub:
     def __init__(self):
         pass
-
     def receive_server_model(self, ft):
+        print(f" ft is {ft}")
         return ft.central_node
 
 
