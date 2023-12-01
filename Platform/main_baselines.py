@@ -46,7 +46,7 @@ class Client:
         self.hub = hub
         self.args = args
         self.node_by_ft = node_by_ft
-        print(f'Node by ft in init: {self.node_by_ft}')
+        # print(f'Node by ft in init: {self.node_by_ft}')
 
 
     def client_localTrain(self, args, node, loss=0.0):
@@ -69,7 +69,7 @@ class Client:
         return loss / len(train_loader)
 
     def perform_one_round(self, ft: FederatedMLTask):
-        print(f'Node by ft: {self.node_by_ft}')
+        # print(f'Node by ft: {self.node_by_ft}')
         node = self.node_by_ft[ft]
         central_node = self.hub.receive_server_model(ft)
         if 'fedlaw' in self.args.server_method:
