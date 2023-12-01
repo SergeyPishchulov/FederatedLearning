@@ -22,7 +22,7 @@ class DatasetSplit(Dataset):
 
 # Main data loader
 class Data(object):
-    def __init__(self, dataset, node_num, iid, args):
+    def __init__(self, dataset, node_num, args):
         if dataset == 'cifar10':
             # Data enhancement: None
             tra_transformer = transforms.Compose(
@@ -41,7 +41,7 @@ class Data(object):
             self.train_set = torchvision.datasets.CIFAR10(
                 root="/home/Dataset/cifar/", train=True, download=True, transform=tra_transformer
             )
-            if iid == 0:  # noniid
+            if args.iid == 0:  # noniid
                 # raise NotImplemented()
                 random_state = np.random.RandomState(int(args.random_seed))
                 num_indices = len(self.train_set)

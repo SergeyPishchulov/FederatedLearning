@@ -9,20 +9,10 @@ from client_funct import *
 import os
 from copy import deepcopy
 
-
-class FederatedMLTaskConfiguration:
-    def __init__(self, dataset, nn_architecture, epochs):
-        self.dataset = dataset
-        self.nn_architecture = nn_architecture
-        self.epochs = epochs
-        self.iid = 1  # data is iid
-
-
 class FederatedMLTask:
     def __init__(self, node_cnt, args):
         self.args = args
-        self.data = Data(conf.dataset, node_cnt, 0, args)  # TODO dumb
-        # self.conf = conf
+        self.data = Data(conf.dataset, node_cnt, args)  # TODO dumb
         self.node_cnt = node_cnt
         self.done = False
         # Data-size-based aggregation weights
