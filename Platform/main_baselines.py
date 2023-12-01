@@ -29,11 +29,6 @@ class FederatedMLTask:
         for i in range(node_cnt):
             sample_size.append(len(self.data.train_loader[i]))
         self.size_weights = [x / sum(sample_size) for x in sample_size]
-        self.central_node: Node = None
-        self.client_nodes = None
-        self.init_nodes()
-
-    def init_nodes(self):
         self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
         self.client_nodes = {}
         for i in range(self.node_cnt):
@@ -46,8 +41,6 @@ class Client:
         self.hub = hub
         self.args = args
         self.node_by_ft = node_by_ft
-        # print(f'Node by ft in init: {self.node_by_ft}')
-
 
     def client_localTrain(self, args, node, loss=0.0):
         node.model.train()
@@ -69,7 +62,6 @@ class Client:
         return loss / len(train_loader)
 
     def perform_one_round(self, ft: FederatedMLTask):
-        # print(f'Node by ft: {self.node_by_ft}')
         node = self.node_by_ft[ft]
         central_node = self.hub.receive_server_model(ft)
         if 'fedlaw' in self.args.server_method:
@@ -92,8 +84,8 @@ class Client:
 class Hub:
     def __init__(self):
         pass
+
     def receive_server_model(self, ft):
-        # print(f" ft is {ft}")
         return ft.central_node
 
 
@@ -122,13 +114,12 @@ if __name__ == '__main__':
     clients = [Client(hub, {ft: x}, ft.args)
                for x in ft.client_nodes.values()]
 
-    # Start the FL training
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
     while not ft.done:
         client_losses = []
-        client_acc=[]
+        client_acc = []
         for c in clients:
             loss, acc = c.perform_one_round(ft)
             client_losses.append(loss)
@@ -151,35 +142,5 @@ if __name__ == '__main__':
         acc = validate(ft.args, ft.central_node, which_dataset='local')
         print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
-
-        # Final acc recorder
-        # if rounds >= ft.args.T - 10:
-        #     final_test_acc_recorder.update(acc)
-
-    # for rounds in range(ft.args.T):
-    #     print('===============Stage 1 The {:d}-th round==============='.format(rounds + 1))
-    #     lr_scheduler(rounds, ft.client_nodes, ft.args)
-    #     # Client update
-    #
-    #     ft.client_nodes, train_loss = Client_update(ft.args, ft.client_nodes, ft.central_node)
-    #     avg_client_acc = Client_validate(ft.args, ft.client_nodes)
-    #     print(ft.args.server_method + ft.args.client_method + ', averaged clients personalization acc is ',
-    #           avg_client_acc)
-    #
-    #     # Partial select function
-    #     if ft.args.select_ratio == 1.0:
-    #         select_list = [idx for idx in range(len(ft.client_nodes))]
-    #     else:
-    #         select_list = generate_selectlist(ft.client_nodes, ft.args.select_ratio)
-    #
-    #     # Server update
-    #     ft.central_node = Server_update(ft.args, ft.central_node, ft.client_nodes, select_list, ft.size_weights)
-    #     acc = validate(ft.args, ft.central_node, which_dataset='local')
-    #     print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
-    #     test_acc_recorder.append(acc)
-    #
-    #     # Final acc recorder
-    #     if rounds >= ft.args.T - 10:
-    #         final_test_acc_recorder.update(acc)
 
     print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
