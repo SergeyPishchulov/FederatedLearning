@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
     plan = combine_lists([tasks[0]] * 2, [tasks[1]] * 2)
     # while not all(ft.done for ft in tasks):
-    for ft in []:  # plan:
+    for ft in plan:
         client_losses = []
         client_acc = []
         for c in clients:
