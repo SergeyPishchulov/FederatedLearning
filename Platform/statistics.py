@@ -11,6 +11,13 @@ class Statistics:
             ft.id: pd.DataFrame(columns=['agr_ac'] + [f'client_{c.id}_ac' for c in clients],
                                 index=pd.Series(range(args.T), name='round'))
             for ft in fts}
+        current_directory = os.getcwd()
+        self.directory = os.path.join(current_directory, r'stat')
+        self.pngs_directory = os.path.join(current_directory, r'stat/pngs')
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+        if not os.path.exists(self.pngs_directory):
+            os.makedirs(self.pngs_directory)
 
     def save_client_ac(self, client_id, ft_id, round, acc):
         self.stat_by_ft_id[ft_id].loc[round, f'client_{client_id}_ac'] = acc
@@ -19,12 +26,8 @@ class Statistics:
         self.stat_by_ft_id[ft_id].loc[round, 'agr_ac'] = acc
 
     def to_csv(self):
-        current_directory = os.getcwd()
-        directory = os.path.join(current_directory, r'stat')
-        if not os.path.exists(directory):
-            os.makedirs(directory)
         for ft_id, stat_df in self.stat_by_ft_id.items():
-            stat_df.to_csv(directory + f'/{ft_id}.csv')
+            stat_df.to_csv(self.directory + f'/{ft_id}.csv')
 
     def plot_accuracy(self):
         colors = list(mcolors.BASE_COLORS.values())
@@ -39,3 +42,4 @@ class Statistics:
 
             axes.plot(stat_df['agr_ac'], label='agr_ac')
             plt.show()
+            plt.savefig(f'{self.pngs_directory}/{ft_id}.png')

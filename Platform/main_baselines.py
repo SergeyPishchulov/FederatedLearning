@@ -109,14 +109,14 @@ if __name__ == '__main__':
 
     plan = combine_lists([tasks[0]] * 2, [tasks[1]] * 2)
     # while not all(ft.done for ft in tasks):
-    for ft in []:#plan:
+    for ft in []:  # plan:
         client_losses = []
         client_acc = []
         for c in clients:
             loss, acc, round_done = c.perform_one_round(ft, hub)
             client_losses.append(loss)
             client_acc.append(acc)
-            hub.stat.save_client_ac(c.id, ft.id, round_done-1, acc)
+            hub.stat.save_client_ac(c.id, ft.id, round_done - 1, acc)
         if all([c.node_by_ft[ft].rounds_performed == ft.args.T  # TODO smarter
                 for c in clients]):
             ft.done = True
@@ -135,10 +135,11 @@ if __name__ == '__main__':
         ft.central_node = Server_update(ft.args, ft.central_node, ft.client_nodes, select_list, ft.size_weights)
         acc = validate(ft.args, ft.central_node, which_dataset='local')
         hub.stat.save_agr_ac(ft.id,
-                             round=round_done-1,  # TODO too bad. make AGS know what round it is
+                             round=round_done - 1,  # TODO too bad. make AGS know what round it is
                              acc=acc)
         print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
 
     # print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
     hub.stat.to_csv()
+    hub.stat.plot_accuracy()
