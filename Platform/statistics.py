@@ -38,7 +38,8 @@ class Statistics:
                 if 'client' in c:
                     axes.plot(stat_df[c],
                               # color=color_by_dataset[t.dataset_name],
-                              label=c)
+                              label=c,
+                              linestyle='dashed')
 
             axes.plot(stat_df['agr_ac'], label='agr_ac')
             fig.legend()

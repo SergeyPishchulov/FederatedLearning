@@ -107,7 +107,8 @@ if __name__ == '__main__':
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
-    plan = combine_lists([tasks[0]] * 2, [tasks[1]] * 2)
+    ROUNDS = 10
+    plan = combine_lists([tasks[0]] * ROUNDS, [tasks[1]] * ROUNDS)
     # while not all(ft.done for ft in tasks):
     for ft in plan:
         client_losses = []
