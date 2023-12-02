@@ -41,5 +41,6 @@ class Statistics:
                               label=c)
 
             axes.plot(stat_df['agr_ac'], label='agr_ac')
+            fig.legend()
             plt.show()
             fig.savefig(f'{self.pngs_directory}/{ft_id}.png')

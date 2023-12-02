@@ -141,5 +141,5 @@ if __name__ == '__main__':
         test_acc_recorder.append(acc)
 
     # print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
-    hub.stat.to_csv()
-    hub.stat.plot_accuracy()
+        hub.stat.to_csv()
+        hub.stat.plot_accuracy()
