@@ -42,4 +42,4 @@ class Statistics:
 
             axes.plot(stat_df['agr_ac'], label='agr_ac')
             plt.show()
-            plt.savefig(f'{self.pngs_directory}/{ft_id}.png')
+            fig.savefig(f'{self.pngs_directory}/{ft_id}.png')
