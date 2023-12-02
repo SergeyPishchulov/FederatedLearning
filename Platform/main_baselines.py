@@ -1,5 +1,6 @@
 from typing import List
 
+from statistics import Statistics
 from experiment_config import get_configs
 from datasets import Data
 from args import args_parser
@@ -37,8 +38,9 @@ class FederatedMLTask:
 
 
 class Client:
-    def __init__(self, hub, node_by_ft):
-        self.hub = hub
+    def __init__(self, id, node_by_ft):
+        self.id = id  # TODO set pipe
+        # self.hub = hub#temporary. instead of pipe
         # self.args = args
         self.node_by_ft = node_by_ft
 
@@ -61,9 +63,9 @@ class Client:
 
         return loss / len(train_loader)
 
-    def perform_one_round(self, ft: FederatedMLTask):
-        node = self.node_by_ft[ft]
-        central_node = self.hub.receive_server_model(ft)
+    def perform_one_round(self, ft: FederatedMLTask, hub):
+        node = self.node_by_ft[ft]  # TODO delete hub when set pipe in __init__
+        central_node = hub.receive_server_model(ft)
         if 'fedlaw' in ft.args.server_method:
             node.model.load_param(copy.deepcopy(central_node.model.get_param(clone=True)))
         else:
@@ -77,13 +79,13 @@ class Client:
         else:
             raise NotImplemented('Still only local_train =(')
         acc = validate(ft.args, node)
-        node.epochs_performed += 1
-        return mean_loss, acc
+        node.rounds_performed += 1
+        return mean_loss, acc, node.rounds_performed
 
 
 class Hub:
-    def __init__(self):
-        pass
+    def __init__(self, fts: List[FederatedMLTask], clients, args):
+        self.stat = Statistics(fts, clients, args)
 
     def receive_server_model(self, ft):
         return ft.central_node
@@ -91,8 +93,6 @@ class Hub:
 
 if __name__ == '__main__':
     user_args = args_parser()
-    # print(get_configs(user_args))
-    # exit()
     setup_seed(user_args.random_seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
     torch.cuda.set_device('cuda:' + user_args.device)
@@ -100,27 +100,24 @@ if __name__ == '__main__':
     fedeareted_tasks_configs = get_configs(user_args)
     conf = fedeareted_tasks_configs[0]
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
-    # ft = FederatedMLTask(args=fedeareted_tasks_configs[0])
-    hub = Hub()
     clients = []
-    for cl_num in range(user_args.node_num):
-        clients.append(Client(hub, {ft: ft.client_nodes[cl_num] for ft in tasks}))
-    # clients = [Client(hub, {ft: x}, ft.args)
-    #            for ft in tasks for cn in ft.client_nodes.values()]
-
+    for client_id in range(user_args.node_num):
+        clients.append(Client(client_id, {ft: ft.client_nodes[client_id] for ft in tasks}))
+    hub = Hub(tasks, clients, user_args)
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
-    plan = combine_lists([tasks[0]] * 2 + [tasks[1]] * 2)
+    plan = combine_lists([tasks[0]] * 2, [tasks[1]] * 2)
     # while not all(ft.done for ft in tasks):
     for ft in plan:
         client_losses = []
         client_acc = []
         for c in clients:
-            loss, acc = c.perform_one_round(ft)
+            loss, acc, round_done = c.perform_one_round(ft, hub)
             client_losses.append(loss)
             client_acc.append(acc)
-        if all([c.node_by_ft[ft].epochs_performed == ft.args.T
+            hub.stat.save_client_ac(c.id, ft.id, round_done, acc)
+        if all([c.node_by_ft[ft].rounds_performed == ft.args.T  # TODO smarter
                 for c in clients]):
             ft.done = True
         train_loss = sum(client_losses) / len(client_losses)
@@ -137,7 +134,11 @@ if __name__ == '__main__':
 
         ft.central_node = Server_update(ft.args, ft.central_node, ft.client_nodes, select_list, ft.size_weights)
         acc = validate(ft.args, ft.central_node, which_dataset='local')
+        hub.stat.save_agr_ac(ft.id,
+                             round=round_done,  # TODO too bad. make AGS know what round it is
+                             acc=acc)
         print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
 
     # print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
+    hub.stat.to_csv()
