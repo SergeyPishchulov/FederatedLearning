@@ -2,6 +2,8 @@ import os
 from typing import List
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
 
 class Statistics:
     def __init__(self, fts, clients, args):
@@ -22,7 +24,18 @@ class Statistics:
         if not os.path.exists(directory):
             os.makedirs(directory)
         for ft_id, stat_df in self.stat_by_ft_id.items():
-            stat_df.to_csv(directory+f'/{ft_id}.csv')
+            stat_df.to_csv(directory + f'/{ft_id}.csv')
 
+    def plot_accuracy(self):
+        colors = list(mcolors.BASE_COLORS.values())
+        for ft_id, stat_df in self.stat_by_ft_id.items():
+            fig, axes = plt.subplots()
+            axes.set_title(ft_id)
+            for c in stat_df.columns:
+                if 'client' in c:
+                    axes.plot(stat_df[c],
+                              # color=color_by_dataset[t.dataset_name],
+                              label=c)
 
-
+            axes.plot(stat_df['agr_ac'], label='agr_ac')
+            plt.show()
