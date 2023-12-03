@@ -69,33 +69,37 @@ class Client:
         return loss / len(train_loader)
 
     def run(self):
-        for r, ft_id in self.plan:
-            if (ft_id, r) in self.agr_model_by_ft_id_round:
-                agr_model = self.agr_model_by_ft_id_round[(ft_id, r)]
-                ft_args = self.args_by_ft_id[ft_id]
-                node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
-                # central_node = #hub.receive_server_model(mes.ft_id)
-                if 'fedlaw' in ft_args.server_method:
-                    node.model.load_param(copy.deepcopy(
-                        agr_model.get_param(clone=True)))
-                else:
-                    node.model.load_state_dict(copy.deepcopy(
-                        agr_model.state_dict()))
-                epoch_losses = []
-                if ft_args.client_method == 'local_train':
-                    for epoch in range(ft_args.E):
-                        loss = self.client_localTrain(ft_args, node)  # TODO check if not working
-                        epoch_losses.append(loss)
-                    mean_loss = sum(epoch_losses) / len(epoch_losses)
-                else:
-                    raise NotImplemented('Still only local_train =(')
-                acc = validate(ft_args, node)
-                node.rounds_performed += 1  # TODO not to mess with r
-                response = MessageToHub(node.rounds_performed, ft_id,
-                                        acc, mean_loss, node.model)
-                yield response
-            else:
-                raise ValueError(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round}")
+        for i in range(10):
+            yield (f'client{self.id}', i)
+
+        # for r, ft_id in self.plan:
+        #     if (ft_id, r) in self.agr_model_by_ft_id_round:
+        #         agr_model = self.agr_model_by_ft_id_round[(ft_id, r)]
+        #         ft_args = self.args_by_ft_id[ft_id]
+        #         node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
+        #         # central_node = #hub.receive_server_model(mes.ft_id)
+        #         if 'fedlaw' in ft_args.server_method:
+        #             node.model.load_param(copy.deepcopy(
+        #                 agr_model.get_param(clone=True)))
+        #         else:
+        #             node.model.load_state_dict(copy.deepcopy(
+        #                 agr_model.state_dict()))
+        #         epoch_losses = []
+        #         if ft_args.client_method == 'local_train':
+        #             for epoch in range(ft_args.E):
+        #                 loss = self.client_localTrain(ft_args, node)  # TODO check if not working
+        #                 epoch_losses.append(loss)
+        #             mean_loss = sum(epoch_losses) / len(epoch_losses)
+        #         else:
+        #             raise NotImplemented('Still only local_train =(')
+        #         acc = validate(ft_args, node)
+        #         node.rounds_performed += 1  # TODO not to mess with r
+        #         response = MessageToHub(node.rounds_performed, ft_id,
+        #                                 acc, mean_loss, node.model)
+        #         yield response
+        #     else:
+        #         raise ValueError(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round}")
+        #
 
 
 def perform_one_round(self, mes: MessageToClient, hub):
@@ -157,8 +161,9 @@ if __name__ == '__main__':
 
     while not all(ft.done for ft in tasks):
         for responses in zip(c.run() for c in clients):
-            for r in responses:
-                print(r)
+            print(responses)
+            # for r in responses:
+            #     print(r)
             print("\\" * 12)
     exit()
 
