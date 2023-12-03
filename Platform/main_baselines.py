@@ -17,7 +17,7 @@ from itertools import zip_longest
 
 
 def combine_lists(l):
-    return [j for i in zip_longest(l) for j in i if j]
+    return [j for i in zip_longest(*l) for j in i if j]
 
 
 class FederatedMLTask:
