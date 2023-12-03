@@ -70,7 +70,7 @@ class Client:
 
     def run(self):
         for i in range(10):
-            yield (f'client{self.id}', i)
+            yield (f'client{self.id}')
 
         # for r, ft_id in self.plan:
         #     if (ft_id, r) in self.agr_model_by_ft_id_round:
