@@ -1,6 +1,6 @@
 from typing import List
 
-from message import MessageToClient
+from message import MessageToClient, MessageToHub
 from statistics import Statistics
 from experiment_config import get_configs
 from datasets import Data
@@ -75,6 +75,7 @@ class Client:
         else:
             node.model.load_state_dict(copy.deepcopy(
                 mes.agr_model.state_dict()))
+        raise Exception(type(mes.agr_model))
         epoch_losses = []
         if ft_args.client_method == 'local_train':
             for epoch in range(ft_args.E):
@@ -85,7 +86,9 @@ class Client:
             raise NotImplemented('Still only local_train =(')
         acc = validate(ft_args, node)
         node.rounds_performed += 1
-        return mean_loss, acc, node.rounds_performed
+        response = MessageToHub(node.rounds_performed, mes.ft_id,
+                                acc, mean_loss, node.model)
+        return response  # mean_loss, acc, node.rounds_performed
 
 
 class Hub:
