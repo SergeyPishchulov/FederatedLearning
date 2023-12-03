@@ -1,5 +1,7 @@
 from typing import List
 
+import torch.nn
+
 from message import MessageToClient, MessageToHub
 from statistics import Statistics
 from experiment_config import get_configs
@@ -75,7 +77,7 @@ class Client:
         else:
             node.model.load_state_dict(copy.deepcopy(
                 mes.agr_model.state_dict()))
-        raise Exception(type(mes.agr_model))
+        raise Exception(isinstance(mes.agr_model, torch.nn.Module))
         epoch_losses = []
         if ft_args.client_method == 'local_train':
             for epoch in range(ft_args.E):
