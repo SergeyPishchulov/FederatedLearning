@@ -159,12 +159,13 @@ if __name__ == '__main__':
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
-    while not all(ft.done for ft in tasks):
-        for responses in zip(c.run() for c in clients):
-            print(responses)
-            # for r in responses:
-            #     print(r)
-            print("\\" * 12)
+    # while not all(ft.done for ft in tasks):
+    for responses in zip(c.run() for c in clients):
+        print(responses)
+        print(list(responses))
+        # for r in responses:
+        #     print(r)
+        print("*" * 12)
     exit()
 
     for ft in plan:
