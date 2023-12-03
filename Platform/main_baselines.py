@@ -94,7 +94,7 @@ class Client:
                     raise NotImplemented('Still only local_train =(')
                 acc = validate(ft_args, node)
                 node.rounds_performed += 1  # TODO not to mess with r
-                response = MessageToHub(node.rounds_performed, ft_id,
+                response = MessageToHub(node.rounds_performed-1, ft_id,
                                         acc, mean_loss, node.model, self.id)
                 yield response
             else:
@@ -135,9 +135,9 @@ class TrainingJournal:
         # return self.latest_aggregated_round[ft_id]
         # TODO bug if we skip some rounds
 
-    def save_local(self, ft_id, client_id, round, model):
-        if (ft_id, client_id, round) not in self.d:
-            self.d[(ft_id, client_id, round)] = model
+    def save_local(self, ft_id, client_id, round_num, model):
+        if (ft_id, client_id, round_num) not in self.d:
+            self.d[(ft_id, client_id, round_num)] = model
             print(f'Saved local. d keys: {self.d.keys()}')
         else:
             raise KeyError("Key already exists")
@@ -193,8 +193,8 @@ if __name__ == '__main__':
     for responses in zip(*gens):
         for r in responses:
             r: MessageToHub
-            hub.journal.save_local(r.ft_id, r.client_id, r.round, r.model)
-            hub.stat.save_client_ac(r.client_id, r.ft_id, r.round - 1, r.acc)
+            hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
+            hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num - 1, r.acc)
 
         next_ft_id, ag_round = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:

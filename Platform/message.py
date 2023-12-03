@@ -5,7 +5,7 @@ import torch
 
 @dataclass
 class MessageToHub:
-    round: int
+    round_num: int
     ft_id: int
     acc: float
     loss: float
