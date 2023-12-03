@@ -144,7 +144,7 @@ class TrainingJournal:
 
     def get_ft_to_aggregate(self, client_ids):
         for ft_id, latest_round in self.latest_aggregated_round.items():
-            print(f'Searching ({ft_id},_,{latest_round+1}) in keys')
+            print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
             if all((ft_id, cl_id, latest_round + 1) in self.d
                    for cl_id in client_ids):
                 return ft_id, latest_round + 1
