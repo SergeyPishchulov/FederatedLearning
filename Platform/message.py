@@ -10,6 +10,7 @@ class MessageToHub:
     acc: float
     loss: float
     model: torch.nn.Module
+    client_id: int
 
 
 @dataclass
