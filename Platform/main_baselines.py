@@ -160,10 +160,10 @@ if __name__ == '__main__':
     test_acc_recorder = []
 
     # while not all(ft.done for ft in tasks):
-    for responses in zip(c.run() for c in clients):
-        print(responses)
+    gens = [c.run() for c in clients]
+    for responses in zip(*gens):
         for r in responses:
-            print(list(r))
+            print(r)
             print("*" * 12)
         print("NEXT ROUND")
     exit()

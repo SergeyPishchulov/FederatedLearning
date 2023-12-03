@@ -27,13 +27,13 @@ def get_configs(user_args):
 #     [(r, t) for r in range(10)] for t in ['t1', 't2', 't3']
 # ])
 # print(plan)
-# def my_gen(n:int):
+# def my_gen(n:int, cl):
 #     for i in range(n):
-#         yield i
+#         yield (cl, f'round {i}')
 #
-# gen1 = my_gen(10)
-# gen2 = my_gen(8)
-#
-# for x in zip(my_gen(10), my_gen(8)):
-#     print(x)
-#     print('**')
+# gens = [my_gen(10, 'cl1'), my_gen(8,'cl2')]
+# for responses in zip(*gens):
+#     for x in responses:
+#         print(x)
+#         print('**')
+#     print('NEXT ROUND')
