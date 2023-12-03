@@ -163,7 +163,7 @@ if __name__ == '__main__':
     for responses in zip(c.run() for c in clients):
         print(responses)
         for r in responses:
-            print(r[0])
+            print(list(r)[0])
             print("*" * 12)
         print("NEXT ROUND")
     exit()
