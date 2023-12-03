@@ -138,6 +138,7 @@ class TrainingJournal:
     def save_local(self, ft_id, client_id, round, model):
         if (ft_id, client_id, round) not in self.d:
             self.d[(ft_id, client_id, round)] = model
+            print(f'Saved local. d keys: {self.d.keys()}')
         else:
             raise KeyError("Key already exists")
 
@@ -146,6 +147,7 @@ class TrainingJournal:
             if all((ft_id, cl_id, latest_round + 1) in self.d
                    for cl_id in client_ids):
                 return ft_id, latest_round+1
+        raise ValueError("No task to aggregate. d keys: {self.d.keys()}")
         return None, None
 
 
