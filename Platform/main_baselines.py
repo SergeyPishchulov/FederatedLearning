@@ -103,7 +103,7 @@ if __name__ == '__main__':
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
     clients = []
     for client_id in range(user_args.node_num):
-        clients.append(Client(client_id, {ft: ft.client_nodes[client_id] for ft in tasks}))
+        clients.append(Client(client_id, {ft.id: ft.client_nodes[client_id] for ft in tasks}))
     hub = Hub(tasks, clients, user_args)
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
