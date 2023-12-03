@@ -6,11 +6,12 @@ import matplotlib.colors as mcolors
 
 
 class Statistics:
-    def __init__(self, fts, clients, args):
+    def __init__(self, tasks, clients, args):
+        self.client_cols = [f'client_{c.id}_ac' for c in clients]
         self.stat_by_ft_id = {
-            ft.id: pd.DataFrame(columns=['agr_ac'] + [f'client_{c.id}_ac' for c in clients],
+            ft.id: pd.DataFrame(columns=['agr_ac'] + self.client_cols,
                                 index=pd.Series(range(args.T), name='round'))
-            for ft in fts}
+            for ft in tasks}
         current_directory = os.getcwd()
         self.directory = os.path.join(current_directory, r'stat')
         self.pngs_directory = os.path.join(current_directory, r'stat/pngs')
@@ -30,18 +31,19 @@ class Statistics:
             stat_df.to_csv(self.directory + f'/{ft_id}.csv')
 
     def plot_accuracy(self):
-        colors = list(mcolors.BASE_COLORS.values())
+        # colors = list(mcolors.BASE_COLORS.values())
+        fig, axes = plt.subplots(len(self.stat_by_ft_id),
+                                 figsize=(5, 20))
         for ft_id, stat_df in self.stat_by_ft_id.items():
-            fig, axes = plt.subplots()
-            axes.set_title(ft_id)
+            axes[ft_id].set_title(ft_id)
             for c in stat_df.columns:
                 if 'client' in c:
-                    axes.plot(stat_df[c],
+                    axes[ft_id].plot(stat_df[c],
                               # color=color_by_dataset[t.dataset_name],
                               label=c,
                               linestyle='dashed')
 
-            axes.plot(stat_df['agr_ac'], label='agr_ac')
+            axes[ft_id].plot(stat_df['agr_ac'], label='agr_ac')
             fig.legend()
-            plt.show()
-            fig.savefig(f'{self.pngs_directory}/{ft_id}.png')
+        plt.show()
+        fig.savefig(f'{self.pngs_directory}/ac.png')
