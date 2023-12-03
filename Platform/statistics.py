@@ -33,15 +33,17 @@ class Statistics:
     def plot_accuracy(self):
         # colors = list(mcolors.BASE_COLORS.values())
         fig, axes = plt.subplots(len(self.stat_by_ft_id),
-                                 figsize=(10, 8*len(self.stat_by_ft_id)))
+                                 figsize=(10, 8 * len(self.stat_by_ft_id)))
+        if len(self.stat_by_ft_id) == 1:
+            axes = [axes]
         for ft_id, stat_df in self.stat_by_ft_id.items():
             axes[ft_id].set_title(ft_id)
             for c in stat_df.columns:
                 if 'client' in c:
                     axes[ft_id].plot(stat_df[c],
-                              # color=color_by_dataset[t.dataset_name],
-                              label=c,
-                              linestyle='dashed')
+                                     # color=color_by_dataset[t.dataset_name],
+                                     label=c,
+                                     linestyle='dashed')
 
             axes[ft_id].plot(stat_df['agr_ac'], label='agr_ac')
             axes[ft_id].legend()
