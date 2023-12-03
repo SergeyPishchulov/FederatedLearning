@@ -67,7 +67,8 @@ class Client:
         node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
         central_node = hub.receive_server_model(ft_id)
         if 'fedlaw' in ft_args.server_method:
-            node.model.load_param(copy.deepcopy(central_node.model.get_param(clone=True)))
+            node.model.load_param(copy.deepcopy(
+                central_node.model.get_param(clone=True)))
         else:
             node.model.load_state_dict(copy.deepcopy(central_node.model.state_dict()))
         epoch_losses = []
