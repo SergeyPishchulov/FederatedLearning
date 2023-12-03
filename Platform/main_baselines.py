@@ -77,7 +77,6 @@ class Client:
         else:
             node.model.load_state_dict(copy.deepcopy(
                 mes.agr_model.state_dict()))
-        raise Exception(isinstance(mes.agr_model, torch.nn.Module))
         epoch_losses = []
         if ft_args.client_method == 'local_train':
             for epoch in range(ft_args.E):
