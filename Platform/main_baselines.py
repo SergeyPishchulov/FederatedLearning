@@ -138,13 +138,13 @@ class TrainingJournal:
     def save_local(self, ft_id, client_id, round_num, model):
         if (ft_id, client_id, round_num) not in self.d:
             self.d[(ft_id, client_id, round_num)] = model
-            print(f'Saved local. d keys: {self.d.keys()}')
+            #print(f'Saved local. d keys: {self.d.keys()}')
         else:
             raise KeyError("Key already exists")
 
     def get_ft_to_aggregate(self, client_ids):
         for ft_id, latest_round in self.latest_aggregated_round.items():
-            print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
+            #print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
             if all((ft_id, cl_id, latest_round + 1) in self.d
                    for cl_id in client_ids):
                 return ft_id, latest_round + 1
@@ -177,7 +177,7 @@ if __name__ == '__main__':
     plan = combine_lists([
         [(round, task.id) for round in range(ROUNDS)] for task in tasks
     ])
-    print(f"Plan is {plan}")
+    #print(f"Plan is {plan}")
 
     clients = []
     for client_id in range(user_args.node_num):
@@ -207,7 +207,7 @@ if __name__ == '__main__':
                           select_list,  # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
-            print(f'latest_aggregated_round by task id is {hub.journal.latest_aggregated_round}')
+            #print(f'latest_aggregated_round by task id is {hub.journal.latest_aggregated_round}')
             for c in clients:  # TODO make through pipe
                 c.agr_model_by_ft_id_round[(ft.id, ag_round)] = ft.central_node.model
             acc = validate(ft.args, ft.central_node, which_dataset='local')
@@ -216,6 +216,7 @@ if __name__ == '__main__':
                                  acc=acc)
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
+        #TODO delete client_nodes from ft.
 
 # for ft in plan:
 #     client_losses = []
