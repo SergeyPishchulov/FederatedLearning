@@ -204,11 +204,12 @@ if __name__ == '__main__':
                           select_list,  # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
+            print(f'latest_aggregated_round by task id is {hub.journal.latest_aggregated_round}')
             for c in clients:#TODO make through pipe
                 c.agr_model_by_ft_id_round[(ft.id, ag_round)] = ft.central_node.model
             acc = validate(ft.args, ft.central_node, which_dataset='local')
             hub.stat.save_agr_ac(ft.id,
-                                 round=aggregation_round,
+                                 round=ag_round,
                                  acc=acc)
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
