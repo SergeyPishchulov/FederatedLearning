@@ -109,7 +109,7 @@ if __name__ == '__main__':
     clients = []
     for client_id in range(user_args.node_num):
         clients.append(Client(client_id, {ft.id: ft.client_nodes[client_id] for ft in tasks},
-                              {ft.args: ft.client_nodes[client_id] for ft in tasks}))
+                              args_by_ft_id={ft.id: ft.args for ft in tasks}))
     hub = Hub(tasks, clients, user_args)
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
