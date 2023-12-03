@@ -91,7 +91,7 @@ class Hub:
         self.stat = Statistics(tasks, clients, args)
 
     def receive_server_model(self, ft_id):
-        return self.tasks[ft_id]
+        return self.tasks[ft_id].central_node
 
 
 if __name__ == '__main__':
