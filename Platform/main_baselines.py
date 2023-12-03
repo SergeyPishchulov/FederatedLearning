@@ -110,7 +110,7 @@ if __name__ == '__main__':
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
-    ROUNDS = 10
+    ROUNDS = 2
     plan = combine_lists([tasks[0]] * ROUNDS, [tasks[1]] * ROUNDS)
     # while not all(ft.done for ft in tasks):
     for ft in plan:
