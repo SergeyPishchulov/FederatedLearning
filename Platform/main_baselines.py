@@ -173,7 +173,7 @@ if __name__ == '__main__':
     # conf = fedeareted_tasks_configs[0]
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
 
-    ROUNDS = 2
+    ROUNDS = 10
     plan = combine_lists([
         [(round, task.id) for round in range(ROUNDS)] for task in tasks
     ])
