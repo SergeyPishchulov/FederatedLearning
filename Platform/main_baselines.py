@@ -20,7 +20,7 @@ def combine_lists(*l):
 class FederatedMLTask:
     def __init__(self, id, args):
         self.args = args
-        self.data = Data(conf.dataset, args)  # TODO dumb
+        self.data = Data(args)  # TODO dumb
         self.node_cnt = args.node_num
         self.id = id
         self.name = f'Task {id} {args.dataset} {args.local_model}'
@@ -38,11 +38,11 @@ class FederatedMLTask:
 
 
 class Client:
-    def __init__(self, id, node_by_ft):
+    def __init__(self, id, node_by_ft_id):
         self.id = id  # TODO set pipe
         # self.hub = hub#temporary. instead of pipe
         # self.args = args
-        self.node_by_ft = node_by_ft
+        self.node_by_ft_id = node_by_ft_id
 
     def client_localTrain(self, args, node, loss=0.0):
         node.model.train()
@@ -63,32 +63,33 @@ class Client:
 
         return loss / len(train_loader)
 
-    def perform_one_round(self, ft: FederatedMLTask, hub):
-        node = self.node_by_ft[ft]  # TODO delete hub when set pipe in __init__
-        central_node = hub.receive_server_model(ft)
-        if 'fedlaw' in ft.args.server_method:
+    def perform_one_round(self, ft_id, hub, ft_args):
+        node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
+        central_node = hub.receive_server_model(ft_id)
+        if 'fedlaw' in ft_args.server_method:
             node.model.load_param(copy.deepcopy(central_node.model.get_param(clone=True)))
         else:
             node.model.load_state_dict(copy.deepcopy(central_node.model.state_dict()))
         epoch_losses = []
-        if ft.args.client_method == 'local_train':
-            for epoch in range(ft.args.E):
-                loss = self.client_localTrain(ft.args, node)  # TODO check if not working
+        if ft_args.client_method == 'local_train':
+            for epoch in range(ft_args.E):
+                loss = self.client_localTrain(ft_args, node)  # TODO check if not working
                 epoch_losses.append(loss)
             mean_loss = sum(epoch_losses) / len(epoch_losses)
         else:
             raise NotImplemented('Still only local_train =(')
-        acc = validate(ft.args, node)
+        acc = validate(ft_args, node)
         node.rounds_performed += 1
         return mean_loss, acc, node.rounds_performed
 
 
 class Hub:
-    def __init__(self, fts: List[FederatedMLTask], clients, args):
-        self.stat = Statistics(fts, clients, args)
+    def __init__(self, tasks: List[FederatedMLTask], clients, args):
+        self.tasks = tasks
+        self.stat = Statistics(tasks, clients, args)
 
-    def receive_server_model(self, ft):
-        return ft.central_node
+    def receive_server_model(self, ft_id):
+        return self.tasks[ft_id]
 
 
 if __name__ == '__main__':
@@ -98,7 +99,7 @@ if __name__ == '__main__':
     torch.cuda.set_device('cuda:' + user_args.device)
 
     fedeareted_tasks_configs = get_configs(user_args)
-    conf = fedeareted_tasks_configs[0]
+    # conf = fedeareted_tasks_configs[0]
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
     clients = []
     for client_id in range(user_args.node_num):
@@ -114,11 +115,11 @@ if __name__ == '__main__':
         client_losses = []
         client_acc = []
         for c in clients:
-            loss, acc, round_done = c.perform_one_round(ft, hub)
+            loss, acc, round_done = c.perform_one_round(ft.id, hub, ft.args)
             client_losses.append(loss)
             client_acc.append(acc)
             hub.stat.save_client_ac(c.id, ft.id, round_done - 1, acc)
-        if all([c.node_by_ft[ft].rounds_performed == ft.args.T  # TODO smarter
+        if all([c.node_by_ft_id[ft.id].rounds_performed == ft.args.T  # TODO smarter
                 for c in clients]):
             ft.done = True
         train_loss = sum(client_losses) / len(client_losses)
@@ -141,6 +142,6 @@ if __name__ == '__main__':
         print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
 
-    # print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
+        # print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
         hub.stat.to_csv()
         hub.stat.plot_accuracy()

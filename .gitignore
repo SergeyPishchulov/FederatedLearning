@@ -14,3 +14,7 @@ for Federated Learning.pdf
 *.json
 *.tsv
 fedma/
+catboost/
+Platform_old/
+3_TS.ipynb
+/Platform/default_args.txt

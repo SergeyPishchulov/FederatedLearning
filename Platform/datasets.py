@@ -22,8 +22,8 @@ class DatasetSplit(Dataset):
 
 # Main data loader
 class Data(object):
-    def __init__(self, dataset, args):
-        if dataset == 'cifar10':
+    def __init__(self, args):
+        if args.dataset == 'cifar10':
             # Data enhancement: None
             tra_transformer = transforms.Compose(
                 [
