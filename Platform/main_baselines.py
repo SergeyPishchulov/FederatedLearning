@@ -98,7 +98,7 @@ class Client:
                                         acc, mean_loss, node.model, self.id)
                 yield response
             else:
-                raise ValueError(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round}")
+                raise ValueError(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
 
 
 # def perform_one_round(self, mes: MessageToClient, hub):
