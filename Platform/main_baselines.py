@@ -162,10 +162,10 @@ if __name__ == '__main__':
     # while not all(ft.done for ft in tasks):
     for responses in zip(c.run() for c in clients):
         print(responses)
-        print(list(responses))
-        # for r in responses:
-        #     print(r)
-        print("*" * 12)
+        for r in responses:
+            print(r)
+            print("*" * 12)
+        print("NEXT ROUND")
     exit()
 
     for ft in plan:
