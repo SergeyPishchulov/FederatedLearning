@@ -34,10 +34,9 @@ class FederatedMLTask:
             sample_size.append(len(self.data.train_loader[i]))
         self.size_weights = [x / sum(sample_size) for x in sample_size]
         self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
-        self.client_nodes = {}
-        for i in range(self.node_cnt):
-            self.client_nodes[i] = Node(i, self.data.train_loader[i],
+        self.client_nodes = [Node(i, self.data.train_loader[i],
                                         self.data.train_set, self.args, self.node_cnt)
+                             for i in range(self.node_cnt)]
 
 
 class Client:
@@ -145,7 +144,7 @@ if __name__ == '__main__':
         else:
             select_list = generate_selectlist(ft.client_nodes, ft.args.select_ratio)
 
-        Server_update(ft.args, ft.central_node.model, [v.model for k,v in ft.client_nodes.items()], select_list, ft.size_weights)
+        Server_update(ft.args, ft.central_node.model, [n.model for n in ft.client_nodes], select_list, ft.size_weights)
         acc = validate(ft.args, ft.central_node, which_dataset='local')
         hub.stat.save_agr_ac(ft.id,
                              round=response.round- 1,  # TODO too bad. make AGS know what round it is

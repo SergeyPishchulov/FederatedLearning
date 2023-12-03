@@ -33,7 +33,7 @@ class Statistics:
     def plot_accuracy(self):
         # colors = list(mcolors.BASE_COLORS.values())
         fig, axes = plt.subplots(len(self.stat_by_ft_id),
-                                 figsize=(5, 4*len(self.stat_by_ft_id)))
+                                 figsize=(50, 40*len(self.stat_by_ft_id)))
         for ft_id, stat_df in self.stat_by_ft_id.items():
             axes[ft_id].set_title(ft_id)
             for c in stat_df.columns:
