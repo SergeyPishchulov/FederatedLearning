@@ -70,7 +70,7 @@ class Client:
 
     def run(self):
         for i in range(10):
-            yield (f'client{self.id}')
+            yield (f'client{self.id}', f'round {i}')
 
         # for r, ft_id in self.plan:
         #     if (ft_id, r) in self.agr_model_by_ft_id_round:
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     for responses in zip(c.run() for c in clients):
         print(responses)
         for r in responses:
-            print(list(r)[0])
+            print(list(r))
             print("*" * 12)
         print("NEXT ROUND")
     exit()
