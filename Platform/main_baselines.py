@@ -194,7 +194,7 @@ if __name__ == '__main__':
         for r in responses:
             r: MessageToHub
             hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
-            hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num - 1, r.acc)
+            hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
 
         next_ft_id, ag_round = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
