@@ -132,7 +132,7 @@ class TrainingJournal:
 
     def mark_as_aggregated(self, ft_id):
         self.latest_aggregated_round[ft_id] += 1
-        return self.latest_aggregated_round[ft_id]
+        # return self.latest_aggregated_round[ft_id]
         # TODO bug if we skip some rounds
 
     def save_local(self, ft_id, client_id, round, model):
@@ -141,12 +141,12 @@ class TrainingJournal:
         else:
             raise KeyError("Key already exists")
 
-    def get_ft_to_aggregate(self, client_ids) -> Optional[int]:
+    def get_ft_to_aggregate(self, client_ids):
         for ft_id, latest_round in self.latest_aggregated_round.items():
             if all((ft_id, cl_id, latest_round + 1) in self.d
                    for cl_id in client_ids):
-                return ft_id
-        return None
+                return ft_id, latest_round+1
+        return None, None
 
 
 class Hub:
@@ -193,7 +193,7 @@ if __name__ == '__main__':
             hub.journal.save_local(r.client_id, r.ft_id, r.round, r.model)
             hub.stat.save_client_ac(r.client_id, r.ft_id, r.round - 1, r.acc)
 
-        next_ft_id = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        next_ft_id, ag_round = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
             if ft.args.select_ratio == 1.0:
@@ -203,10 +203,12 @@ if __name__ == '__main__':
             Server_update(ft.args, ft.central_node.model, [n.model for n in ft.client_nodes],
                           select_list,  # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
-            ag_r = hub.journal.mark_as_aggregated(ft.id)
+            hub.journal.mark_as_aggregated(ft.id)
+            for c in clients:#TODO make through pipe
+                c.agr_model_by_ft_id_round[(ft.id, ag_round)] = ft.central_node.model
             acc = validate(ft.args, ft.central_node, which_dataset='local')
             hub.stat.save_agr_ac(ft.id,
-                                 round=ag_r,
+                                 round=aggregation_round,
                                  acc=acc)
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
