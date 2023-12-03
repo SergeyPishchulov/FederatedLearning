@@ -174,6 +174,7 @@ if __name__ == '__main__':
     plan = combine_lists([
         [(round, task.id) for round in range(ROUNDS)] for task in tasks
     ])
+    print(f"Plan is {plan}")
 
     clients = []
     for client_id in range(user_args.node_num):
