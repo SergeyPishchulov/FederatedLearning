@@ -66,7 +66,7 @@ class Client:
         return loss / len(train_loader)
 
     def perform_one_round(self, mes: MessageToClient, hub):
-        ft_args = self.node_by_ft_id[mes.ft_id]
+        ft_args = self.args_by_ft_id[mes.ft_id]
         node = self.node_by_ft_id[mes.ft_id]  # TODO delete hub when set pipe in __init__
         # central_node = #hub.receive_server_model(mes.ft_id)
         if 'fedlaw' in ft_args.server_method:
