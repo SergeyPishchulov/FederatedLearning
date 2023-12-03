@@ -148,7 +148,7 @@ if __name__ == '__main__':
         ft.central_node = Server_update(ft.args, ft.central_node, ft.client_nodes, select_list, ft.size_weights)
         acc = validate(ft.args, ft.central_node, which_dataset='local')
         hub.stat.save_agr_ac(ft.id,
-                             round=round_done - 1,  # TODO too bad. make AGS know what round it is
+                             round=response.round- 1,  # TODO too bad. make AGS know what round it is
                              acc=acc)
         print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
