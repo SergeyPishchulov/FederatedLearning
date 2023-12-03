@@ -126,10 +126,10 @@ if __name__ == '__main__':
         client_acc = []
         for c in clients:
             mes_to_client = MessageToClient(1, ft.id, ft.central_node.model)  # TODO specify round
-            loss, acc, round_done = c.perform_one_round(mes_to_client, hub)
-            client_losses.append(loss)
-            client_acc.append(acc)
-            hub.stat.save_client_ac(c.id, ft.id, round_done - 1, acc)
+            response = c.perform_one_round(mes_to_client, hub)
+            client_losses.append(response.loss)
+            client_acc.append(response.acc)
+            hub.stat.save_client_ac(c.id, ft.id, response.round - 1, response.acc)
         if all([c.node_by_ft_id[ft.id].rounds_performed == ft.args.T  # TODO smarter
                 for c in clients]):
             ft.done = True
