@@ -40,14 +40,14 @@ class FederatedMLTask:
 
 
 class Client:
-    def __init__(self, id, node_by_ft_id, args_by_ft_id, plan):
+    def __init__(self, id, node_by_ft_id, args_by_ft_id, plan, agr_model_by_ft_id_round):
         self.id = id  # TODO set pipe
         self.plan = plan
         # self.hub = hub#temporary. instead of pipe
         # self.args = args
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
-        self.agr_model_by_ft_id_round = {}
+        self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
 
     def client_localTrain(self, args, node, loss=0.0):
         node.model.train()
@@ -73,8 +73,8 @@ class Client:
         #     yield (f'client{self.id}', f'round {i}')
 
         for r, ft_id in self.plan:
-            if (ft_id, r) in self.agr_model_by_ft_id_round:
-                agr_model = self.agr_model_by_ft_id_round[(ft_id, r)]
+            if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
+                agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
                 # central_node = #hub.receive_server_model(mes.ft_id)
@@ -178,7 +178,8 @@ if __name__ == '__main__':
     clients = []
     for client_id in range(user_args.node_num):
         clients.append(Client(client_id, {ft.id: ft.client_nodes[client_id] for ft in tasks},
-                              args_by_ft_id={ft.id: ft.args for ft in tasks}, plan=plan))
+                              args_by_ft_id={ft.id: ft.args for ft in tasks}, plan=plan,
+                              agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks}))
     hub = Hub(tasks, clients, user_args)
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
@@ -199,7 +200,7 @@ if __name__ == '__main__':
             else:
                 select_list = generate_selectlist(ft.client_nodes, ft.args.select_ratio)
             Server_update(ft.args, ft.central_node.model, [n.model for n in ft.client_nodes],
-                          select_list,#TODO note that local models are took from nodes, not from journal
+                          select_list,  # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
             ag_r = hub.journal.mark_as_aggregated(ft.id)
             acc = validate(ft.args, ft.central_node, which_dataset='local')
@@ -241,5 +242,4 @@ if __name__ == '__main__':
 #     print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
 #     test_acc_recorder.append(acc)
 
-    # print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
-
+# print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())
