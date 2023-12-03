@@ -70,7 +70,8 @@ class Client:
             node.model.load_param(copy.deepcopy(
                 central_node.model.get_param(clone=True)))
         else:
-            node.model.load_state_dict(copy.deepcopy(central_node.model.state_dict()))
+            node.model.load_state_dict(copy.deepcopy(
+                central_node.model.state_dict()))
         epoch_losses = []
         if ft_args.client_method == 'local_train':
             for epoch in range(ft_args.E):
