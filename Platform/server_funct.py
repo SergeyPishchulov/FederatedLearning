@@ -19,13 +19,13 @@ from torch.optim.lr_scheduler import _LRScheduler
 # General server function
 ##############################################################################
 
-def receive_client_models(args, client_nodes, select_list, size_weights):
+def receive_client_models(args, client_models, select_list, size_weights):
     client_params = []
     for idx in select_list:
         if 'fedlaw' in args.server_method:
-            client_params.append(client_nodes[idx].model.get_param(clone = True))
+            client_params.append(client_models[idx].get_param(clone = True))
         else:
-            client_params.append(copy.deepcopy(client_nodes[idx].model.state_dict()))
+            client_params.append(copy.deepcopy(client_models[idx].state_dict()))
     
     agg_weights = [size_weights[idx] for idx in select_list]
     agg_weights = [w/sum(agg_weights) for w in agg_weights]
@@ -277,46 +277,46 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
 # Baselines function (FedAvg, FedDF, FedBE, FedDyn, FedAdam, Finetune, etc.)
 ##############################################################################
 
-def Server_update(args, central_node, client_nodes, select_list, size_weights):
+def Server_update(args, agr_model, client_models, select_list, size_weights):
     '''
     server update functions for baselines
     '''
 
     # receive the local models from clients
-    agg_weights, client_params = receive_client_models(args, client_nodes, select_list, size_weights)
+    agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
 
     # update the global model
     if args.server_method == 'fedavg':
         avg_global_param = fedavg(client_params, agg_weights)
-        central_node.model.load_state_dict(avg_global_param)
+        agr_model.load_state_dict(avg_global_param)
 
-    elif args.server_method == 'feddf':
-        avg_global_param = fedavg(client_params, agg_weights)
-        central_node.model.load_state_dict(avg_global_param)
-        central_node = feddf(args, central_node, client_nodes, select_list)
-
-    elif args.server_method == 'fedbe':
-        prev_global_param = copy.deepcopy(central_node.model.state_dict())
-        avg_global_param = fedavg(client_params, agg_weights)
-        central_node.model.load_state_dict(avg_global_param)
-        central_node = fedbe(args, prev_global_param, central_node, client_nodes, select_list)
-
-    elif args.server_method == 'finetune':
-        avg_global_param = fedavg(client_params, agg_weights)
-        central_node.model.load_state_dict(avg_global_param)
-        central_node = server_finetune(args, central_node)
-
-    elif args.server_method == 'feddyn':
-        central_node = feddyn(args, central_node, agg_weights, client_nodes, select_list)
-    
-    elif args.server_method == 'fedadam':
-        avg_global_param = fedavg(client_params, agg_weights)
-        central_node = fedadam(args, central_node, avg_global_param)
+    # elif args.server_method == 'feddf':
+    #     avg_global_param = fedavg(client_params, agg_weights)
+    #     central_node.model.load_state_dict(avg_global_param)
+    #     central_node = feddf(args, central_node, client_nodes, select_list)
+    #
+    # elif args.server_method == 'fedbe':
+    #     prev_global_param = copy.deepcopy(central_node.model.state_dict())
+    #     avg_global_param = fedavg(client_params, agg_weights)
+    #     central_node.model.load_state_dict(avg_global_param)
+    #     central_node = fedbe(args, prev_global_param, central_node, client_nodes, select_list)
+    #
+    # elif args.server_method == 'finetune':
+    #     avg_global_param = fedavg(client_params, agg_weights)
+    #     central_node.model.load_state_dict(avg_global_param)
+    #     central_node = server_finetune(args, central_node)
+    #
+    # elif args.server_method == 'feddyn':
+    #     central_node = feddyn(args, central_node, agg_weights, client_nodes, select_list)
+    #
+    # elif args.server_method == 'fedadam':
+    #     avg_global_param = fedavg(client_params, agg_weights)
+    #     central_node = fedadam(args, central_node, avg_global_param)
 
     else:
-        raise ValueError('Undefined server method...')
+        raise NotImplemented('Undefined server method...')
 
-    return central_node
+    # return central_node
 
 # FedAvg
 def fedavg(parameters, list_nums_local_data):
