@@ -16,8 +16,8 @@ from copy import deepcopy
 from itertools import zip_longest
 
 
-def combine_lists(*l):
-    return [j for i in zip_longest(*l) for j in i if j]
+def combine_lists(l):
+    return [j for i in zip_longest(l) for j in i if j]
 
 
 class FederatedMLTask:
@@ -35,17 +35,19 @@ class FederatedMLTask:
         self.size_weights = [x / sum(sample_size) for x in sample_size]
         self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
         self.client_nodes = [Node(i, self.data.train_loader[i],
-                                        self.data.train_set, self.args, self.node_cnt)
+                                  self.data.train_set, self.args, self.node_cnt)
                              for i in range(self.node_cnt)]
 
 
 class Client:
-    def __init__(self, id, node_by_ft_id, args_by_ft_id):
+    def __init__(self, id, node_by_ft_id, args_by_ft_id, plan):
         self.id = id  # TODO set pipe
+        self.plan = plan
         # self.hub = hub#temporary. instead of pipe
         # self.args = args
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
+        self.agr_model_by_ft_id_round = {}
 
     def client_localTrain(self, args, node, loss=0.0):
         node.model.train()
@@ -66,29 +68,59 @@ class Client:
 
         return loss / len(train_loader)
 
-    def perform_one_round(self, mes: MessageToClient, hub):
-        ft_args = self.args_by_ft_id[mes.ft_id]
-        node = self.node_by_ft_id[mes.ft_id]  # TODO delete hub when set pipe in __init__
-        # central_node = #hub.receive_server_model(mes.ft_id)
-        if 'fedlaw' in ft_args.server_method:
-            node.model.load_param(copy.deepcopy(
-                mes.agr_model.get_param(clone=True)))
-        else:
-            node.model.load_state_dict(copy.deepcopy(
-                mes.agr_model.state_dict()))
-        epoch_losses = []
-        if ft_args.client_method == 'local_train':
-            for epoch in range(ft_args.E):
-                loss = self.client_localTrain(ft_args, node)  # TODO check if not working
-                epoch_losses.append(loss)
-            mean_loss = sum(epoch_losses) / len(epoch_losses)
-        else:
-            raise NotImplemented('Still only local_train =(')
-        acc = validate(ft_args, node)
-        node.rounds_performed += 1
-        response = MessageToHub(node.rounds_performed, mes.ft_id,
-                                acc, mean_loss, node.model)
-        return response  # mean_loss, acc, node.rounds_performed
+    def run(self):
+        for r, ft_id in self.plan:
+            if (ft_id, r) in self.agr_model_by_ft_id_round:
+                agr_model = self.agr_model_by_ft_id_round[(ft_id, r)]
+                ft_args = self.args_by_ft_id[ft_id]
+                node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
+                # central_node = #hub.receive_server_model(mes.ft_id)
+                if 'fedlaw' in ft_args.server_method:
+                    node.model.load_param(copy.deepcopy(
+                        agr_model.get_param(clone=True)))
+                else:
+                    node.model.load_state_dict(copy.deepcopy(
+                        agr_model.state_dict()))
+                epoch_losses = []
+                if ft_args.client_method == 'local_train':
+                    for epoch in range(ft_args.E):
+                        loss = self.client_localTrain(ft_args, node)  # TODO check if not working
+                        epoch_losses.append(loss)
+                    mean_loss = sum(epoch_losses) / len(epoch_losses)
+                else:
+                    raise NotImplemented('Still only local_train =(')
+                acc = validate(ft_args, node)
+                node.rounds_performed += 1  # TODO not to mess with r
+                response = MessageToHub(node.rounds_performed, ft_id,
+                                        acc, mean_loss, node.model)
+                yield response
+            else:
+                raise ValueError(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round}")
+
+
+def perform_one_round(self, mes: MessageToClient, hub):
+    ft_args = self.args_by_ft_id[mes.ft_id]
+    node = self.node_by_ft_id[mes.ft_id]  # TODO delete hub when set pipe in __init__
+    # central_node = #hub.receive_server_model(mes.ft_id)
+    if 'fedlaw' in ft_args.server_method:
+        node.model.load_param(copy.deepcopy(
+            mes.agr_model.get_param(clone=True)))
+    else:
+        node.model.load_state_dict(copy.deepcopy(
+            mes.agr_model.state_dict()))
+    epoch_losses = []
+    if ft_args.client_method == 'local_train':
+        for epoch in range(ft_args.E):
+            loss = self.client_localTrain(ft_args, node)  # TODO check if not working
+            epoch_losses.append(loss)
+        mean_loss = sum(epoch_losses) / len(epoch_losses)
+    else:
+        raise NotImplemented('Still only local_train =(')
+    acc = validate(ft_args, node)
+    node.rounds_performed += 1
+    response = MessageToHub(node.rounds_performed, mes.ft_id,
+                            acc, mean_loss, node.model)
+    return response
 
 
 class Hub:
@@ -109,17 +141,27 @@ if __name__ == '__main__':
     fedeareted_tasks_configs = get_configs(user_args)
     # conf = fedeareted_tasks_configs[0]
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
+
+    ROUNDS = 2
+    plan = combine_lists([
+        [(round, task.id) for round in range(ROUNDS)] for task in tasks
+    ])
+
     clients = []
     for client_id in range(user_args.node_num):
         clients.append(Client(client_id, {ft.id: ft.client_nodes[client_id] for ft in tasks},
-                              args_by_ft_id={ft.id: ft.args for ft in tasks}))
+                              args_by_ft_id={ft.id: ft.args for ft in tasks}, plan=plan))
     hub = Hub(tasks, clients, user_args)
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
-    ROUNDS = 2
-    plan = combine_lists([tasks[0]] * ROUNDS, [tasks[1]] * ROUNDS)
-    # while not all(ft.done for ft in tasks):
+    while not all(ft.done for ft in tasks):
+        for responses in zip(c.run() for c in clients):
+            for r in responses:
+                print(r)
+            print("\\" * 12)
+    exit()
+
     for ft in plan:
         client_losses = []
         client_acc = []
@@ -147,7 +189,7 @@ if __name__ == '__main__':
         Server_update(ft.args, ft.central_node.model, [n.model for n in ft.client_nodes], select_list, ft.size_weights)
         acc = validate(ft.args, ft.central_node, which_dataset='local')
         hub.stat.save_agr_ac(ft.id,
-                             round=response.round- 1,  # TODO too bad. make AGS know what round it is
+                             round=response.round - 1,  # TODO too bad. make AGS know what round it is
                              acc=acc)
         print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
         test_acc_recorder.append(acc)
