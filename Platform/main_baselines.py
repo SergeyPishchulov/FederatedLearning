@@ -166,6 +166,7 @@ if __name__ == '__main__':
                           hub.get_select_list(ft, [c.id for c in clients]),
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
+            print(f'AGS Success. Task {ft.id}, round {ag_round}')
             if ag_round == user_args.T:
                 tasks[ft.id].done = True
                 print(f'Task {ft.id} is done')

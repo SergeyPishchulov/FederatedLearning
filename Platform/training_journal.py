@@ -20,5 +20,5 @@ class TrainingJournal:
                    for cl_id in client_ids):
                 models = [self.d[(ft_id, cl_id, latest_round + 1)] for cl_id in client_ids]
                 return ft_id, latest_round + 1, models
-        print(f"No task to aggregate. d keys: {self.d.keys()}")
+        # print(f"No task to aggregate. d keys: {self.d.keys()}")
         return None, None, None

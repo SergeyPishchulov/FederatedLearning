@@ -47,5 +47,5 @@ class Statistics:
 
             axes[ft_id].plot(stat_df['agr_ac'], label='agr_ac')
             axes[ft_id].legend()
-        plt.show()
+        # plt.show()
         fig.savefig(f'{self.pngs_directory}/ac.png')
