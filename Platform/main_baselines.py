@@ -119,7 +119,7 @@ class Client:
                 node.rounds_performed += 1  # TODO not to mess with r
                 response = MessageToHub(node.rounds_performed - 1, ft_id,
                                         acc, mean_loss,
-                                        copy.deepcopy(node.model.detach().clone()),
+                                        copy.deepcopy(node.model.clone()),
                                         self.id)
                 write_q.put(response)
                 self.plan.pop(0)
@@ -243,7 +243,7 @@ if __name__ == '__main__':
             for c in clients:
                 q = hub.write_q_by_cl_id[c.id].put(
                     MessageToClient(ag_round, ft.id,
-                                    copy.deepcopy(ft.central_node.model.detach().clone()
+                                    copy.deepcopy(ft.central_node.model.clone()
                                                   )))
 
         hub.stat.to_csv()
