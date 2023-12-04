@@ -1,5 +1,14 @@
-import multiprocessing
+# import multiprocessing
+
+from torch.multiprocessing import Pool, Process, set_start_method, Queue
+
+try:
+    set_start_method('spawn')
+except RuntimeError:
+    pass
+
 import time
+
 from typing import List, Optional
 
 import torch.nn
@@ -164,11 +173,11 @@ class Hub:
 
     def init_qs(self):
         write_q_by_cl_id = {
-            cl.id: multiprocessing.Queue()
+            cl.id: Queue()
             for cl in clients
         }
         read_q_by_cl_id = {
-            cl.id: multiprocessing.Queue()
+            cl.id: Queue()
             for cl in clients
         }
         return write_q_by_cl_id, read_q_by_cl_id
@@ -198,7 +207,7 @@ if __name__ == '__main__':
 
     procs = []
     for client in clients:
-        p = multiprocessing.Process(target=client.run,
+        p = Process(target=client.run,
                                     args=(hub.write_q_by_cl_id[client.id],
                                           hub.read_q_by_cl_id[client.id]))
         procs.append(p)
