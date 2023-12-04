@@ -156,11 +156,11 @@ class Hub:
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
 
-    def get_select_list(self, ft):
+    def get_select_list(self, ft, client_ids):
         if ft.args.select_ratio == 1.0:
-            select_list = [idx for idx in range(len(ft.client_nodes))]
+            select_list = client_ids
         else:
-            select_list = generate_selectlist(ft.client_nodes, ft.args.select_ratio)
+            select_list = generate_selectlist(client_ids, ft.args.select_ratio)
         return select_list
 
 
