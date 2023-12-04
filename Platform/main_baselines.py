@@ -204,7 +204,8 @@ if __name__ == '__main__':
         next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
-            Server_update(ft.args, ft.central_node.model, client_models,
+            Server_update(ft.args, ft.central_node.model,
+                          client_models,
                           hub.get_select_list(ft, [c.id for c in clients]),
                           # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
