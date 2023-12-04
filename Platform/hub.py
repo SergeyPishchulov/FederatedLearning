@@ -1,9 +1,9 @@
 from typing import List
 
+from federated_ml_task import FederatedMLTask
 from utils import generate_selectlist
 from training_journal import TrainingJournal
 from statistics import Statistics
-from main_baselines import FederatedMLTask
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
 
