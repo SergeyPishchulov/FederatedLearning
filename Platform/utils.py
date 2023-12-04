@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -6,6 +5,8 @@ import random
 from torch.backends import cudnn
 from torch.optim import Optimizer
 from models_dict import densenet, resnet, cnn
+from itertools import zip_longest
+
 
 ##############################################################################
 # Tools
@@ -42,6 +43,7 @@ def model_parameter_vector(args, model):
         param = [p.view(-1) for p in model.parameters()]
         vector = torch.cat(param, dim=0)
     return vector
+
 
 ##############################################################################
 # Initialization function
@@ -80,7 +82,7 @@ def init_model(model_type, args):
         elif model_type == 'MLP':
             model = cnn.MLP_fedlaw()
         elif model_type == 'LeNet5':
-            model = cnn.LeNet5_fedlaw() 
+            model = cnn.LeNet5_fedlaw()
     else:
         if model_type == 'CNN':
             if args.dataset == 'cifar10':
@@ -108,9 +110,10 @@ def init_model(model_type, args):
         elif model_type == 'MLP':
             model = cnn.MLP()
         elif model_type == 'LeNet5':
-            model = cnn.LeNet5() 
+            model = cnn.LeNet5()
 
     return model
+
 
 def init_optimizer(num_id, model, args):
     optimizer = []
@@ -118,10 +121,12 @@ def init_optimizer(num_id, model, args):
         optimizer = PerturbedGradientDescent(model.parameters(), lr=args.lr, mu=args.mu)
     else:
         if args.optimizer == 'sgd':
-            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.local_wd_rate)
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum,
+                                        weight_decay=args.local_wd_rate)
         elif args.optimizer == 'adam':
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.local_wd_rate)
     return optimizer
+
 
 def setup_seed(seed):
     torch.manual_seed(seed)
@@ -131,24 +136,27 @@ def setup_seed(seed):
     random.seed(seed)
     cudnn.deterministic = True
 
+
 ##############################################################################
 # Training function
 ##############################################################################
 
-def generate_selectlist(client_nodes, ratio = 0.5):
+def generate_selectlist(client_nodes, ratio=0.5):
     candidate_list = [i for i in range(len(client_nodes))]
     select_num = int(ratio * len(client_nodes))
-    select_list = np.random.choice(candidate_list, select_num, replace = False).tolist()
+    select_list = np.random.choice(candidate_list, select_num, replace=False).tolist()
     return select_list
+
 
 def lr_scheduler(rounds, node_list, args):
     # learning rate scheduler for decaying
     if rounds != 0:
-        args.lr *= 0.99 #0.99
+        args.lr *= 0.99  # 0.99
         for i in range(len(node_list)):
             node_list[i].args.lr = args.lr
             node_list[i].optimizer.param_groups[0]['lr'] = args.lr
     # print('Learning rate={:.4f}'.format(args.lr))
+
 
 class PerturbedGradientDescent(Optimizer):
     def __init__(self, params, lr=0.01, mu=0.0):
@@ -167,12 +175,13 @@ class PerturbedGradientDescent(Optimizer):
                 d_p = p.grad.data + group['mu'] * (p.data - g.data)
                 p.data.add_(d_p, alpha=-group['lr'])
 
+
 ##############################################################################
 # Validation function
 ##############################################################################
 
-def validate(args, node, which_dataset = 'validate'):
-    node.model.cuda().eval() 
+def validate(args, node, which_dataset='validate'):
+    node.model.cuda().eval()
     if which_dataset == 'validate':
         test_loader = node.validate_set
     elif which_dataset == 'local':
@@ -190,8 +199,9 @@ def validate(args, node, which_dataset = 'validate'):
         acc = correct / len(test_loader.dataset) * 100
     return acc
 
-def testloss(args, node, which_dataset = 'validate'):
-    node.model.cuda().eval()  
+
+def testloss(args, node, which_dataset='validate'):
+    node.model.cuda().eval()
     if which_dataset == 'validate':
         test_loader = node.validate_set
     elif which_dataset == 'local':
@@ -204,13 +214,14 @@ def testloss(args, node, which_dataset = 'validate'):
         for idx, (data, target) in enumerate(test_loader):
             data, target = data.cuda(), target.cuda()
             output = node.model(data)
-            loss_local =  F.cross_entropy(output, target, reduction='mean')
+            loss_local = F.cross_entropy(output, target, reduction='mean')
             loss.append(loss_local.item())
-    loss_value = sum(loss)/len(loss)
+    loss_value = sum(loss) / len(loss)
     return loss_value
 
+
 # Functions for FedLAW with param as an input
-def validate_with_param(args, node, param, which_dataset = 'validate'):
+def validate_with_param(args, node, param, which_dataset='validate'):
     node.model.cuda().eval()
     if which_dataset == 'validate':
         test_loader = node.validate_set
@@ -229,8 +240,9 @@ def validate_with_param(args, node, param, which_dataset = 'validate'):
         acc = correct / len(test_loader.dataset) * 100
     return acc
 
-def testloss_with_param(args, node, param, which_dataset = 'validate'):
-    node.model.cuda().eval()  
+
+def testloss_with_param(args, node, param, which_dataset='validate'):
+    node.model.cuda().eval()
     if which_dataset == 'validate':
         test_loader = node.validate_set
     elif which_dataset == 'local':
@@ -243,7 +255,11 @@ def testloss_with_param(args, node, param, which_dataset = 'validate'):
         for idx, (data, target) in enumerate(test_loader):
             data, target = data.cuda(), target.cuda()
             output = node.model.forward_with_param(data, param)
-            loss_local =  F.cross_entropy(output, target, reduction='mean')
+            loss_local = F.cross_entropy(output, target, reduction='mean')
             loss.append(loss_local.item())
-    loss_value = sum(loss)/len(loss)
+    loss_value = sum(loss) / len(loss)
     return loss_value
+
+
+def combine_lists(l):
+    return [j for i in zip_longest(*l) for j in i if j]

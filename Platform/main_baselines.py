@@ -13,12 +13,6 @@ from client_funct import *
 import os
 from copy import deepcopy
 
-from itertools import zip_longest
-
-
-def combine_lists(l):
-    return [j for i in zip_longest(*l) for j in i if j]
-
 
 class FederatedMLTask:
     def __init__(self, id, args):
@@ -132,13 +126,11 @@ class TrainingJournal:
 
     def mark_as_aggregated(self, ft_id):
         self.latest_aggregated_round[ft_id] += 1
-        # return self.latest_aggregated_round[ft_id]
         # TODO bug if we skip some rounds
 
     def save_local(self, ft_id, client_id, round_num, model):
         if (ft_id, client_id, round_num) not in self.d:
             self.d[(ft_id, client_id, round_num)] = model
-            # print(f'Saved local. d keys: {self.d.keys()}')
         else:
             raise KeyError("Key already exists")
 
@@ -215,37 +207,3 @@ if __name__ == '__main__':
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         # TODO delete client_nodes from ft.
-
-# for ft in plan:
-#     client_losses = []
-#     client_acc = []
-#     for c in clients:
-#         mes_to_client = MessageToClient(1, ft.id, ft.central_node.model)  # TODO specify round
-#         response = c.perform_one_round(mes_to_client, hub)
-#         client_losses.append(response.loss)
-#         client_acc.append(response.acc)
-#         hub.stat.save_client_ac(c.id, ft.id, response.round - 1, response.acc)
-#     if all([c.node_by_ft_id[ft.id].rounds_performed == ft.args.T  # TODO smarter
-#             for c in clients]):
-#         ft.done = True
-#     train_loss = sum(client_losses) / len(client_losses)
-#     avg_client_acc = sum(client_acc) / len(client_acc)
-#     print(f"============= {ft.name} ============= ")
-#     print(ft.args.server_method + ft.args.client_method + ', averaged clients personalization acc is ',
-#           avg_client_acc)
-#
-#     # Partial select function
-#     if ft.args.select_ratio == 1.0:
-#         select_list = [idx for idx in range(len(ft.client_nodes))]
-#     else:
-#         select_list = generate_selectlist(ft.client_nodes, ft.args.select_ratio)
-#
-#     Server_update(ft.args, ft.central_node.model, [n.model for n in ft.client_nodes], select_list, ft.size_weights)
-#     acc = validate(ft.args, ft.central_node, which_dataset='local')
-#     hub.stat.save_agr_ac(ft.id,
-#                          round=response.round - 1,  # TODO too bad. make AGS know what round it is
-#                          acc=acc)
-#     print(ft.args.server_method + ft.args.client_method + ', global model test acc is ', acc)
-#     test_acc_recorder.append(acc)
-
-# print(ft.args.server_method + ft.args.client_method + ', final_testacc is ', final_test_acc_recorder.value())

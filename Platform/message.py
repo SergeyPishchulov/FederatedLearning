@@ -15,6 +15,6 @@ class MessageToHub:
 
 @dataclass
 class MessageToClient:
-    round: int
+    round_num: int
     ft_id: int
     agr_model: torch.nn.Module
