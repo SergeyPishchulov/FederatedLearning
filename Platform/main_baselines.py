@@ -33,7 +33,7 @@ class FederatedMLTask:
 
 
 class Client:
-    def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round):
+    def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args):
         self.id = id  # TODO set pipe
         self.plan = self._get_plan()
         # self.hub = hub#temporary. instead of pipe
@@ -41,6 +41,7 @@ class Client:
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
         self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
+        self.user_args = user_args
 
     def _get_plan(self):
         return combine_lists([
@@ -85,7 +86,13 @@ class Client:
         else:
             raise NotImplemented('Still only local_train =(')
 
+    def setup(self):
+        setup_seed(self.user_args.random_seed)
+        os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
+        torch.cuda.set_device('cuda:' + self.user_args.device)
+
     def run(self, read_q, write_q):
+        self.setup()
         while self.plan:
             r, ft_id = self.plan[0]
             while not read_q.empty():
@@ -183,7 +190,8 @@ if __name__ == '__main__':
                                               Node(client_id, ft.data.train_loader[client_id],
                                                    ft.data.train_set, ft.args, ft.node_cnt) for ft in tasks},
                               args_by_ft_id={ft.id: ft.args for ft in tasks},
-                              agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks}))
+                              agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks},
+                              user_args=user_args))
     hub = Hub(tasks, clients, user_args)
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
