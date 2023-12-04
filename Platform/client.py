@@ -14,13 +14,14 @@ from client_funct import *
 class Client:
     def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args):
         self.id = id  # TODO set pipe
-        self.plan = self._get_plan()
         # self.hub = hub#temporary. instead of pipe
         # self.args = args
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
         self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
         self.user_args = user_args
+        self.plan = self._get_plan()
+
 
     def _get_plan(self):
         rounds = self.user_args.T
