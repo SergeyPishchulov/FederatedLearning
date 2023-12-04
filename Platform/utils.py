@@ -141,9 +141,9 @@ def setup_seed(seed):
 # Training function
 ##############################################################################
 
-def generate_selectlist(client_ids, ratio=0.5):
-    candidate_list = client_ids
-    select_num = int(ratio * len(client_ids))
+def generate_selectlist(client_nodes, ratio=0.5):
+    candidate_list = [i for i in range(len(client_nodes))]
+    select_num = int(ratio * len(client_nodes))
     select_list = np.random.choice(candidate_list, select_num, replace=False).tolist()
     return select_list
 

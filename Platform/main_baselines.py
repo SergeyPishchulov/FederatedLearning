@@ -140,10 +140,9 @@ class TrainingJournal:
             # print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
             if all((ft_id, cl_id, latest_round + 1) in self.d
                    for cl_id in client_ids):
-                models = [self.d[(ft_id, cl_id, latest_round + 1)] for cl_id in client_ids]
-                return ft_id, latest_round + 1, models
+                return ft_id, latest_round + 1
         raise ValueError(f"No task to aggregate. d keys: {self.d.keys()}")
-        return None, None, None
+        return None, None
 
 
 class Hub:
@@ -156,19 +155,12 @@ class Hub:
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
 
-    def get_select_list(self, ft, client_ids):
+    def get_select_list(self, ft, nodes_by_ft_id):
         if ft.args.select_ratio == 1.0:
-            select_list = client_ids
+            select_list = [idx for idx in range(len(nodes_by_ft_id[ft.id]))]
         else:
-            select_list = generate_selectlist(client_ids, ft.args.select_ratio)
+            select_list = generate_selectlist(nodes_by_ft_id[ft.id], ft.args.select_ratio)
         return select_list
-
-
-def get_nodes_for_client(tasks, client_id):
-    return {ft.id:
-                Node(client_id, ft.data.train_loader[client_id],
-                     ft.data.train_set, ft.args, ft.node_cnt)
-            for ft in tasks}
 
 
 if __name__ == '__main__':
@@ -182,12 +174,13 @@ if __name__ == '__main__':
 
     ROUNDS = 10
     clients = []
-    # self.client_nodes = [Node(i, self.data.train_loader[i],
-    #                           self.data.train_set, self.args, self.node_cnt)
-    #                      for i in range(self.node_cnt)]
 
+    nodes_by_ft_id = {ft.id: [Node(i, ft.data.train_loader[i],
+                                   ft.data.train_set, ft.args, ft.node_cnt)
+                              for i in range(ft.node_cnt)]
+                      for ft in tasks}
     for client_id in range(user_args.node_num):
-        clients.append(Client(client_id, get_nodes_for_client(tasks, client_id),
+        clients.append(Client(client_id, {ft.id: nodes_by_ft_id[ft.id][client_id] for ft in tasks},
                               args_by_ft_id={ft.id: ft.args for ft in tasks},
                               agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks}))
     hub = Hub(tasks, clients, user_args)
@@ -201,13 +194,11 @@ if __name__ == '__main__':
             hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
             hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
 
-        next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        next_ft_id, ag_round = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
-            Server_update(ft.args, ft.central_node.model,
-                          client_models,
-                          hub.get_select_list(ft, [c.id for c in clients]),
-                          # TODO note that local models are took from nodes, not from journal
+            Server_update(ft.args, ft.central_node.model, [n.model for n in nodes_by_ft_id[ft.id]],
+                          hub.get_select_list(ft,nodes_by_ft_id),  # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
             for c in clients:  # TODO make through pipe
@@ -218,3 +209,4 @@ if __name__ == '__main__':
                                  acc=acc)
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
+        # TODO delete client_nodes from ft.
