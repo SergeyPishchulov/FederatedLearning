@@ -118,7 +118,9 @@ class Client:
                 acc = validate(ft_args, node)
                 node.rounds_performed += 1  # TODO not to mess with r
                 response = MessageToHub(node.rounds_performed - 1, ft_id,
-                                        acc, mean_loss, node.model, self.id)
+                                        acc, mean_loss,
+                                        copy.deepcopy(node.model.detach().clone()),
+                                        self.id)
                 write_q.put(response)
                 self.plan.pop(0)
             else:
@@ -194,6 +196,7 @@ if __name__ == '__main__':
 
     ROUNDS = 10
     clients = []
+    print(f'node num is {user_args.node_num}')
     for client_id in range(user_args.node_num):
         clients.append(Client(client_id, {ft.id:
                                               Node(client_id, ft.data.train_loader[client_id],
@@ -208,8 +211,8 @@ if __name__ == '__main__':
     procs = []
     for client in clients:
         p = Process(target=client.run,
-                                    args=(hub.write_q_by_cl_id[client.id],
-                                          hub.read_q_by_cl_id[client.id]))
+                    args=(hub.write_q_by_cl_id[client.id],
+                          hub.read_q_by_cl_id[client.id]))
         procs.append(p)
         p.start()
 
@@ -239,7 +242,9 @@ if __name__ == '__main__':
                                  acc=acc)
             for c in clients:
                 q = hub.write_q_by_cl_id[c.id].put(
-                    MessageToClient(ag_round, ft.id, ft.central_node.model))
+                    MessageToClient(ag_round, ft.id,
+                                    copy.deepcopy(ft.central_node.model.detach().clone()
+                                                  )))
 
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
