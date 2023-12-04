@@ -49,3 +49,4 @@ class Statistics:
             axes[ft_id].legend()
         # plt.show()
         fig.savefig(f'{self.pngs_directory}/ac.png')
+        plt.close()

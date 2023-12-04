@@ -111,9 +111,10 @@ class Client:
                 self.plan.pop(0)
                 print(f'Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
             else:
-                print(
-                    f" Client {self.id}: Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
-                time.sleep(1)
+                pass
+                # print(
+                #     f" Client {self.id}: Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
+                # time.sleep(1)
             time.sleep(0.5)
         print(f'Client {self.id} is DONE')
 
