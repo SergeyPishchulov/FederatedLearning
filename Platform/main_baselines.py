@@ -190,30 +190,30 @@ if __name__ == '__main__':
         clients.append(Client(client_id, get_nodes_for_client(tasks, client_id),
                               args_by_ft_id={ft.id: ft.args for ft in tasks},
                               agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks}))
-        hub = Hub(tasks, clients, user_args)
-        final_test_acc_recorder = RunningAverage()
-        test_acc_recorder = []
+    hub = Hub(tasks, clients, user_args)
+    final_test_acc_recorder = RunningAverage()
+    test_acc_recorder = []
 
-        gens = [c.run() for c in clients]
-        for responses in zip(*gens):
-            r: MessageToHub
-            for r in responses:
-                hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
-                hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+    gens = [c.run() for c in clients]
+    for responses in zip(*gens):
+        r: MessageToHub
+        for r in responses:
+            hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
+            hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
 
-            next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
-            if next_ft_id is not None:
-                ft = tasks[next_ft_id]
-                Server_update(ft.args, ft.central_node.model, client_models,
-                              hub.get_select_list(ft, [c.id for c in clients]),
-                              # TODO note that local models are took from nodes, not from journal
-                              ft.size_weights)
-                hub.journal.mark_as_aggregated(ft.id)
-                for c in clients:  # TODO make through pipe
-                    c.agr_model_by_ft_id_round[(ft.id, ag_round)] = ft.central_node.model
-                acc = validate(ft.args, ft.central_node, which_dataset='local')
-                hub.stat.save_agr_ac(ft.id,
-                                     round=ag_round,
-                                     acc=acc)
-            hub.stat.to_csv()
-            hub.stat.plot_accuracy()
+        next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        if next_ft_id is not None:
+            ft = tasks[next_ft_id]
+            Server_update(ft.args, ft.central_node.model, client_models,
+                          hub.get_select_list(ft, [c.id for c in clients]),
+                          # TODO note that local models are took from nodes, not from journal
+                          ft.size_weights)
+            hub.journal.mark_as_aggregated(ft.id)
+            for c in clients:  # TODO make through pipe
+                c.agr_model_by_ft_id_round[(ft.id, ag_round)] = ft.central_node.model
+            acc = validate(ft.args, ft.central_node, which_dataset='local')
+            hub.stat.save_agr_ac(ft.id,
+                                 round=ag_round,
+                                 acc=acc)
+        hub.stat.to_csv()
+        hub.stat.plot_accuracy()
