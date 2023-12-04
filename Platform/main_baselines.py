@@ -94,7 +94,7 @@ class Client:
                     raise NotImplemented('Still only local_train =(')
                 acc = validate(ft_args, node)
                 node.rounds_performed += 1  # TODO not to mess with r
-                response = MessageToHub(node.rounds_performed-1, ft_id,
+                response = MessageToHub(node.rounds_performed - 1, ft_id,
                                         acc, mean_loss, node.model, self.id)
                 yield response
             else:
@@ -138,13 +138,13 @@ class TrainingJournal:
     def save_local(self, ft_id, client_id, round_num, model):
         if (ft_id, client_id, round_num) not in self.d:
             self.d[(ft_id, client_id, round_num)] = model
-            #print(f'Saved local. d keys: {self.d.keys()}')
+            # print(f'Saved local. d keys: {self.d.keys()}')
         else:
             raise KeyError("Key already exists")
 
     def get_ft_to_aggregate(self, client_ids):
         for ft_id, latest_round in self.latest_aggregated_round.items():
-            #print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
+            # print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
             if all((ft_id, cl_id, latest_round + 1) in self.d
                    for cl_id in client_ids):
                 return ft_id, latest_round + 1
@@ -162,6 +162,13 @@ class Hub:
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
 
+    def get_select_list(self, ft):
+        if ft.args.select_ratio == 1.0:
+            select_list = [idx for idx in range(len(ft.client_nodes))]
+        else:
+            select_list = generate_selectlist(ft.client_nodes, ft.args.select_ratio)
+        return select_list
+
 
 if __name__ == '__main__':
     user_args = args_parser()
@@ -170,15 +177,12 @@ if __name__ == '__main__':
     torch.cuda.set_device('cuda:' + user_args.device)
 
     fedeareted_tasks_configs = get_configs(user_args)
-    # conf = fedeareted_tasks_configs[0]
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
 
     ROUNDS = 10
     plan = combine_lists([
         [(round, task.id) for round in range(ROUNDS)] for task in tasks
     ])
-    #print(f"Plan is {plan}")
-
     clients = []
     for client_id in range(user_args.node_num):
         clients.append(Client(client_id, {ft.id: ft.client_nodes[client_id] for ft in tasks},
@@ -188,26 +192,20 @@ if __name__ == '__main__':
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
-    # while not all(ft.done for ft in tasks):
     gens = [c.run() for c in clients]
     for responses in zip(*gens):
+        r: MessageToHub
         for r in responses:
-            r: MessageToHub
             hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
             hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
 
         next_ft_id, ag_round = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
-            if ft.args.select_ratio == 1.0:
-                select_list = [idx for idx in range(len(ft.client_nodes))]
-            else:
-                select_list = generate_selectlist(ft.client_nodes, ft.args.select_ratio)
             Server_update(ft.args, ft.central_node.model, [n.model for n in ft.client_nodes],
-                          select_list,  # TODO note that local models are took from nodes, not from journal
+                          hub.get_select_list(ft),  # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
-            #print(f'latest_aggregated_round by task id is {hub.journal.latest_aggregated_round}')
             for c in clients:  # TODO make through pipe
                 c.agr_model_by_ft_id_round[(ft.id, ag_round)] = ft.central_node.model
             acc = validate(ft.args, ft.central_node, which_dataset='local')
@@ -216,7 +214,7 @@ if __name__ == '__main__':
                                  acc=acc)
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
-        #TODO delete client_nodes from ft.
+        # TODO delete client_nodes from ft.
 
 # for ft in plan:
 #     client_losses = []
