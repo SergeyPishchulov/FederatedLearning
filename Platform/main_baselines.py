@@ -28,10 +28,6 @@ class FederatedMLTask:
             sample_size.append(len(self.data.train_loader[i]))
         self.size_weights = [x / sum(sample_size) for x in sample_size]
         self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
-        # self.client_nodes = [Node(i, self.data.train_loader[i],
-        #                           self.data.train_set, self.args, self.node_cnt)
-        #                      for i in range(self.node_cnt)]
-        #
 
 
 class Client:
@@ -68,26 +64,33 @@ class Client:
 
         return loss / len(train_loader)
 
+    def _set_aggregated_model(self, ft_args, node, agr_model):
+        if 'fedlaw' in ft_args.server_method:
+            node.model.load_param(copy.deepcopy(
+                agr_model.get_param(clone=True)))
+        else:
+            node.model.load_state_dict(copy.deepcopy(
+                agr_model.state_dict()))
+
+    def _train_one_round(self, ft_args, node):
+        epoch_losses = []
+        if ft_args.client_method == 'local_train':
+            for epoch in range(ft_args.E):
+                loss = self.client_localTrain(ft_args, node)  # TODO check if not working
+                epoch_losses.append(loss)
+            mean_loss = sum(epoch_losses) / len(epoch_losses)
+            return mean_loss
+        else:
+            raise NotImplemented('Still only local_train =(')
+
     def run(self):
         for r, ft_id in self.plan:
             if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
-                if 'fedlaw' in ft_args.server_method:
-                    node.model.load_param(copy.deepcopy(
-                        agr_model.get_param(clone=True)))
-                else:
-                    node.model.load_state_dict(copy.deepcopy(
-                        agr_model.state_dict()))
-                epoch_losses = []
-                if ft_args.client_method == 'local_train':
-                    for epoch in range(ft_args.E):
-                        loss = self.client_localTrain(ft_args, node)  # TODO check if not working
-                        epoch_losses.append(loss)
-                    mean_loss = sum(epoch_losses) / len(epoch_losses)
-                else:
-                    raise NotImplemented('Still only local_train =(')
+                self._set_aggregated_model(ft_args, node, agr_model)
+                mean_loss = self._train_one_round(ft_args, node)
                 acc = validate(ft_args, node)
                 node.rounds_performed += 1  # TODO not to mess with r
                 response = MessageToHub(node.rounds_performed - 1, ft_id,
@@ -96,30 +99,6 @@ class Client:
             else:
                 raise ValueError(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
 
-
-# def perform_one_round(self, mes: MessageToClient, hub):
-#     ft_args = self.args_by_ft_id[mes.ft_id]
-#     node = self.node_by_ft_id[mes.ft_id]  # TODO delete hub when set pipe in __init__
-#     # central_node = #hub.receive_server_model(mes.ft_id)
-#     if 'fedlaw' in ft_args.server_method:
-#         node.model.load_param(copy.deepcopy(
-#             mes.agr_model.get_param(clone=True)))
-#     else:
-#         node.model.load_state_dict(copy.deepcopy(
-#             mes.agr_model.state_dict()))
-#     epoch_losses = []
-#     if ft_args.client_method == 'local_train':
-#         for epoch in range(ft_args.E):
-#             loss = self.client_localTrain(ft_args, node)  # TODO check if not working
-#             epoch_losses.append(loss)
-#         mean_loss = sum(epoch_losses) / len(epoch_losses)
-#     else:
-#         raise NotImplemented('Still only local_train =(')
-#     acc = validate(ft_args, node)
-#     node.rounds_performed += 1
-#     response = MessageToHub(node.rounds_performed, mes.ft_id,
-#                             acc, mean_loss, node.model)
-#     return response
 
 class TrainingJournal:
     def __init__(self, task_ids):
@@ -144,7 +123,7 @@ class TrainingJournal:
                 models = [self.d[(ft_id, cl_id, latest_round + 1)] for cl_id in client_ids]
                 return ft_id, latest_round + 1, models
         raise ValueError(f"No task to aggregate. d keys: {self.d.keys()}")
-        return None, None
+        return None, None, None
 
 
 class Hub:
@@ -198,7 +177,6 @@ if __name__ == '__main__':
             ft = tasks[next_ft_id]
             Server_update(ft.args, ft.central_node.model, client_models,
                           hub.get_select_list(ft, [c.id for c in clients]),
-                          # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
             for c in clients:  # TODO make through pipe
@@ -209,4 +187,3 @@ if __name__ == '__main__':
                                  acc=acc)
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
-        # TODO delete client_nodes from ft.
