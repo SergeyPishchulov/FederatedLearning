@@ -3,6 +3,8 @@ import traceback
 
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
+from hub import Hub
+
 try:
     set_start_method('spawn')
 except RuntimeError:
@@ -131,62 +133,6 @@ class Client:
                 print(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
             time.sleep(0.5)
         print(f'Client {self.id} is DONE')
-
-
-class TrainingJournal:
-    def __init__(self, task_ids):
-        self.d = {}  # key is (ft_id, client_id, round); value is model
-        self.latest_aggregated_round = {i: -1 for i in task_ids}
-
-    def mark_as_aggregated(self, ft_id):
-        self.latest_aggregated_round[ft_id] += 1
-        # TODO bug if we skip some rounds
-
-    def save_local(self, ft_id, client_id, round_num, model):
-        if (ft_id, client_id, round_num) not in self.d:
-            self.d[(ft_id, client_id, round_num)] = model
-        else:
-            raise KeyError("Key already exists")
-
-    def get_ft_to_aggregate(self, client_ids):
-        for ft_id, latest_round in self.latest_aggregated_round.items():
-            # print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
-            if all((ft_id, cl_id, latest_round + 1) in self.d
-                   for cl_id in client_ids):
-                models = [self.d[(ft_id, cl_id, latest_round + 1)] for cl_id in client_ids]
-                return ft_id, latest_round + 1, models
-        raise ValueError(f"No task to aggregate. d keys: {self.d.keys()}")
-        return None, None, None
-
-
-class Hub:
-    def __init__(self, tasks: List[FederatedMLTask], clients, args):
-        self.tasks = tasks
-        self.clients = clients
-        self.stat = Statistics(tasks, clients, args)
-        self.journal = TrainingJournal([ft.id for ft in tasks])
-        self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
-
-    def receive_server_model(self, ft_id):
-        return self.tasks[ft_id].central_node
-
-    def get_select_list(self, ft, client_ids):
-        if ft.args.select_ratio == 1.0:
-            select_list = client_ids
-        else:
-            select_list = generate_selectlist(client_ids, ft.args.select_ratio)
-        return select_list
-
-    def init_qs(self):
-        write_q_by_cl_id = {
-            cl.id: Queue()
-            for cl in clients
-        }
-        read_q_by_cl_id = {
-            cl.id: Queue()
-            for cl in clients
-        }
-        return write_q_by_cl_id, read_q_by_cl_id
 
 
 if __name__ == '__main__':
