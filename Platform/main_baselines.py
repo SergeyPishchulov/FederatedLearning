@@ -141,7 +141,8 @@ class TrainingJournal:
             # print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
             if all((ft_id, cl_id, latest_round + 1) in self.d
                    for cl_id in client_ids):
-                return ft_id, latest_round + 1
+                models = [self.d[(ft_id, cl_id, latest_round + 1)] for cl_id in client_ids]
+                return ft_id, latest_round + 1, models
         raise ValueError(f"No task to aggregate. d keys: {self.d.keys()}")
         return None, None
 
@@ -172,15 +173,13 @@ if __name__ == '__main__':
 
     fedeareted_tasks_configs = get_configs(user_args)
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
-    client_nodes_by_ft_id = {ft.id: [Node(i, ft.data.train_loader[i],
-                                          ft.data.train_set, ft.args, ft.node_cnt)
-                                     for i in range(ft.node_cnt)]
-                             for ft in tasks}
 
     ROUNDS = 10
     clients = []
     for client_id in range(user_args.node_num):
-        clients.append(Client(client_id, {ft.id: client_nodes_by_ft_id[ft.id][client_id] for ft in tasks},
+        clients.append(Client(client_id, {ft.id:
+                                              Node(client_id, ft.data.train_loader[client_id],
+                                                   ft.data.train_set, ft.args, ft.node_cnt) for ft in tasks},
                               args_by_ft_id={ft.id: ft.args for ft in tasks},
                               agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks}))
     hub = Hub(tasks, clients, user_args)
@@ -194,10 +193,10 @@ if __name__ == '__main__':
             hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
             hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
 
-        next_ft_id, ag_round = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
-            Server_update(ft.args, ft.central_node.model, [n.model for n in client_nodes_by_ft_id[ft.id]],
+            Server_update(ft.args, ft.central_node.model, client_models,
                           hub.get_select_list(ft, [c.id for c in clients]),
                           # TODO note that local models are took from nodes, not from journal
                           ft.size_weights)
