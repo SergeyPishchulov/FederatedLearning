@@ -1,6 +1,8 @@
 # import multiprocessing
 import traceback
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
+
+from federated_ml_task import FederatedMLTask
 from hub import Hub
 try:
     set_start_method('spawn')
