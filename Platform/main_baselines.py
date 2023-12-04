@@ -1,4 +1,5 @@
 # import multiprocessing
+import traceback
 
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
@@ -119,9 +120,12 @@ class Client:
                 node.rounds_performed += 1  # TODO not to mess with r
                 response = MessageToHub(node.rounds_performed - 1, ft_id,
                                         acc, mean_loss,
-                                        copy.deepcopy(node.model.clone()),
+                                        copy.deepcopy(node.model),
                                         self.id)
-                write_q.put(response)
+                try:
+                    write_q.put(response)
+                except Exception:
+                    print(traceback.format_exc())
                 self.plan.pop(0)
             else:
                 print(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
@@ -241,9 +245,17 @@ if __name__ == '__main__':
                                  round=ag_round,
                                  acc=acc)
             for c in clients:
-                q = hub.write_q_by_cl_id[c.id].put(
+                try:
+                    hub.write_q_by_cl_id[c.id].put(
+                        MessageToClient(ag_round, ft.id,
+                                        copy.deepcopy(ft.central_node.model
+                                                      )))
+                except Exception:
+                    print(traceback.format_exc())
+
+                hub.write_q_by_cl_id[c.id].put(
                     MessageToClient(ag_round, ft.id,
-                                    copy.deepcopy(ft.central_node.model.clone()
+                                    copy.deepcopy(ft.central_node.model
                                                   )))
 
         hub.stat.to_csv()
