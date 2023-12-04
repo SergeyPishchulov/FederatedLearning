@@ -1,3 +1,5 @@
+import multiprocessing
+import time
 from typing import List, Optional
 
 import torch.nn
@@ -83,8 +85,14 @@ class Client:
         else:
             raise NotImplemented('Still only local_train =(')
 
-    def run(self):
-        for r, ft_id in self.plan:
+    def run(self, read_q, write_q):
+        while self.plan:
+            r, ft_id = self.plan[0]
+            while not read_q.empty():
+                mes: MessageToClient = read_q.get()
+                print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
+                self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = mes.agr_model
+
             if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
@@ -95,9 +103,12 @@ class Client:
                 node.rounds_performed += 1  # TODO not to mess with r
                 response = MessageToHub(node.rounds_performed - 1, ft_id,
                                         acc, mean_loss, node.model, self.id)
-                yield response
+                write_q.put(response)
+                self.plan.pop(0)
             else:
-                raise ValueError(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
+                print(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
+            time.sleep(0.5)
+        print(f'Client {self.id} is DONE')
 
 
 class TrainingJournal:
@@ -132,6 +143,7 @@ class Hub:
         self.clients = clients
         self.stat = Statistics(tasks, clients, args)
         self.journal = TrainingJournal([ft.id for ft in tasks])
+        self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs
 
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
@@ -142,6 +154,17 @@ class Hub:
         else:
             select_list = generate_selectlist(client_ids, ft.args.select_ratio)
         return select_list
+
+    def init_qs(self):
+        write_q_by_cl_id = {
+            cl.id: multiprocessing.Queue()
+            for cl in clients
+        }
+        read_q_by_cl_id = {
+            cl.id: multiprocessing.Queue()
+            for cl in clients
+        }
+        return write_q_by_cl_id, read_q_by_cl_id
 
 
 if __name__ == '__main__':
@@ -165,12 +188,22 @@ if __name__ == '__main__':
     final_test_acc_recorder = RunningAverage()
     test_acc_recorder = []
 
-    gens = [c.run() for c in clients]
-    for responses in zip(*gens):
-        r: MessageToHub
-        for r in responses:
-            hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
-            hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+    procs = []
+    for client in clients:
+        p = multiprocessing.Process(target=client.run,
+                                    args=(hub.write_q_by_cl_id[client.id],
+                                          hub.read_q_by_cl_id[client.id]))
+        procs.append(p)
+        p.start()
+
+    # gens = [c.run() for c in clients]
+    while not all(ft.done for ft in tasks):
+        for cl_id, q in hub.read_q_by_cl_id.items():
+            while not q.empty():
+                r: MessageToHub = q.get()
+                print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done')
+                hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
+                hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
 
         next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
@@ -179,11 +212,21 @@ if __name__ == '__main__':
                           hub.get_select_list(ft, [c.id for c in clients]),
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
-            for c in clients:  # TODO make through pipe
-                c.agr_model_by_ft_id_round[(ft.id, ag_round)] = ft.central_node.model
+            if ag_round == user_args.T:
+                tasks[ft.id].done = True
+                print(f'Task {ft.id} is done')
+
             acc = validate(ft.args, ft.central_node, which_dataset='local')
             hub.stat.save_agr_ac(ft.id,
                                  round=ag_round,
                                  acc=acc)
+            for c in clients:
+                q = hub.write_q_by_cl_id[c.id].put(
+                    MessageToClient(ag_round, ft.id, ft.central_node.model))
+
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
+        time.sleep(0.5)
+
+    for proc in procs:
+        proc.join()
