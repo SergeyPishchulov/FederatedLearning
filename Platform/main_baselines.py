@@ -4,6 +4,7 @@ from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
 from federated_ml_task import FederatedMLTask
 from hub import Hub
+
 try:
     set_start_method('spawn')
 except RuntimeError:
@@ -21,9 +22,6 @@ from server_funct import *
 from client_funct import *
 import os
 from copy import deepcopy
-
-
-
 
 
 class Client:
@@ -111,8 +109,11 @@ class Client:
                 except Exception:
                     print(traceback.format_exc())
                 self.plan.pop(0)
+                print(f'Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
             else:
-                print(f"Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
+                print(
+                    f" Client {self.id}: Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
+                time.sleep(1)
             time.sleep(0.5)
         print(f'Client {self.id} is DONE')
 
@@ -142,6 +143,7 @@ if __name__ == '__main__':
 
     procs = []
     for client in clients:
+        client: Client
         p = Process(target=client.run,
                     args=(hub.write_q_by_cl_id[client.id],
                           hub.read_q_by_cl_id[client.id]))
