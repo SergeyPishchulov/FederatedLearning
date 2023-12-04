@@ -34,14 +34,19 @@ class FederatedMLTask:
 
 
 class Client:
-    def __init__(self, id, node_by_ft_id, args_by_ft_id, plan, agr_model_by_ft_id_round):
+    def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round):
         self.id = id  # TODO set pipe
-        self.plan = plan
+        self.plan = self._get_plan()
         # self.hub = hub#temporary. instead of pipe
         # self.args = args
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
         self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
+
+    def _get_plan(self):
+        return combine_lists([
+            [(round, task.id) for round in range(ROUNDS)] for task in tasks
+        ])
 
     def client_localTrain(self, args, node, loss=0.0):
         node.model.train()
@@ -63,15 +68,11 @@ class Client:
         return loss / len(train_loader)
 
     def run(self):
-        # for i in range(10):
-        #     yield (f'client{self.id}', f'round {i}')
-
         for r, ft_id in self.plan:
             if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
-                # central_node = #hub.receive_server_model(mes.ft_id)
                 if 'fedlaw' in ft_args.server_method:
                     node.model.load_param(copy.deepcopy(
                         agr_model.get_param(clone=True)))
@@ -172,13 +173,10 @@ if __name__ == '__main__':
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
 
     ROUNDS = 10
-    plan = combine_lists([
-        [(round, task.id) for round in range(ROUNDS)] for task in tasks
-    ])
     clients = []
     for client_id in range(user_args.node_num):
         clients.append(Client(client_id, {ft.id: ft.client_nodes[client_id] for ft in tasks},
-                              args_by_ft_id={ft.id: ft.args for ft in tasks}, plan=plan,
+                              args_by_ft_id={ft.id: ft.args for ft in tasks},
                               agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks}))
     hub = Hub(tasks, clients, user_args)
     final_test_acc_recorder = RunningAverage()
