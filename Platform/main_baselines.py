@@ -55,7 +55,7 @@ if __name__ == '__main__':
             while not q.empty():
                 r: MessageToHub = q.get()
                 print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done')
-                hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model.clone())
+                hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model))
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
                 del r.model
                 del r
