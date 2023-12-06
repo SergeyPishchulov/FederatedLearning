@@ -43,17 +43,20 @@ def get_client_procs(clients, hub):
     return procs
 
 
+def handle_messages(hub):
+    for cl_id, q in hub.read_q_by_cl_id.items():
+        while not q.empty():
+            r: MessageToHub = q.get()
+            print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done')
+            hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model))
+            hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+            # del r.model
+            del r
+
+
 def run(tasks, hub, clients, user_args):
     while not all(ft.done for ft in tasks):
-        for cl_id, q in hub.read_q_by_cl_id.items():
-            while not q.empty():
-                r: MessageToHub = q.get()
-                print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done')
-                hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model))
-                hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
-                # del r.model
-                del r
-
+        handle_messages(tasks)
         next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
@@ -83,16 +86,14 @@ def run(tasks, hub, clients, user_args):
         # time.sleep(0.5)
 
 
-if __name__ == '__main__':
+def main():
     user_args = args_parser()
     setup_seed(user_args.random_seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
     torch.cuda.set_device('cuda:' + user_args.device)
 
-    fedeareted_tasks_configs = get_configs(user_args)
-    tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
-
-    ROUNDS = 10
+    federated_tasks_configs = get_configs(user_args)
+    tasks = [FederatedMLTask(id, c) for id, c in enumerate(federated_tasks_configs)]
     clients = create_clients(tasks, user_args)
     hub = Hub(tasks, clients, user_args)
     procs = get_client_procs(clients, hub)
@@ -103,3 +104,7 @@ if __name__ == '__main__':
 
     for proc in procs:
         proc.join()
+
+
+if __name__ == '__main__':
+    main()
