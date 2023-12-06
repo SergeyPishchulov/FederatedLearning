@@ -57,6 +57,7 @@ if __name__ == '__main__':
                 print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done')
                 hub.journal.save_local(r.ft_id, r.client_id, r.round_num, r.model)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+                del r
 
         next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
@@ -82,12 +83,6 @@ if __name__ == '__main__':
                                                       )))
                 except Exception:
                     print(traceback.format_exc())
-
-                hub.write_q_by_cl_id[c.id].put(
-                    MessageToClient(ag_round, ft.id,
-                                    copy.deepcopy(ft.central_node.model
-                                                  )))
-
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         time.sleep(0.5)
