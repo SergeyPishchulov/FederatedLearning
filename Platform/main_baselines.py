@@ -54,9 +54,20 @@ def handle_messages(hub):
             del r
 
 
+def send_agr_model_to_clients(clients, hub, ag_round, ft):
+    for c in clients:
+        try:
+            hub.write_q_by_cl_id[c.id].put(
+                MessageToClient(ag_round, ft.id,
+                                copy.deepcopy(ft.central_node.model
+                                              )))
+        except Exception:
+            print(traceback.format_exc())
+
+
 def run(tasks, hub, clients, user_args):
     while not all(ft.done for ft in tasks):
-        handle_messages(tasks)
+        handle_messages(hub)
         next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
@@ -73,14 +84,8 @@ def run(tasks, hub, clients, user_args):
             hub.stat.save_agr_ac(ft.id,
                                  round=ag_round,
                                  acc=acc)
-            for c in clients:
-                try:
-                    hub.write_q_by_cl_id[c.id].put(
-                        MessageToClient(ag_round, ft.id,
-                                        copy.deepcopy(ft.central_node.model
-                                                      )))
-                except Exception:
-                    print(traceback.format_exc())
+            send_agr_model_to_clients(clients, hub, ag_round, ft)
+
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         # time.sleep(0.5)
