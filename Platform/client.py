@@ -79,7 +79,7 @@ class Client:
                 mes: MessageToClient = read_q.get()
                 print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
                 self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
-                del mes.agr_model  # TODO redundant?
+                # del mes.agr_model  # TODO redundant?
                 del mes
 
             if (ft_id, r - 1) in self.agr_model_by_ft_id_round:

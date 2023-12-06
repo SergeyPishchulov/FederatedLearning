@@ -17,39 +17,33 @@ try:
 except RuntimeError:
     pass
 
-if __name__ == '__main__':
-    user_args = args_parser()
-    setup_seed(user_args.random_seed)
-    os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
-    torch.cuda.set_device('cuda:' + user_args.device)
 
-    fedeareted_tasks_configs = get_configs(user_args)
-    tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
-
-    ROUNDS = 10
+def create_clients(tasks, user_args):
     clients = []
-    print(f'node num is {user_args.node_num}')
     for client_id in range(user_args.node_num):
-        clients.append(Client(client_id, {ft.id:
-                                              Node(client_id, ft.data.train_loader[client_id],
-                                                   ft.data.train_set, ft.args, ft.node_cnt) for ft in tasks},
-                              args_by_ft_id={ft.id: ft.args for ft in tasks},
-                              agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks},
-                              user_args=user_args))
-    hub = Hub(tasks, clients, user_args)
-    final_test_acc_recorder = RunningAverage()
-    test_acc_recorder = []
+        node_by_ft_id = {ft.id:
+                             Node(client_id, ft.data.train_loader[client_id],
+                                  ft.data.train_set, ft.args, ft.node_cnt) for ft in tasks}
+        client = Client(client_id,
+                        node_by_ft_id,
+                        args_by_ft_id={ft.id: ft.args for ft in tasks},
+                        agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks},
+                        user_args=user_args)
+        clients.append(client)
+    return clients
 
+
+def get_client_procs(clients, hub):
     procs = []
     for client in clients:
-        client: Client
         p = Process(target=client.run,
                     args=(hub.write_q_by_cl_id[client.id],
                           hub.read_q_by_cl_id[client.id]))
         procs.append(p)
-        p.start()
+    return procs
 
-    # gens = [c.run() for c in clients]
+
+def run(tasks, hub, clients, user_args):
     while not all(ft.done for ft in tasks):
         for cl_id, q in hub.read_q_by_cl_id.items():
             while not q.empty():
@@ -57,7 +51,7 @@ if __name__ == '__main__':
                 print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done')
                 hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model))
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
-                del r.model
+                # del r.model
                 del r
 
         next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
@@ -87,6 +81,25 @@ if __name__ == '__main__':
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         # time.sleep(0.5)
+
+
+if __name__ == '__main__':
+    user_args = args_parser()
+    setup_seed(user_args.random_seed)
+    os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
+    torch.cuda.set_device('cuda:' + user_args.device)
+
+    fedeareted_tasks_configs = get_configs(user_args)
+    tasks = [FederatedMLTask(id, c) for id, c in enumerate(fedeareted_tasks_configs)]
+
+    ROUNDS = 10
+    clients = create_clients(tasks, user_args)
+    hub = Hub(tasks, clients, user_args)
+    procs = get_client_procs(clients, hub)
+    for p in procs:
+        p.start()
+
+    run(tasks, hub, clients, user_args)
 
     for proc in procs:
         proc.join()
