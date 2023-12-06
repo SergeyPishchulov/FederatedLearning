@@ -79,7 +79,8 @@ class Client:
             while not read_q.empty():
                 mes: MessageToClient = read_q.get()
                 print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
-                self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = mes.agr_model
+                self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = mes.agr_model.clone()
+                del mes.agr_model
                 del mes
 
             if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
@@ -105,5 +106,5 @@ class Client:
                 # print(
                 #     f" Client {self.id}: Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
                 # time.sleep(1)
-            time.sleep(0.5)
+            # time.sleep(0.5)
         print(f'Client {self.id} is DONE')
