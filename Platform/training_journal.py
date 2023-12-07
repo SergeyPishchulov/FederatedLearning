@@ -40,7 +40,7 @@ class TrainingJournal:
         ready = self._get_ft_ready_to_agr(client_ids)
         if not ready:
             return (None,) * 4
-        res = (datetime(year=3000), None, None, None)
+        res = (datetime.max, None, None, None)
         for ft_id, round in ready:
             records = [self.d[(ft_id, cl_id, round)] for cl_id in client_ids]
             models = [r.model for r in records]
