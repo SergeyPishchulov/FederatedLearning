@@ -16,6 +16,8 @@ class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):
         self.dataset = dataset
         self.idxs = list(idxs)
+        print(f'DatasetSplit. Original dataset size is {len(dataset)}.')
+
 
     def __len__(self):
         return len(self.idxs)
