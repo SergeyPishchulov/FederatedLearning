@@ -1,7 +1,7 @@
 import os
 import time
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import torch
 
@@ -82,6 +82,10 @@ class Client:
 
     def run(self, read_q, write_q):
         self.setup()
+        for ft_id, n in self.node_by_ft_id.items():
+            n: Node
+            n.deadline = datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec)
+
         while self.plan:
             r, ft_id = self.plan[0]
             self.handle_messages(read_q)
@@ -98,7 +102,7 @@ class Client:
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),
                                         self.id,
-                                        datetime.now())
+                                        node.deadline)
                 try:
                     write_q.put(response)
                 except Exception:
