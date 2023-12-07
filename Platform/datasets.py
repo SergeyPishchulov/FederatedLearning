@@ -43,6 +43,7 @@ class DatasetPartiallyAvailable(Dataset):
     def __len__(self):
         cur = datetime.now()
         parts_available = 1 + sum(ts < cur for ts in self.input_timestamps)
+        print(f"Parts available {parts_available}")
         # raise Exception(self.last_inds,  self.last_inds[parts_available - 1])
         return self.last_inds[parts_available - 1]
 

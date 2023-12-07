@@ -98,7 +98,7 @@ class Client:
             if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
-                node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
+                node = self.node_by_ft_id[ft_id]
                 self._set_aggregated_model(ft_args, node, agr_model)
                 mean_loss = self._train_one_round(ft_args, node)
                 acc = validate(ft_args, node)
