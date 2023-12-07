@@ -42,11 +42,14 @@ class DatasetPartiallyAvailable(Dataset):
     def __len__(self):
         cur = datetime.now()
         parts_available = 1 + sum(ts < cur for ts in self.input_timestamps)
-        raise Exception(self.last_inds,  self.last_inds[parts_available - 1])
+        # raise Exception(self.last_inds,  self.last_inds[parts_available - 1])
         return self.last_inds[parts_available - 1]
 
     def __getitem__(self, item):
-        image, label = self.dataset[:self.__len__()][item]
+        if item < self.__len__():
+            image, label = self.dataset[item]
+        raise IndexError()
+        # image, label = self.dataset[:self.__len__()][item]
         return image, label
 
 
