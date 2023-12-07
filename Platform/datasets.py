@@ -48,6 +48,7 @@ class DatasetPartiallyAvailable(Dataset):
     def __getitem__(self, item):
         if item < self.__len__():
             image, label = self.dataset[item]
+            return image, label
         raise IndexError()
         # image, label = self.dataset[:self.__len__()][item]
         return image, label
