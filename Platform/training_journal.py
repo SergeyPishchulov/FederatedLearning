@@ -33,4 +33,4 @@ class TrainingJournal:
                 models, deadlines = zip(*records)
                 return ft_id, latest_round + 1, models, deadlines
         # print(f"No task to aggregate. d keys: {self.d.keys()}")
-        return None, None, None
+        return None, None, None, None
