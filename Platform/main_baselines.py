@@ -71,25 +71,25 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft):
 def run(tasks, hub, clients, user_args):
     while not all(ft.done for ft in tasks):
         handle_messages(hub)
-        _, next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        _, next_ft_id, ag_round_num, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
             Server_update(ft.args, ft.central_node.model, client_models,
                           hub.get_select_list(ft, [c.id for c in clients]),
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
-            print(f'AGS Success. Task {ft.id}, round {ag_round}')
-            if ag_round == user_args.T:
+            print(f'AGS Success. Task {ft.id}, round {ag_round_num}')
+            if ag_round_num == user_args.T-1:
                 tasks[ft.id].done = True
                 print(f'Task {ft.id} is done')
             else:
-                print(f'Performed {ag_round}/{user_args.T} rounds in task {ft.id}')
+                print(f'Performed {ag_round_num+1}/{user_args.T} rounds in task {ft.id}')
 
             acc = validate(ft.args, ft.central_node, which_dataset='local')
             hub.stat.save_agr_ac(ft.id,
-                                 round=ag_round,
+                                 round=ag_round_num,
                                  acc=acc)
-            send_agr_model_to_clients(clients, hub, ag_round, ft)
+            send_agr_model_to_clients(clients, hub, ag_round_num, ft)
 
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
