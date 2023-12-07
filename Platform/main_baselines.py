@@ -83,7 +83,7 @@ def run(tasks, hub, clients, user_args):
                 tasks[ft.id].done = True
                 print(f'Task {ft.id} is done')
             else:
-                print(f'Performed {ag_round}/{user_args.T} rounds')
+                print(f'Performed {ag_round}/{user_args.T} rounds in task {ft.id}')
 
             acc = validate(ft.args, ft.central_node, which_dataset='local')
             hub.stat.save_agr_ac(ft.id,
