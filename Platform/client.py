@@ -72,16 +72,19 @@ class Client:
         os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
         torch.cuda.set_device('cuda:' + self.user_args.device)
 
+    def handle_messages(self, read_q):
+        while not read_q.empty():
+            mes: MessageToClient = read_q.get()
+            print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
+            self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
+            # del mes.agr_model  # TODO redundant?
+            del mes
+
     def run(self, read_q, write_q):
         self.setup()
         while self.plan:
             r, ft_id = self.plan[0]
-            while not read_q.empty():
-                mes: MessageToClient = read_q.get()
-                print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
-                self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
-                # del mes.agr_model  # TODO redundant?
-                del mes
+            self.handle_messages(read_q)
 
             if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
