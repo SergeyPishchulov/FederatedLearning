@@ -47,7 +47,7 @@ def handle_messages(hub):
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
             r: MessageToHub = q.get()
-            print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done')
+            print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
             hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline)
             hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
             del r
