@@ -4,6 +4,11 @@ import torchvision
 from torch.utils.data import Dataset
 from torchvision import transforms
 import copy
+from datetime import datetime, timedelta
+
+from typing import List
+
+from utils import divide_almost_equally
 
 
 # Subset function
@@ -17,6 +22,31 @@ class DatasetSplit(Dataset):
 
     def __getitem__(self, item):
         image, label = self.dataset[self.idxs[item]]
+        return image, label
+
+
+class DatasetPartiallyAvailable(Dataset):
+    """
+    Dataset represents data available for current moment in time.
+
+    input_timestamps is a list of time points at which a new portion of data is added
+
+    First portion is always available
+    """
+
+    def __init__(self, dataset, input_timestamps: List[datetime]):
+        self.dataset = dataset
+        self.input_timestamps = sorted(input_timestamps)
+        self.num_parts = len(self.input_timestamps) + 1
+        self.last_inds = np.cumsum(divide_almost_equally(len(dataset), self.num_parts))
+
+    def __len__(self):
+        cur = datetime.now()
+        parts_available = 1 + sum(ts < cur for ts in self.input_timestamps)
+        return self.last_inds[parts_available - 1]
+
+    def __getitem__(self, item):
+        image, label = self.dataset[:self.__len__()][item]
         return image, label
 
 

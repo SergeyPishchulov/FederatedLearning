@@ -15,4 +15,4 @@ class FederatedMLTask:
         for i in range(self.node_cnt):
             sample_size.append(len(self.data.train_loader[i]))
         self.size_weights = [x / sum(sample_size) for x in sample_size]
-        self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args, self.node_cnt)
+        self.central_node = Node(-1, self.data.test_loader[0], self.data.test_set, self.args)

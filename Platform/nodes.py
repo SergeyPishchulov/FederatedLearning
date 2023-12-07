@@ -8,9 +8,11 @@ from utils import init_optimizer, model_parameter_vector
 
 
 class Node(object):
-    def __init__(self, num_id, local_data, train_set, args, node_num):
+    def __init__(self, num_id, local_data, train_set, args):
         self.num_id = num_id
         self.args = args
+        self._local_data = local_data
+        self._train_set = train_set
         # self.node_num = node_num
         self.iterations_performed = 0
         self.deadline_by_round = None
@@ -26,13 +28,14 @@ class Node(object):
 
         if args.iid == 1 or num_id == -1:
             # for the server, use the validate_set as the training data, and use local_data for testing
-            self.local_data, self.validate_set = self.train_val_split_forServer(local_data.indices, train_set, self.valid_ratio, self.num_classes)
+            self.local_data, self.validate_set = self.train_val_split_forServer(local_data.indices, train_set,
+                                                                                self.valid_ratio, self.num_classes)
         else:
             self.local_data, self.validate_set = self.train_val_split(local_data, train_set, self.valid_ratio)
 
         self.model = init_model(self.args.local_model, self.args).cuda()
         self.optimizer = init_optimizer(self.num_id, self.model, args)
-        
+
         # node init for feddyn
         if args.client_method == 'feddyn':
             self.old_grad = None
@@ -43,7 +46,7 @@ class Node(object):
             self.server_state = copy.deepcopy(self.model)
             for param in self.server_state.parameters():
                 param.data = torch.zeros_like(param.data)
-        
+
         # node init for fedadam's server
         if args.server_method == 'fedadam' and num_id == -1:
             m = copy.deepcopy(self.model)
@@ -53,11 +56,12 @@ class Node(object):
             self.zero_weights(v)
             self.v = v
 
+
     def zero_weights(self, model):
         for n, p in model.named_parameters():
             p.data.zero_()
 
-    def train_val_split(self, idxs, train_set, valid_ratio): 
+    def train_val_split(self, idxs, train_set, valid_ratio):
 
         np.random.shuffle(idxs)
 
@@ -66,16 +70,16 @@ class Node(object):
         idxs_test = idxs[:int(validate_size)]
         idxs_train = idxs[int(validate_size):]
 
-        train_loader = DataLoader(DatasetSplit(train_set, idxs_train),
+        ds_train = DatasetSplit(train_set, idxs_train)
+        train_loader = DataLoader(ds_train,
                                   batch_size=self.args.batchsize, num_workers=0, shuffle=True)
 
         test_loader = DataLoader(DatasetSplit(train_set, idxs_test),
-                                 batch_size=self.args.validate_batchsize,  num_workers=0, shuffle=True)
-        
+                                 batch_size=self.args.validate_batchsize, num_workers=0, shuffle=True)
 
         return train_loader, test_loader
 
-    def train_val_split_forServer(self, idxs, train_set, valid_ratio, num_classes=10): # local data index, trainset
+    def train_val_split_forServer(self, idxs, train_set, valid_ratio, num_classes=10):  # local data index, trainset
 
         np.random.shuffle(idxs)
 
@@ -85,17 +89,18 @@ class Node(object):
         idxs_test = []
 
         if self.args.longtail_proxyset == 'none':
-            test_class_count = [int(validate_size)/num_classes for _ in range(num_classes)]
+            test_class_count = [int(validate_size) / num_classes for _ in range(num_classes)]
         elif self.args.longtail_proxyset == 'LT':
             imb_factor = 0.1
-            test_class_count = [int(validate_size/num_classes * (imb_factor**(_classes_idx / (num_classes - 1.0)))) for _classes_idx in range(num_classes)]
+            test_class_count = [int(validate_size / num_classes * (imb_factor ** (_classes_idx / (num_classes - 1.0))))
+                                for _classes_idx in range(num_classes)]
 
         k = 0
         while sum(test_class_count) != 0:
             if test_class_count[train_set[idxs[k]][1]] > 0:
                 idxs_test.append(idxs[k])
                 test_class_count[train_set[idxs[k]][1]] -= 1
-            else: 
+            else:
                 pass
             k += 1
         label_list = []
@@ -107,7 +112,7 @@ class Node(object):
         train_loader = DataLoader(DatasetSplit(train_set, idxs_train),
                                   batch_size=self.args.batchsize, num_workers=0, shuffle=True)
         test_loader = DataLoader(DatasetSplit(train_set, idxs_test),
-                                 batch_size=self.args.validate_batchsize,  num_workers=0, shuffle=True)
+                                 batch_size=self.args.validate_batchsize, num_workers=0, shuffle=True)
 
         return train_loader, test_loader
 
@@ -120,15 +125,17 @@ def label_indices2indices(list_label2indices):
 
     return indices_res
 
+
 def _get_img_num_per_cls(list_label2indices_train, num_classes, imb_factor, imb_type):
     img_max = len(list_label2indices_train) / num_classes
     img_num_per_cls = []
     if imb_type == 'exp':
         for _classes_idx in range(num_classes):
-            num = img_max * (imb_factor**(_classes_idx / (num_classes - 1.0)))
+            num = img_max * (imb_factor ** (_classes_idx / (num_classes - 1.0)))
             img_num_per_cls.append(int(num))
 
     return img_num_per_cls
+
 
 def train_long_tail(list_label2indices_train, num_classes, imb_factor, imb_type):
     new_list_label2indices_train = label_indices2indices(copy.deepcopy(list_label2indices_train))
@@ -148,4 +155,3 @@ def train_long_tail(list_label2indices_train, num_classes, imb_factor, imb_type)
     print(len(num_list_clients_indices))
 
     return img_num_list, list_clients_indices
-
