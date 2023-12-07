@@ -12,6 +12,7 @@ from itertools import zip_longest
 # Tools
 ##############################################################################
 
+
 class RunningAverage():
     """A simple class that maintains the running average of a quantity
 
@@ -263,3 +264,8 @@ def testloss_with_param(args, node, param, which_dataset='validate'):
 
 def combine_lists(l):
     return [j for i in zip_longest(*l) for j in i if j]
+
+def divide_almost_equally(num, div):
+    return [num // div + (1 if x < num % div else 0) for x in range(div)]
+
+
