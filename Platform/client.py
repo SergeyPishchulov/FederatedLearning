@@ -80,12 +80,15 @@ class Client:
             # del mes.agr_model  # TODO redundant?
             del mes
 
-    def run(self, read_q, write_q):
-        self.setup()
+    def set_deadlines(self):
         for ft_id, n in self.node_by_ft_id.items():
             n: Node
-            n.deadline = datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec)
+            n.deadline_by_round = [datetime.now() + timedelta(seconds=self.user_args.interdeadline_time_sec) * (i + 1)
+                                   for i in range(self.user_args.T)]
 
+    def run(self, read_q, write_q):
+        self.setup()
+        self.set_deadlines()
         while self.plan:
             r, ft_id = self.plan[0]
             self.handle_messages(read_q)
@@ -98,11 +101,12 @@ class Client:
                 mean_loss = self._train_one_round(ft_args, node)
                 acc = validate(ft_args, node)
                 node.rounds_performed += 1  # TODO not to mess with r
+                deadline = node.deadline_by_round[r]
                 response = MessageToHub(node.rounds_performed - 1, ft_id,
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),
                                         self.id,
-                                        node.deadline)
+                                        deadline)
                 try:
                     write_q.put(response)
                 except Exception:

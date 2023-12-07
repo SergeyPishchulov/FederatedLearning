@@ -1,6 +1,8 @@
 from dataclasses import dataclass, astuple
+
+import numpy as np
 import torch
-from datetime import datetime
+from datetime import datetime, date
 
 
 @dataclass
@@ -24,13 +26,28 @@ class TrainingJournal:
         else:
             raise KeyError("Key already exists")
 
-    def get_ft_to_aggregate(self, client_ids):
+    def _get_ft_ready_to_agr(self, client_ids):
+        res = []
         for ft_id, latest_round in self.latest_aggregated_round.items():
             # print(f'Searching ({ft_id},_,{latest_round+1}) in keys. client_ids is {client_ids}')
             if all((ft_id, cl_id, latest_round + 1) in self.d
-                   for cl_id in client_ids):
-                records = [astuple(self.d[(ft_id, cl_id, latest_round + 1)]) for cl_id in client_ids]
-                models, deadlines = zip(*records)
-                return ft_id, latest_round + 1, models, deadlines
-        # print(f"No task to aggregate. d keys: {self.d.keys()}")
-        return None, None, None, None
+                   for cl_id in client_ids):  # TODO summ accuaracy > A
+                # ft_records = [self.d[(ft_id, cl_id, latest_round + 1)] for cl_id in client_ids]
+                res.append((ft_id, latest_round + 1))
+        return res
+
+    def get_ft_to_aggregate(self, client_ids):
+        ready = self._get_ft_ready_to_agr(client_ids)
+        if not ready:
+            return (None,) * 4
+        res = (date.max, None, None, None)
+        for ft_id, round in ready:
+            records = [self.d[(ft_id, cl_id, round)] for cl_id in client_ids]
+            models = [r.model for r in records]
+            min_d = min([r.deadline for r in records])
+            if min_d < res[0]:
+                res = min_d, ft_id, round, models
+        print(f'Task {res[1]} with min deadline {res[0]}')
+        return res
+
+    # print(f"No task to aggregate. d keys: {self.d.keys()}")

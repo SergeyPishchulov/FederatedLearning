@@ -1,4 +1,6 @@
 import traceback
+from datetime import datetime, timedelta
+
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
 from client import Client
 from federated_ml_task import FederatedMLTask
@@ -18,12 +20,15 @@ except RuntimeError:
     pass
 
 
+
+
 def create_clients(tasks, user_args):
     clients = []
     for client_id in range(user_args.node_num):
         node_by_ft_id = {ft.id:
                              Node(client_id, ft.data.train_loader[client_id],
-                                  ft.data.train_set, ft.args, ft.node_cnt) for ft in tasks}
+                                  ft.data.train_set, ft.args, ft.node_cnt,
+                                  ) for ft in tasks}
         client = Client(client_id,
                         node_by_ft_id,
                         args_by_ft_id={ft.id: ft.args for ft in tasks},
@@ -47,7 +52,8 @@ def handle_messages(hub):
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
             r: MessageToHub = q.get()
-            print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
+            print(
+                f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
             hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline)
             hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
             del r
@@ -67,8 +73,7 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft):
 def run(tasks, hub, clients, user_args):
     while not all(ft.done for ft in tasks):
         handle_messages(hub)
-        next_ft_id, ag_round, client_models, deadlines = hub.journal.get_ft_to_aggregate([c.id for c in clients])
-        print(f'AGS TASK {next_ft_id} {deadlines}')
+        _, next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
             Server_update(ft.args, ft.central_node.model, client_models,
