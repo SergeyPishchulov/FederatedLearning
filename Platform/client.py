@@ -59,7 +59,7 @@ class Client:
     def _train_one_round(self, ft_args, node):
         epoch_losses = []
         if ft_args.client_method == 'local_train':
-            print(f'Node {node.num_id} has available data: {len(node.local_data)}')
+            # print(f'Node {node.num_id} has available batches: {len(node.local_data)}')
             for epoch in range(ft_args.E):
                 loss = self.client_localTrain(ft_args, node)  # TODO check if not working
                 epoch_losses.append(loss)
