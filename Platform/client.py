@@ -86,8 +86,8 @@ class Client:
             n: Node
             n.deadline_by_round = [datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec) * (i + 1)
                                    for i in range(self.user_args.T)]
-            # n.set_datasets(n.deadline_by_round)
-            n.set_datasets(None)
+            n.set_datasets(n.deadline_by_round)# node will get data gradually through DatasetPartiallyAvailable
+            # n.set_datasets(None)# node have all the date initially
 
     def run(self, read_q, write_q):
         self.setup()

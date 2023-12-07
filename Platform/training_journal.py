@@ -41,12 +41,12 @@ class TrainingJournal:
         if not ready:
             return (None,) * 4
         res = (datetime.max, None, None, None)
-        for ft_id, round in ready:
-            records = [self.d[(ft_id, cl_id, round)] for cl_id in client_ids]
+        for ft_id, round_num in ready:
+            records = [self.d[(ft_id, cl_id, round_num)] for cl_id in client_ids]
             models = [r.model for r in records]
             min_d = min([r.deadline for r in records])
             if min_d < res[0]:
-                res = min_d, ft_id, round, models
+                res = min_d, ft_id, round_num, models
         print(f'Task {res[1]} with min deadline {res[0]}')
         return res
 
