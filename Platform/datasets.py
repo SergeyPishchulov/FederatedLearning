@@ -30,7 +30,6 @@ class DatasetPartiallyAvailable(Dataset):
     Dataset represents data available for current moment in time.
 
     input_timestamps is a list of time points at which a new portion of data is added
-
     First portion is always available
     """
 

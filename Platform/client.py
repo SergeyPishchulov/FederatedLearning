@@ -59,6 +59,7 @@ class Client:
     def _train_one_round(self, ft_args, node):
         epoch_losses = []
         if ft_args.client_method == 'local_train':
+            print(f'Node {node.num_id} has available data: {len(node.local_data)}')
             for epoch in range(ft_args.E):
                 loss = self.client_localTrain(ft_args, node)  # TODO check if not working
                 epoch_losses.append(loss)
@@ -85,6 +86,7 @@ class Client:
             n: Node
             n.deadline_by_round = [datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec) * (i + 1)
                                    for i in range(self.user_args.T)]
+            n.set_datasets(n.deadline_by_round)
 
     def run(self, read_q, write_q):
         self.setup()

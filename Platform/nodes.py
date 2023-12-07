@@ -2,7 +2,7 @@ import copy
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from datasets import DatasetSplit
+from datasets import DatasetSplit, DatasetPartiallyAvailable
 from utils import init_model
 from utils import init_optimizer, model_parameter_vector
 
@@ -31,7 +31,8 @@ class Node(object):
             self.local_data, self.validate_set = self.train_val_split_forServer(local_data.indices, train_set,
                                                                                 self.valid_ratio, self.num_classes)
         else:
-            self.local_data, self.validate_set = self.train_val_split(local_data, train_set, self.valid_ratio)
+            pass
+            # self.local_data, self.validate_set = self.train_val_split(local_data, train_set, self.valid_ratio)
 
         self.model = init_model(self.args.local_model, self.args).cuda()
         self.optimizer = init_optimizer(self.num_id, self.model, args)
@@ -56,12 +57,14 @@ class Node(object):
             self.zero_weights(v)
             self.v = v
 
+    def set_datasets(self, input_tss):
+        self.local_data, self.validate_set = self.train_val_split(self._local_data, self._train_set, self.valid_ratio, input_tss)
 
     def zero_weights(self, model):
         for n, p in model.named_parameters():
             p.data.zero_()
 
-    def train_val_split(self, idxs, train_set, valid_ratio):
+    def train_val_split(self, idxs, train_set, valid_ratio, input_tss=None):
 
         np.random.shuffle(idxs)
 
@@ -71,6 +74,8 @@ class Node(object):
         idxs_train = idxs[int(validate_size):]
 
         ds_train = DatasetSplit(train_set, idxs_train)
+        if input_tss is not None:
+            ds_train = DatasetPartiallyAvailable(ds_train, input_tss)
         train_loader = DataLoader(ds_train,
                                   batch_size=self.args.batchsize, num_workers=0, shuffle=True)
 
