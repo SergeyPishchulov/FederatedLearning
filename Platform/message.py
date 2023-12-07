@@ -5,7 +5,12 @@ import torch
 
 @dataclass
 class MessageToHub:
-    round_num: int
+    """Message from client to hub with information about updated model
+
+    iteration_num - the serial number of the message sent.
+    It can differ from the round at hub
+    """
+    iteration_num: int
     ft_id: int
     acc: float
     loss: float

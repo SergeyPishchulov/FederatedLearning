@@ -20,8 +20,6 @@ except RuntimeError:
     pass
 
 
-
-
 def create_clients(tasks, user_args):
     clients = []
     for client_id in range(user_args.node_num):
@@ -51,11 +49,11 @@ def get_client_procs(clients, hub):
 def handle_messages(hub):
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
-            r: MessageToHub = q.get()
+            r: MessageToHub = q.get()  # TODO understand what round is performed
             print(
-                f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
-            hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline)
-            hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+                f'Got update from client {r.client_id}. Round {r.iteration_num} for task {r.ft_id} is done. DL is {r.deadline}')
+            hub.journal.save_local(r.ft_id, r.client_id, r.iteration_num, copy.deepcopy(r.model), r.deadline)
+            hub.stat.save_client_ac(r.client_id, r.ft_id, r.iteration_num, r.acc)
             del r
 
 

@@ -100,9 +100,9 @@ class Client:
                 self._set_aggregated_model(ft_args, node, agr_model)
                 mean_loss = self._train_one_round(ft_args, node)
                 acc = validate(ft_args, node)
-                node.rounds_performed += 1  # TODO not to mess with r
+                node.iterations_performed += 1  # TODO not to mess with r
                 deadline = node.deadline_by_round[r]
-                response = MessageToHub(node.rounds_performed - 1, ft_id,
+                response = MessageToHub(node.iterations_performed - 1, ft_id,
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),
                                         self.id,
@@ -112,7 +112,7 @@ class Client:
                 except Exception:
                     print(traceback.format_exc())
                 self.plan.pop(0)
-                print(f'Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
+                print(f'Client {self.id} sent local model for round {response.iteration_num}, task {response.ft_id}')
             else:
                 pass
                 # print(
