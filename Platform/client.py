@@ -83,7 +83,7 @@ class Client:
     def set_deadlines(self):
         for ft_id, n in self.node_by_ft_id.items():
             n: Node
-            n.deadline_by_round = [datetime.now() + timedelta(seconds=self.user_args.interdeadline_time_sec) * (i + 1)
+            n.deadline_by_round = [datetime.now() + timedelta(seconds=self.args_by_ft_id.interdeadline_time_sec) * (i + 1)
                                    for i in range(self.user_args.T)]
 
     def run(self, read_q, write_q):
