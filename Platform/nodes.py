@@ -11,7 +11,7 @@ class Node(object):
     def __init__(self, num_id, local_data, train_set, args, node_num):
         self.num_id = num_id
         self.args = args
-        self.node_num = node_num
+        # self.node_num = node_num
         self.iterations_performed = 0
         self.deadline_by_round = None
         if num_id == -1:
