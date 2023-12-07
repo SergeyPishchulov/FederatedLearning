@@ -16,7 +16,7 @@ class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):
         self.dataset = dataset
         self.idxs = list(idxs)
-        print(f'DatasetSplit. Original dataset size is {len(dataset)}.')
+        # print(f'DatasetSplit. Original dataset size is {len(dataset)}.')
 
     def __len__(self):
         return len(self.idxs)
@@ -49,11 +49,7 @@ class DatasetPartiallyAvailable(Dataset):
         return self.last_inds[parts_available - 1]
 
     def __getitem__(self, item):
-        # if item < self.__len__():#TODO rollback
-        # image, label = self.dataset[item]
-        # return image, label
-        # raise IndexError()
-        image, label = self.dataset[:self.__len__()][item]
+        image, label = self.dataset[item]
         return image, label
 
 
