@@ -68,6 +68,7 @@ def run(tasks, hub, clients, user_args):
     while not all(ft.done for ft in tasks):
         handle_messages(hub)
         next_ft_id, ag_round, client_models, deadlines = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        print(f'AGS TASK {next_ft_id} {deadlines}')
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
             Server_update(ft.args, ft.central_node.model, client_models,
