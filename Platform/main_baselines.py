@@ -48,9 +48,8 @@ def handle_messages(hub):
         while not q.empty():
             r: MessageToHub = q.get()
             print(f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done')
-            hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model))
+            hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline)
             hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
-            # del r.model
             del r
 
 
@@ -68,7 +67,7 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft):
 def run(tasks, hub, clients, user_args):
     while not all(ft.done for ft in tasks):
         handle_messages(hub)
-        next_ft_id, ag_round, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        next_ft_id, ag_round, client_models, deadlines = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
             Server_update(ft.args, ft.central_node.model, client_models,

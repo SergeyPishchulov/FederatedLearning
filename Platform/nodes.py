@@ -13,6 +13,7 @@ class Node(object):
         self.args = args
         self.node_num = node_num
         self.rounds_performed = 0
+        self.deadline = None
         if num_id == -1:
             self.valid_ratio = args.server_valid_ratio
         else:

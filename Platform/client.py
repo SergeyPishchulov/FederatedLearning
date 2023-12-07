@@ -1,7 +1,7 @@
 import os
 import time
 import traceback
-
+from datetime import datetime, timedelta
 import torch
 
 from message import MessageToHub, MessageToClient
@@ -13,9 +13,7 @@ from client_funct import *
 
 class Client:
     def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args):
-        self.id = id  # TODO set pipe
-        # self.hub = hub#temporary. instead of pipe
-        # self.args = args
+        self.id = id
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
         self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
@@ -71,29 +69,38 @@ class Client:
         os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
         torch.cuda.set_device('cuda:' + self.user_args.device)
 
+    def handle_messages(self, read_q):
+        while not read_q.empty():
+            mes: MessageToClient = read_q.get()
+            print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
+            self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
+            del mes
+
+    def get_prev_aggregated_model(self, ft_id, r):
+        return self.agr_model_by_ft_id_round.get((ft_id, r - 1), None)
+
     def run(self, read_q, write_q):
+        for ft_id, n in self.node_by_ft_id.items():
+            n: Node
+            n.deadline = datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec)
+
         self.setup()
         while self.plan:
             r, ft_id = self.plan[0]
-            while not read_q.empty():
-                mes: MessageToClient = read_q.get()
-                print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
-                self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
-                # del mes.agr_model  # TODO redundant?
-                del mes
-
-            if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
-                agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
+            self.handle_messages(read_q)
+            prev_agr_model = self.get_prev_aggregated_model(ft_id, r - 1)
+            if prev_agr_model is not None:
                 ft_args = self.args_by_ft_id[ft_id]
-                node = self.node_by_ft_id[ft_id]  # TODO delete hub when set pipe in __init__
-                self._set_aggregated_model(ft_args, node, agr_model)
+                node = self.node_by_ft_id[ft_id]
+                self._set_aggregated_model(ft_args, node, prev_agr_model)
                 mean_loss = self._train_one_round(ft_args, node)
                 acc = validate(ft_args, node)
-                node.rounds_performed += 1  # TODO not to mess with r
+                node.rounds_performed += 1  # TODO not to mess with ragr_model
                 response = MessageToHub(node.rounds_performed - 1, ft_id,
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),
-                                        self.id)
+                                        self.id,
+                                        node.deadline)
                 try:
                     write_q.put(response)
                 except Exception:
@@ -106,4 +113,5 @@ class Client:
                 #     f" Client {self.id}: Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
                 # time.sleep(1)
             # time.sleep(0.5)
+
         print(f'Client {self.id} is DONE')

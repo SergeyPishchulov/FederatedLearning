@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+from datetime import datetime
 import torch
 
 
@@ -11,6 +11,7 @@ class MessageToHub:
     loss: float
     model: torch.nn.Module
     client_id: int
+    deadline: datetime
 
 
 @dataclass

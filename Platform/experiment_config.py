@@ -2,6 +2,7 @@ from argparse import Namespace
 
 
 def get_configs(user_args):
+    common_config = dict(interdeadline_time_sec=10)
     custom_configs = []
     custom_configs.append(dict(
         dataset='cifar10',
@@ -11,7 +12,7 @@ def get_configs(user_args):
         dataset='cifar10',
         local_model='ResNet20',
     ))
-    return [Namespace(**(vars(user_args) | cc)) for cc in custom_configs]
+    return [Namespace(**(vars(user_args) | common_config | cc)) for cc in custom_configs]
 
 
 #
