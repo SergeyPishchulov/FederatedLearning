@@ -38,6 +38,7 @@ class DatasetPartiallyAvailable(Dataset):
         self.input_timestamps = sorted(input_timestamps)
         self.num_parts = len(self.input_timestamps) + 1
         self.last_inds = np.cumsum(divide_almost_equally(len(dataset), self.num_parts))
+        print(f'Original dataset size is {len(dataset)}, but will be available as {self.last_inds}')
 
     def __len__(self):
         cur = datetime.now()
