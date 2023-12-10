@@ -98,9 +98,9 @@ def run(tasks, hub, clients, user_args):
 
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
+        hub.stat.print_stat()
         # time.sleep(0.5)
     print('All tasks are done')
-    hub.stat.print_stat()
 
 
 def main():
