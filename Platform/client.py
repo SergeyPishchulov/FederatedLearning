@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import torch
 
-from message import MessageToHub, MessageToClient
+from message import MessageToHub, MessageToClient, ResponseToHub
 from utils import validate, setup_seed, combine_lists
 from utils import *
 from server_funct import *
@@ -73,20 +73,23 @@ class Client:
         os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
         torch.cuda.set_device('cuda:' + self.user_args.device)
 
-    def handle_messages(self, read_q):
+    def handle_messages(self, read_q, write_q):
         while not read_q.empty():
             mes: MessageToClient = read_q.get()
             print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
             self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
-            # del mes.agr_model  # TODO redundant?
+            required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
+            delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
+            write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay))
             del mes
 
     def set_deadlines(self):
         for ft_id, n in self.node_by_ft_id.items():
             n: Node
-            n.deadline_by_round = [datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec) * (i + 1)
-                                   for i in range(self.user_args.T)]
-            n.set_datasets(n.deadline_by_round)# node will get data gradually through DatasetPartiallyAvailable
+            n.deadline_by_round = [
+                datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec) * (i + 1)
+                for i in range(self.user_args.T)]
+            n.set_datasets(n.deadline_by_round)  # node will get data gradually through DatasetPartiallyAvailable
             # n.set_datasets(None)# node have all the date initially
 
     def run(self, read_q, write_q):
@@ -94,7 +97,7 @@ class Client:
         self.set_deadlines()
         while self.plan:
             r, ft_id = self.plan[0]
-            self.handle_messages(read_q)
+            self.handle_messages(read_q, write_q)
 
             if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
@@ -104,7 +107,7 @@ class Client:
                 mean_loss = self._train_one_round(ft_args, node)
                 acc = validate(ft_args, node)
                 node.iterations_performed += 1  # TODO not to mess with r
-                deadline = node.deadline_by_round[r]
+                deadline = node.deadline_by_round[r]  # deadline to perform round r
                 response = MessageToHub(node.iterations_performed - 1, ft_id,
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),

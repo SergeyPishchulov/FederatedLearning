@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import torch
 
 
@@ -24,3 +24,18 @@ class MessageToClient:
     round_num: int
     ft_id: int
     agr_model: torch.nn.Module
+
+
+@dataclass
+class ResponseToHub:
+    """
+    Response to Hub on MessageToClient.
+
+    It notifies the hub that aggregated model was received by client.
+    delay is positive means the aggregated model was received after the required deadline. The hub will have penalty.
+    delay is zero means the aggregated model was received before the required deadline.
+    """
+    client_id: int
+    ft_id: int
+    round_num: int
+    delay: timedelta

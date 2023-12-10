@@ -15,7 +15,7 @@ class Node(object):
         self._train_set = train_set
         # self.node_num = node_num
         self.iterations_performed = 0
-        self.deadline_by_round = None
+        self.deadline_by_round = None  # max time to perform round №r
         if num_id == -1:
             self.valid_ratio = args.server_valid_ratio
         else:
@@ -58,7 +58,8 @@ class Node(object):
             self.v = v
 
     def set_datasets(self, input_tss):
-        self.local_data, self.validate_set = self.train_val_split(self._local_data, self._train_set, self.valid_ratio, input_tss)
+        self.local_data, self.validate_set = self.train_val_split(self._local_data, self._train_set, self.valid_ratio,
+                                                                  input_tss)
 
     def zero_weights(self, model):
         for n, p in model.named_parameters():

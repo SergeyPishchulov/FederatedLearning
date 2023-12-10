@@ -6,7 +6,7 @@ from client import Client
 from federated_ml_task import FederatedMLTask
 from hub import Hub
 import time
-from message import MessageToClient, MessageToHub
+from message import MessageToClient, MessageToHub, ResponseToHub
 from experiment_config import get_configs
 from args import args_parser
 from utils import *
@@ -49,12 +49,17 @@ def get_client_procs(clients, hub):
 def handle_messages(hub):
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
-            r: MessageToHub = q.get()  # TODO understand what round is performed
-            print(
-                f'Got update from client {r.client_id}. Round {r.iteration_num} for task {r.ft_id} is done. DL is {r.deadline}')
-            hub.journal.save_local(r.ft_id, r.client_id, r.iteration_num, copy.deepcopy(r.model), r.deadline)
-            hub.stat.save_client_ac(r.client_id, r.ft_id, r.iteration_num, r.acc)
-            del r
+            r = q.get()
+            if isinstance(r, MessageToHub):
+                # TODO understand what round is performed
+                print(
+                    f'Got update from client {r.client_id}. Round {r.iteration_num} for task {r.ft_id} is done. DL is {r.deadline}')
+                hub.journal.save_local(r.ft_id, r.client_id, r.iteration_num, copy.deepcopy(r.model), r.deadline)
+                hub.stat.save_client_ac(r.client_id, r.ft_id, r.iteration_num, r.acc)
+                del r
+            elif isinstance(r, ResponseToHub):
+                print(f'Received ResponseToHub: {r}')
+                hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
 
 
 def send_agr_model_to_clients(clients, hub, ag_round, ft):
@@ -79,11 +84,11 @@ def run(tasks, hub, clients, user_args):
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
             print(f'AGS Success. Task {ft.id}, round {ag_round_num}')
-            if ag_round_num == user_args.T-1:
+            if ag_round_num == user_args.T - 1:
                 tasks[ft.id].done = True
                 print(f'Task {ft.id} is done')
             else:
-                print(f'Performed {ag_round_num+1}/{user_args.T} rounds in task {ft.id}')
+                print(f'Performed {ag_round_num + 1}/{user_args.T} rounds in task {ft.id}')
 
             acc = validate(ft.args, ft.central_node, which_dataset='local')
             hub.stat.save_agr_ac(ft.id,
@@ -94,6 +99,8 @@ def run(tasks, hub, clients, user_args):
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         # time.sleep(0.5)
+    print('All tasks are done')
+    hub.stat.print_stat()
 
 
 def main():

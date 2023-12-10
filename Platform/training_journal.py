@@ -7,6 +7,12 @@ from datetime import datetime, date
 
 @dataclass
 class JournalRecord:
+    """
+    Representation of a client's message.
+
+    model - locally trained model
+    deadline - max time the aggregation should have been done to
+    """
     model: torch.nn.Module
     deadline: datetime
 
@@ -44,7 +50,7 @@ class TrainingJournal:
         for ft_id, round_num in ready:
             records = [self.d[(ft_id, cl_id, round_num)] for cl_id in client_ids]
             models = [r.model for r in records]
-            min_d = min([r.deadline for r in records])
+            min_d = min([r.deadline for r in records])  # feature of the task
             if min_d < res[0]:
                 res = min_d, ft_id, round_num, models
         print(f'Task {res[1]} with min deadline {res[0]}')
