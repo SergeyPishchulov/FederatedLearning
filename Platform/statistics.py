@@ -38,7 +38,7 @@ class Statistics:
     def print_stat(self):
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
-            print(df[self.client_cols].dropna())
+            print(df)
             res += df[self.client_cols].dropna().iloc[:, -1].sum()
             print(f'SUM_DELAY: {res}')
 
