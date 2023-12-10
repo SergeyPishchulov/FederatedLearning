@@ -95,7 +95,7 @@ class Client:
     def run(self, read_q, write_q):
         self.setup()
         self.set_deadlines()
-        while self.plan:
+        while self.plan:# TODO bug. on last iteration we need to computed delay
             r, ft_id = self.plan[0]
             self.handle_messages(read_q, write_q)
 
