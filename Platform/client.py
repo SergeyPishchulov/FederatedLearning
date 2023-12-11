@@ -89,13 +89,15 @@ class Client:
             n.deadline_by_round = [
                 datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec) * (i + 1)
                 for i in range(self.user_args.T)]
-            n.set_datasets(n.deadline_by_round)  # node will get data gradually through DatasetPartiallyAvailable
-            # n.set_datasets(None)# node have all the date initially
+            if self.user_args.partially_available:
+                n.set_datasets(n.deadline_by_round)  # node will get data gradually through DatasetPartiallyAvailable
+            else:
+                n.set_datasets(None)  # node have all the date initially
 
     def run(self, read_q, write_q):
         self.setup()
         self.set_deadlines()
-        while self.plan:# TODO bug. on last iteration we need to computed delay
+        while self.plan:  # TODO bug. on last iteration we need to computed delay
             r, ft_id = self.plan[0]
             self.handle_messages(read_q, write_q)
 
