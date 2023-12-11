@@ -99,7 +99,7 @@ class Client:
     def run(self, read_q, write_q):
         self.setup()
         self.set_deadlines()
-        while self.plan and not self.should_finish:  # TODO bug. on last iteration we need to computed delay
+        while self.plan:  # TODO bug. on last iteration we need to computed delay
             r, ft_id = self.plan[0]
             self.handle_messages(read_q, write_q)
 
@@ -129,4 +129,6 @@ class Client:
                 #     f" Client {self.id}: Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
                 # time.sleep(1)
             # time.sleep(0.5)
+        while not self.should_finish:
+            self.handle_messages(read_q, write_q)
         print(f'Client {self.id} is DONE')
