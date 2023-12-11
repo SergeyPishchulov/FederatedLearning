@@ -62,13 +62,14 @@ def handle_messages(hub):
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
 
 
-def send_agr_model_to_clients(clients, hub, ag_round, ft):
+def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
     for c in clients:
         try:
             hub.write_q_by_cl_id[c.id].put(
                 MessageToClient(ag_round, ft.id,
-                                copy.deepcopy(ft.central_node.model
-                                              )))
+                                copy.deepcopy(ft.central_node.model),
+                                should_finish=should_finish
+                                ))
         except Exception:
             print(traceback.format_exc())
 
@@ -84,9 +85,9 @@ def run(tasks, hub, clients, user_args):
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
             print(f'AGS Success. Task {ft.id}, round {ag_round_num}')
-            all_aggregation_done = ag_round_num == user_args.T - 1
+            all_aggregation_done = (ag_round_num == user_args.T - 1)
             if all_aggregation_done:
-                tasks[ft.id].done = True
+                ft.done = True
                 print(f'Task {ft.id} is done')
             else:
                 print(f'Performed {ag_round_num + 1}/{user_args.T} rounds in task {ft.id}')
@@ -95,7 +96,8 @@ def run(tasks, hub, clients, user_args):
             hub.stat.save_agr_ac(ft.id,
                                  round=ag_round_num,
                                  acc=acc)
-            send_agr_model_to_clients(clients, hub, ag_round_num, ft, all_aggregation_done)
+            send_agr_model_to_clients(clients, hub, ag_round_num, ft,
+                                      should_finish=all(ft.done for ft in tasks))
 
         hub.stat.to_csv()
         hub.stat.plot_accuracy()

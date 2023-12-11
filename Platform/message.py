@@ -24,6 +24,7 @@ class MessageToClient:
     round_num: int
     ft_id: int
     agr_model: torch.nn.Module
+    should_finish: bool
 
 
 @dataclass

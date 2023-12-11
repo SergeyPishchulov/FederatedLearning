@@ -22,6 +22,7 @@ class Client:
         self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
         self.user_args = user_args
         self.plan = self._get_plan()
+        self.should_finish = False
 
     def _get_plan(self):
         rounds = self.user_args.T
@@ -77,6 +78,7 @@ class Client:
         while not read_q.empty():
             mes: MessageToClient = read_q.get()
             print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
+            self.should_finish = mes.should_finish
             self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
             required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
             delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
@@ -97,7 +99,7 @@ class Client:
     def run(self, read_q, write_q):
         self.setup()
         self.set_deadlines()
-        while self.plan:  # TODO bug. on last iteration we need to computed delay
+        while self.plan and not self.should_finish:  # TODO bug. on last iteration we need to computed delay
             r, ft_id = self.plan[0]
             self.handle_messages(read_q, write_q)
 
