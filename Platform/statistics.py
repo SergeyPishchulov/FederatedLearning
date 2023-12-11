@@ -46,11 +46,13 @@ class Statistics:
         fig, axes = plt.subplots(1, figsize=(10, 8))
         axes.set_title(f'Delay by round')
         for ft_id, df in self.delay_by_ft_id.items():
-            sum_by_all_clients = df.sum(axis=1)
+            sum_by_all_clients = df.map(lambda x: x.total_seconds()).sum(axis=1)
             axes.plot(sum_by_all_clients,
                       label=f'{ft_id}',
                       # linestyle='dashed'
                       )
+        axes.set_xlabel('round')
+        axes.set_ylabel('Delay (s)')
         axes.legend()
         fig.savefig(f'{self.pngs_directory}/delay.png')
         plt.close()
