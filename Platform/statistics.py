@@ -15,7 +15,7 @@ class Statistics:
                                 index=pd.Series(range(args.T), name='round'))
             for ft in tasks}
         self.delay_by_ft_id = {
-            ft.id: pd.DataFrame(columns=self.client_cols,
+            ft.id: pd.DataFrame(timedelta(0), columns=self.client_cols,
                                 index=pd.Series(range(args.T), name='round'))
             for ft in tasks}
         current_directory = os.getcwd()
