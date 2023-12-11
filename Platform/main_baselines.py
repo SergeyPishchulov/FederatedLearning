@@ -58,7 +58,7 @@ def handle_messages(hub):
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.iteration_num, r.acc)
                 del r
             elif isinstance(r, ResponseToHub):
-                print(f'Received ResponseToHub: {r}')
+                # print(f'Received ResponseToHub: {r}')
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
 
 
@@ -84,7 +84,8 @@ def run(tasks, hub, clients, user_args):
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
             print(f'AGS Success. Task {ft.id}, round {ag_round_num}')
-            if ag_round_num == user_args.T - 1:
+            all_aggregation_done = ag_round_num == user_args.T - 1
+            if all_aggregation_done:
                 tasks[ft.id].done = True
                 print(f'Task {ft.id} is done')
             else:
@@ -94,11 +95,12 @@ def run(tasks, hub, clients, user_args):
             hub.stat.save_agr_ac(ft.id,
                                  round=ag_round_num,
                                  acc=acc)
-            send_agr_model_to_clients(clients, hub, ag_round_num, ft)
+            send_agr_model_to_clients(clients, hub, ag_round_num, ft, all_aggregation_done)
 
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
-        hub.stat.print_stat()
+        hub.stat.print_delay()
+        hub.stat.plot_delay()
         # time.sleep(0.5)
     print('All tasks are done')
 

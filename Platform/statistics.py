@@ -35,12 +35,25 @@ class Statistics:
     def save_agr_ac(self, ft_id, round, acc):
         self.acc_by_ft_id[ft_id].loc[round, 'agr'] = acc
 
-    def print_stat(self):
+    def print_delay(self):
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
             # print(df)
             res += df[self.client_cols].sum().sum()
-            print(f'SUM_DELAY: {res}')
+        print(f'SUM_DELAY: {res}')
+
+    def plot_delay(self):
+        fig, axes = plt.subplots(1, figsize=(10, 8))
+        axes.set_title(f'Delay by round')
+        for ft_id, df in self.delay_by_ft_id.items():
+            sum_by_all_clients = df.sum(axis=1)
+            axes.plot(sum_by_all_clients,
+                      label=f'{ft_id}',
+                      # linestyle='dashed'
+                      )
+        axes.legend()
+        fig.savefig(f'{self.pngs_directory}/delay.png')
+        plt.close()
 
     def to_csv(self):
         for ft_id, stat_df in self.acc_by_ft_id.items():
