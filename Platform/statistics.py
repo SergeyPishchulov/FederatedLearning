@@ -39,7 +39,7 @@ class Statistics:
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
             print(df)
-            res += df[self.client_cols].dropna().iloc[:, -1].sum()
+            res += df[self.client_cols].sum()
             print(f'SUM_DELAY: {res}')
 
     def to_csv(self):
