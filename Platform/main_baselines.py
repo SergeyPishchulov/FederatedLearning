@@ -61,6 +61,7 @@ def handle_messages(hub):
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
             del r
 
+
 def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
     for c in clients:
         try:
@@ -74,6 +75,7 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
 
 
 def run(tasks, hub, clients, user_args):
+    hub.stat.set_init_round_beginning()
     while not all(ft.done for ft in tasks):
         handle_messages(hub)
         _, next_ft_id, ag_round_num, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
@@ -83,6 +85,7 @@ def run(tasks, hub, clients, user_args):
                           hub.get_select_list(ft, [c.id for c in clients]),
                           ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
+            hub.stat.set_round_done_ts(ft.id, ag_round_num)
             print(f'AGS Success. Task {ft.id}, round {ag_round_num}')
             all_aggregation_done = (ag_round_num == user_args.T - 1)
             if all_aggregation_done:
@@ -104,6 +107,7 @@ def run(tasks, hub, clients, user_args):
         # time.sleep(0.5)
     print('All tasks are done')
     hub.stat.print_delay()
+    hub.stat.print_sum_round_duration()
 
 
 def main():

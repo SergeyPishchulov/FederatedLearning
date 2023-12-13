@@ -1,6 +1,6 @@
 import copy
 import os
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import List
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,6 +18,7 @@ class Statistics:
             ft.id: pd.DataFrame(timedelta(0), columns=self.client_cols,
                                 index=pd.Series(range(args.T), name='round'))
             for ft in tasks}
+        self.round_done_ts_by_round_num = {}
         current_directory = os.getcwd()
         self.directory = os.path.join(current_directory, r'stat')
         self.pngs_directory = os.path.join(current_directory, r'stat/pngs')
@@ -25,6 +26,22 @@ class Statistics:
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
             os.makedirs(self.pngs_directory)
+
+    def set_init_round_beginning(self, task_ids):
+        for ft_id in task_ids:
+            self.round_done_ts_by_round_num[ft_id] = {-1: datetime.now()}
+
+    def set_round_done_ts(self, ft_id, ag_round_num):
+        """Save moment in time at which ag_round_num is done"""
+        self.round_done_ts_by_round_num[ft_id][ag_round_num] = datetime.now()
+
+    def print_sum_round_duration(self):
+        res = timedelta(0)
+        for ft_id, ts_by_round in self.round_done_ts_by_round_num.items():
+            tss = (list(ts_by_round.values()))
+            all_rounds_duration = max(tss) - min(tss)
+            res += all_rounds_duration
+        print(f"All rounds duration (sum by all tasks) {res.total_seconds()} s")
 
     def save_client_ac(self, client_id, ft_id, round, acc):
         self.acc_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = acc
