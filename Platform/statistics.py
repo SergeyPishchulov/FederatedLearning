@@ -52,6 +52,12 @@ class Statistics:
     def save_agr_ac(self, ft_id, round, acc):
         self.acc_by_ft_id[ft_id].loc[round, 'agr'] = acc
 
+    def print_time_target_acc(self, tasks):
+        """Prints time required to reach target accuracy for the specified task"""
+        res = {}
+        for ft in tasks:
+            acs = self.acc_by_ft_id[ft.id]['agr']
+
     def print_delay(self):
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
