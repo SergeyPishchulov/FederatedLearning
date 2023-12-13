@@ -40,15 +40,15 @@ class Statistics:
         for ft_id, df in self.delay_by_ft_id.items():
             # print(df)
             res += df[self.client_cols].sum().sum()
-        print(f'SUM_DELAY: {res}')
+        print(f'SUM_DELAY: {res.total_seconds()} s')
 
     def plot_delay(self):
         fig, axes = plt.subplots(1, figsize=(10, 8))
-        axes.set_title(f'Delay by round')
+        axes.set_title(f"Delay by round. Sum of clients delays for each task")
         for ft_id, df in self.delay_by_ft_id.items():
             sum_by_all_clients = df.map(lambda x: x.total_seconds()).sum(axis=1)
             axes.plot(sum_by_all_clients,
-                      label=f'{ft_id}',
+                      label=f'task {ft_id}',
                       # linestyle='dashed'
                       )
         axes.set_xlabel('round')

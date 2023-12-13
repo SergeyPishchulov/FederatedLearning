@@ -56,11 +56,10 @@ def handle_messages(hub):
                     f'Got update from client {r.client_id}. Round {r.iteration_num} for task {r.ft_id} is done. DL is {r.deadline}')
                 hub.journal.save_local(r.ft_id, r.client_id, r.iteration_num, copy.deepcopy(r.model), r.deadline)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.iteration_num, r.acc)
-                del r
             elif isinstance(r, ResponseToHub):
                 # print(f'Received ResponseToHub: {r}')
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
-
+            del r
 
 def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
     for c in clients:
