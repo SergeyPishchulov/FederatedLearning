@@ -75,7 +75,7 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
 
 
 def run(tasks, hub, clients, user_args):
-    hub.stat.set_init_round_beginning()
+    hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     while not all(ft.done for ft in tasks):
         handle_messages(hub)
         _, next_ft_id, ag_round_num, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
