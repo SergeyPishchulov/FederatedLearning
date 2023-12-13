@@ -12,10 +12,10 @@ def get_configs(user_args):
         dataset='cifar10',
         local_model='ResNet20',
     ))
-    custom_configs.append(dict(
-        dataset='cifar10',
-        local_model='ResNet56',
-    ))
+    # custom_configs.append(dict(
+    #     dataset='cifar10',
+    #     local_model='ResNet56',
+    # ))
     return [Namespace(**(vars(user_args) | common_config | cc)) for cc in custom_configs]
 
 
