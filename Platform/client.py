@@ -4,6 +4,7 @@ import traceback
 from datetime import datetime, timedelta
 
 import torch
+from typing import Dict, List
 
 from message import MessageToHub, MessageToClient, ResponseToHub
 from utils import validate, setup_seed, combine_lists
@@ -23,7 +24,7 @@ class Client:
         self.user_args = user_args
         self.plan = self._get_plan()
         self.should_finish = False
-        self.data_len_by_ft_id = {ft_id: [0] for ft_id in node_by_ft_id}
+        self.data_len_by_ft_id: Dict[int,List] = {ft_id: [0] for ft_id in node_by_ft_id}
 
     def _get_plan(self):
         rounds = self.user_args.T
@@ -111,7 +112,7 @@ class Client:
                 node = self.node_by_ft_id[ft_id]
                 self._set_aggregated_model(ft_args, node, agr_model)
                 mean_loss, data_len = self._train_one_round(ft_args, node)
-                self.data_len_by_ft_id[ft_id].appen(data_len)
+                self.data_len_by_ft_id[ft_id].append(data_len)
                 acc = validate(ft_args, node)
                 node.iterations_performed += 1  # TODO not to mess with r
                 deadline = node.deadline_by_round[r]  # deadline to perform round r
