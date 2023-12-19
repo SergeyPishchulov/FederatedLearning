@@ -1,7 +1,7 @@
 import argparse
 from typing import List
 
-from Platform.aggregation_station import DumbAggregationStationScheduler, SFAggregationStationScheduler
+from aggregation_station import DumbAggregationStationScheduler, SFAggregationStationScheduler
 from federated_ml_task import FederatedMLTask
 from utils import generate_selectlist
 from training_journal import TrainingJournal
