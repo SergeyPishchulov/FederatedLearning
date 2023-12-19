@@ -1,5 +1,7 @@
+import argparse
 from typing import List
 
+from Platform.aggregation_station import DumbAggregationStationScheduler, SFAggregationStationScheduler
 from federated_ml_task import FederatedMLTask
 from utils import generate_selectlist
 from training_journal import TrainingJournal
@@ -14,6 +16,18 @@ class Hub:
         self.stat = Statistics(tasks, clients, args)
         self.journal = TrainingJournal([ft.id for ft in tasks])
         self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
+        self._init_scheduler(args)
+
+    def _init_scheduler(self, args):
+        if args.aggregation_scheduler == 'random':
+            self.aggregation_scheduler = DumbAggregationStationScheduler
+            print(f'DumbAggregationStationScheduler is set')
+        elif args.aggregation_scheduler == 'SF':
+            self.aggregation_scheduler = SFAggregationStationScheduler
+            print(f'SFAggregationStationScheduler is set')
+        else:
+            raise argparse.ArgumentError(args.aggregation_scheduler,
+                                         'Incorrect value for aggregation_scheduler')
 
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node

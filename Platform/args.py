@@ -44,6 +44,8 @@ def args_parser():
                         help="random seed for the whole experiment")
     parser.add_argument('--exp_name', type=str, default='FirstTable',
                         help="experiment name")
+    parser.add_argument('--aggregation_scheduler', type=str, default='random',
+                        help="Scheduler at aggregation station. random or SF")
 
     # Server function
     parser.add_argument('--server_method', type=str, default='fedavg',
