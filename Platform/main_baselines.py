@@ -107,14 +107,13 @@ def run(tasks, hub, clients, user_args):
     while not all(ft.done for ft in tasks):
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
-        raise ValueError(ready_tasks_dict)
-        jobs = [Job(ft_id, deadline, round_num, processing_time_coef=1)
-                for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
-        best_job = AggregationStationScheduler.plan_next(jobs)
-        next_ft_id = best_job.ft_id
-        _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
+        if ready_tasks_dict:
+            jobs = [Job(ft_id, deadline, round_num, processing_time_coef=1)
+                    for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
+            best_job = AggregationStationScheduler.plan_next(jobs)
+            next_ft_id = best_job.ft_id
+            _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
         # _, next_ft_id, ag_round_num, client_models
-        if next_ft_id is not None:
             ft = tasks[next_ft_id]
             Server_update(ft.args, ft.central_node.model, client_models,
                           hub.get_select_list(ft, [c.id for c in clients]),

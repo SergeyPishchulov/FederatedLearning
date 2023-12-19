@@ -45,7 +45,7 @@ class TrainingJournal:
     def get_ft_to_aggregate(self, client_ids):
         ready = self._get_ft_ready_to_agr(client_ids)
         if not ready:
-            return (None,) * 4
+            return {}
         res = (datetime.max, None, None, None)
         res_tasks = {}
         for ft_id, round_num in ready:
