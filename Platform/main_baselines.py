@@ -1,7 +1,10 @@
 import traceback
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
+from typing import List
+
 from client import Client
 from federated_ml_task import FederatedMLTask
 from hub import Hub
@@ -74,11 +77,42 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
             print(traceback.format_exc())
 
 
+@dataclass
+class Job:
+    ft_id: int
+    deadline: datetime
+    round_num: int
+    processing_time_coef: float  # coefficient proportional to time required for aggregation
+
+
+class AggregationStationScheduler:
+    @staticmethod
+    def plan_next(jobs: List[Job]):
+        if not jobs:
+            raise ValueError("No jobs provided")
+        for j in jobs:
+            j.reserve_coef = (j.deadline - datetime.now()) / (j.processing_time_coef)
+        min_reserve_coef = min(j.reserve_coef for j in jobs)
+        best_candidates = [j for j in jobs if j.reserve_coef == min_reserve_coef]
+        if len(best_candidates) == 1:
+            print('AGS_PLAN: Only one task is ready for aggregation')
+            return best_candidates[0]
+        return random.choice(best_candidates)
+        # TODO if best_candidates is short enough then
+        #  find which one has best metric value (sum delay of deadline) with brute force
+
+
 def run(tasks, hub, clients, user_args):
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     while not all(ft.done for ft in tasks):
         handle_messages(hub)
-        _, next_ft_id, ag_round_num, client_models = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        ready_tasks_tuples = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        jobs = [Job(ft_id, deadline, round_num, processing_time_coef=1)
+                for ft_id, (deadline, round_num, models) in ready_tasks_tuples.items()]
+        best_job = AggregationStationScheduler.plan_next(jobs)
+        next_ft_id = best_job.ft_id
+        _, ag_round_num, client_models = ready_tasks_tuples[next_ft_id]
+        # _, next_ft_id, ag_round_num, client_models
         if next_ft_id is not None:
             ft = tasks[next_ft_id]
             Server_update(ft.args, ft.central_node.model, client_models,

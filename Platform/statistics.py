@@ -57,6 +57,7 @@ class Statistics:
         res = {}
         for ft in tasks:
             acs = self.acc_by_ft_id[ft.id]['agr']
+            #TODO join with round_done_ts_by_round_num
 
     def print_delay(self):
         res = timedelta(0)

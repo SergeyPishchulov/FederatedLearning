@@ -19,7 +19,7 @@ class JournalRecord:
 
 class TrainingJournal:
     def __init__(self, task_ids):
-        self.d = {}  # key is (ft_id, client_id, round); value is model
+        self.d = {}  # key is (ft_id, client_id, round); value is Record(model, deadline)
         self.latest_aggregated_round = {i: -1 for i in task_ids}
 
     def mark_as_aggregated(self, ft_id):
@@ -47,13 +47,16 @@ class TrainingJournal:
         if not ready:
             return (None,) * 4
         res = (datetime.max, None, None, None)
+        res_tasks = {}
         for ft_id, round_num in ready:
             records = [self.d[(ft_id, cl_id, round_num)] for cl_id in client_ids]
             models = [r.model for r in records]
             min_d = min([r.deadline for r in records])  # feature of the task
+            res_tasks[ft_id] = ((min_d, ft_id, round_num, models))
             if min_d < res[0]:
                 res = min_d, ft_id, round_num, models
-        print(f'Task {res[1]} with min deadline {res[0]}')
-        return res
+        # print(f'Task {res[1]} with min deadline {res[0]}')
+        # return res
+        return res_tasks
 
     # print(f"No task to aggregate. d keys: {self.d.keys()}")
