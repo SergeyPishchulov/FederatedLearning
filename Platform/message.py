@@ -17,6 +17,7 @@ class MessageToHub:
     model: torch.nn.Module
     client_id: int
     deadline: datetime
+    update_quality: float
 
 
 @dataclass

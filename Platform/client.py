@@ -23,6 +23,7 @@ class Client:
         self.user_args = user_args
         self.plan = self._get_plan()
         self.should_finish = False
+        self.data_len_by_ft_id = {ft_id: [0] for ft_id in node_by_ft_id}
 
     def _get_plan(self):
         rounds = self.user_args.T
@@ -47,7 +48,7 @@ class Client:
             loss = loss + loss_local.item()
             node.optimizer.step()
 
-        return loss / len(train_loader)
+        return loss / len(train_loader), len(train_loader)
 
     def _set_aggregated_model(self, ft_args, node, agr_model):
         if 'fedlaw' in ft_args.server_method:
@@ -59,13 +60,14 @@ class Client:
 
     def _train_one_round(self, ft_args, node):
         epoch_losses = []
+        data_len = -1
         if ft_args.client_method == 'local_train':
             # print(f'Node {node.num_id} has available batches: {len(node.local_data)}')
             for epoch in range(ft_args.E):
-                loss = self.client_localTrain(ft_args, node)  # TODO check if not working
+                loss, data_len = self.client_localTrain(ft_args, node)  # TODO check if not working
                 epoch_losses.append(loss)
             mean_loss = sum(epoch_losses) / len(epoch_losses)
-            return mean_loss
+            return mean_loss, data_len
         else:
             raise NotImplemented('Still only local_train =(')
 
@@ -108,27 +110,29 @@ class Client:
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]
                 self._set_aggregated_model(ft_args, node, agr_model)
-                mean_loss = self._train_one_round(ft_args, node)
+                mean_loss, data_len = self._train_one_round(ft_args, node)
+                self.data_len_by_ft_id[ft_id].appen(data_len)
                 acc = validate(ft_args, node)
                 node.iterations_performed += 1  # TODO not to mess with r
                 deadline = node.deadline_by_round[r]  # deadline to perform round r
+                data_lens = self.data_len_by_ft_id[ft_id]
+                update_quality = data_lens[-1] - data_lens[
+                    -2]  # how much new data points was used in this training round
                 response = MessageToHub(node.iterations_performed - 1, ft_id,
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),
                                         self.id,
-                                        deadline)
+                                        deadline,
+                                        update_quality)
                 try:
                     write_q.put(response)
                 except Exception:
                     print(traceback.format_exc())
                 self.plan.pop(0)
-                print(f'    Client {self.id} sent local model for round {response.iteration_num}, task {response.ft_id}')
+                print(
+                    f'    Client {self.id} sent local model for round {response.iteration_num}, task {response.ft_id}')
             else:
                 pass
-                # print(
-                #     f" Client {self.id}: Agr model from prev step is not found {self.agr_model_by_ft_id_round.keys()}")
-                # time.sleep(1)
-            # time.sleep(0.5)
         while not self.should_finish:
             self.handle_messages(read_q, write_q)
         print(f'    Client {self.id} is DONE')

@@ -1,7 +1,7 @@
 import argparse
 from typing import List
 
-from aggregation_station import DumbAggregationStationScheduler, SFAggregationStationScheduler
+from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
 from federated_ml_task import FederatedMLTask
 from utils import generate_selectlist
 from training_journal import TrainingJournal
@@ -14,14 +14,15 @@ class Hub:
         self.tasks = tasks
         self.clients = clients
         self.stat = Statistics(tasks, clients, args)
-        self.journal = TrainingJournal([ft.id for ft in tasks])
+        self.journal = TrainingJournal([ft.id for ft in tasks], {ft.id: ft.args
+                                                                 for ft in tasks}, args)
         self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
         self._init_scheduler(args)
 
     def _init_scheduler(self, args):
         if args.aggregation_scheduler == 'random':
-            self.aggregation_scheduler = DumbAggregationStationScheduler
-            print(f'DumbAggregationStationScheduler is set')
+            self.aggregation_scheduler = RandomAggregationStationScheduler
+            print(f'RandomAggregationStationScheduler is set')
         elif args.aggregation_scheduler == 'SF':
             self.aggregation_scheduler = SFAggregationStationScheduler
             print(f'SFAggregationStationScheduler is set')

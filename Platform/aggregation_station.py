@@ -30,7 +30,7 @@ class SFAggregationStationScheduler:
         #  find which one has best metric value (sum delay of deadline) with brute force
 
 
-class DumbAggregationStationScheduler:
+class RandomAggregationStationScheduler:
     @staticmethod
     def plan_next(jobs: List[Job]):
         if not jobs:

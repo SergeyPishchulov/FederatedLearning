@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
 from typing import List
 
-from aggregation_station import Job, SFAggregationStationScheduler, DumbAggregationStationScheduler
+from aggregation_station import Job, SFAggregationStationScheduler, RandomAggregationStationScheduler
 from client import Client
 from federated_ml_task import FederatedMLTask
 from hub import Hub
@@ -58,7 +58,7 @@ def handle_messages(hub):
                 # TODO understand what round is performed
                 print(
                     f'Got update from client {r.client_id}. Round {r.iteration_num} for task {r.ft_id} is done. DL is {r.deadline}')
-                hub.journal.save_local(r.ft_id, r.client_id, r.iteration_num, copy.deepcopy(r.model), r.deadline)
+                hub.journal.save_local(r.ft_id, r.client_id, r.iteration_num, copy.deepcopy(r.model), r.deadline, r.update_quality)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.iteration_num, r.acc)
             elif isinstance(r, ResponseToHub):
                 # print(f'Received ResponseToHub: {r}')
@@ -106,7 +106,7 @@ def run(tasks, hub, clients, user_args):
 
             acc = validate(ft.args, ft.central_node, which_dataset='local')
             hub.stat.save_agr_ac(ft.id,
-                                 round=ag_round_num,
+                                 round_num=ag_round_num,
                                  acc=acc)
             send_agr_model_to_clients(clients, hub, ag_round_num, ft,
                                       should_finish=all(ft.done for ft in tasks))

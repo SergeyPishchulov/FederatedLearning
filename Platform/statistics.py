@@ -49,8 +49,8 @@ class Statistics:
     def save_client_delay(self, client_id, ft_id, round, delay):
         self.delay_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = delay
 
-    def save_agr_ac(self, ft_id, round, acc):
-        self.acc_by_ft_id[ft_id].loc[round, 'agr'] = acc
+    def save_agr_ac(self, ft_id, round_num, acc):
+        self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
     def print_time_target_acc(self, tasks):
         """Prints time required to reach target accuracy for the specified task"""

@@ -46,6 +46,11 @@ def args_parser():
                         help="experiment name")
     parser.add_argument('--aggregation_scheduler', type=str, default='random',
                         help="Scheduler at aggregation station. random or SF")
+    parser.add_argument('--aggregation_on', type=str, default='all_received',
+                        help="""Event that will run aggregation process. 
+                        Options:
+                         all_received - All clients have performed the round
+                         required_quality - Required quality of updates is reached. You should specify required_quality in an experiment configs""")
 
     # Server function
     parser.add_argument('--server_method', type=str, default='fedavg',
