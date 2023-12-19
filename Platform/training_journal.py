@@ -61,7 +61,8 @@ class TrainingJournal:
         for cl_id in client_ids:
             if (ft_id, cl_id, round_num + 1) in self.d:
                 sum_quality += self.d[(ft_id, cl_id, round_num + 1)].update_quality
-        print(f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}. SUM is{sum_quality}")
+        print(
+            f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}. SUM is{sum_quality}")
         if sum_quality >= self.required_quality_by_ft_id[ft_id]:
             print(f"JOURNAL: Quality reached.")
             return True
@@ -75,7 +76,13 @@ class TrainingJournal:
         total_min_deadline = datetime.max
         res_tasks = {}
         for ft_id, round_num in ready:
-            records = [self.d[(ft_id, cl_id, round_num)] for cl_id in client_ids]
+            # TODO think what will happen dith updates that was sent after aggreagation
+            # NOTE: minimal deadline of task is computed only by clients who have sent an update
+            # Fair enough: clients who havent sent can not vote for aggregation of the task
+            records = []
+            for cl_id in client_ids:
+                if (ft_id, cl_id, round_num) in self.d:
+                    records.append(self.d[(ft_id, cl_id, round_num)])
             models = [r.model for r in records]
             min_d = min([r.deadline for r in records])  # feature of the task
             res_tasks[ft_id] = ((min_d, round_num, models))
