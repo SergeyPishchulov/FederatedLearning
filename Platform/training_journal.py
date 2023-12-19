@@ -43,7 +43,7 @@ class TrainingJournal:
         if self.args.aggregation_on == 'all_received':
             decision_func = self.all_clients_performed_round
         elif self.args.aggregation_on == 'required_quality':
-            decision_func = self.required_quality_by_ft_id
+            decision_func = self.required_quality_reached
         else:
             raise argparse.ArgumentError(self.args.aggregation_on, "Unknown value")
         for ft_id, latest_round in self.latest_aggregated_round.items():
