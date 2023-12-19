@@ -77,7 +77,7 @@ class Client:
     def handle_messages(self, read_q, write_q):
         while not read_q.empty():
             mes: MessageToClient = read_q.get()
-            print(f'Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
+            print(f'    Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
             self.should_finish = mes.should_finish
             self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
             required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
@@ -122,7 +122,7 @@ class Client:
                 except Exception:
                     print(traceback.format_exc())
                 self.plan.pop(0)
-                print(f'Client {self.id} sent local model for round {response.iteration_num}, task {response.ft_id}')
+                print(f'    Client {self.id} sent local model for round {response.iteration_num}, task {response.ft_id}')
             else:
                 pass
                 # print(
@@ -131,4 +131,4 @@ class Client:
             # time.sleep(0.5)
         while not self.should_finish:
             self.handle_messages(read_q, write_q)
-        print(f'Client {self.id} is DONE')
+        print(f'    Client {self.id} is DONE')
