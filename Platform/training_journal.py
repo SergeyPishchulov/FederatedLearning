@@ -48,7 +48,7 @@ class TrainingJournal:
             raise argparse.ArgumentError(self.args.aggregation_on, "Unknown value")
         for ft_id, latest_round in self.latest_aggregated_round.items():
             condition = decision_func(ft_id, latest_round, client_ids)
-            if condition:  # TODO summ accuaracy > A
+            if condition:
                 res.append((ft_id, latest_round + 1))
         return res
 
@@ -61,9 +61,10 @@ class TrainingJournal:
         for cl_id in client_ids:
             if (ft_id, cl_id, round_num + 1) in self.d:
                 sum_quality += self.d[(ft_id, cl_id, round_num + 1)].update_quality
+        print(f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}")
         if sum_quality >= self.required_quality_by_ft_id[ft_id]:
             return True
-        print(f"Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}")
+        print(f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}")
         return False or self.all_clients_performed_round(ft_id, round_num, client_ids)
 
     def get_ft_to_aggregate(self, client_ids):
