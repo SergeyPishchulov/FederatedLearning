@@ -52,7 +52,7 @@ class TrainingJournal:
             records = [self.d[(ft_id, cl_id, round_num)] for cl_id in client_ids]
             models = [r.model for r in records]
             min_d = min([r.deadline for r in records])  # feature of the task
-            res_tasks[ft_id] = ((min_d, ft_id, round_num, models))
+            res_tasks[ft_id] = ((min_d, round_num, models))
             if min_d < res[0]:
                 res = min_d, ft_id, round_num, models
         # print(f'Task {res[1]} with min deadline {res[0]}')
