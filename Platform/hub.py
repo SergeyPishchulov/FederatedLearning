@@ -14,7 +14,7 @@ class Hub:
         self.tasks = tasks
         self.clients = clients
         self.stat = Statistics(tasks, clients, args)
-        self.journal = TrainingJournal([ft.id for ft in tasks], {ft.id: ft.args
+        self.journal = TrainingJournal([ft.id for ft in tasks], {ft.id: ft.args.required_quality
                                                                  for ft in tasks}, args)
         self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
         self._init_scheduler(args)
