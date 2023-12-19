@@ -24,7 +24,7 @@ class Client:
         self.user_args = user_args
         self.plan = self._get_plan()
         self.should_finish = False
-        self.data_len_by_ft_id: Dict[int,List] = {ft_id: [0] for ft_id in node_by_ft_id}
+        self.data_len_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
 
     def _get_plan(self):
         rounds = self.user_args.T
@@ -49,7 +49,7 @@ class Client:
             loss = loss + loss_local.item()
             node.optimizer.step()
 
-        return loss / len(train_loader), len(train_loader)
+        return loss / len(train_loader), len(train_loader) * node.args.batchsize
 
     def _set_aggregated_model(self, ft_args, node, agr_model):
         if 'fedlaw' in ft_args.server_method:
