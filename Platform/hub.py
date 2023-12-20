@@ -33,12 +33,12 @@ class Hub:
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
 
-    def get_select_list(self, ft, client_ids):
-        if ft.args.select_ratio == 1.0:
-            select_list = client_ids
-        else:
-            select_list = generate_selectlist(client_ids, ft.args.select_ratio)
-        return select_list
+    # def get_select_list(self, ft, client_ids):
+    #     if ft.args.select_ratio == 1.0:
+    #         select_list = client_ids
+    #     else:
+    #         select_list = generate_selectlist(client_ids, ft.args.select_ratio)
+    #     return select_list
 
     def init_qs(self):
         write_q_by_cl_id = {

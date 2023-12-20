@@ -58,7 +58,8 @@ def handle_messages(hub):
                 # TODO understand what round is performed
                 print(
                     f'Got update from client {r.client_id}. Round {r.iteration_num} for task {r.ft_id} is done. DL is {r.deadline}')
-                hub.journal.save_local(r.ft_id, r.client_id, r.iteration_num, copy.deepcopy(r.model), r.deadline, r.update_quality)
+                hub.journal.save_local(r.ft_id, r.client_id, r.iteration_num, copy.deepcopy(r.model), r.deadline,
+                                       r.update_quality)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.iteration_num, r.acc)
             elif isinstance(r, ResponseToHub):
                 # print(f'Received ResponseToHub: {r}')
@@ -92,8 +93,9 @@ def run(tasks, hub, clients, user_args):
             # _, next_ft_id, ag_round_num, client_models
             ft = tasks[next_ft_id]
             Server_update(ft.args, ft.central_node.model, client_models,
-                          hub.get_select_list(ft, [c.id for c in clients]),
-                          ft.size_weights)
+                          select_list=list(range(len(client_models))),  # NOTE: all ready clients will be aggregated
+                          # hub.get_select_list(ft, [c.id for c in clients]),
+                          size_weights=ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
             print(f'AGS Success. Task {ft.id}, round {ag_round_num}')

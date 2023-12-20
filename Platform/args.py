@@ -36,8 +36,8 @@ def args_parser():
                         help="Number of local epochs: E")
     parser.add_argument('--dataset', type=str, default='cifar10',
                         help="Type of algorithms:{mnist, cifar10,cifar100, fmnist}")
-    parser.add_argument('--select_ratio', type=float, default=1.0,
-                        help="the ratio of client selection in each round")
+    # parser.add_argument('--select_ratio', type=float, default=1.0,
+    #                     help="the ratio of client selection in each round")
     parser.add_argument('--local_model', type=str, default='CNN',
                         help='Type of local model: {CNN, ResNet8, AlexNet}')
     parser.add_argument('--random_seed', type=int, default=10,
