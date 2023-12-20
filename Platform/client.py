@@ -176,6 +176,6 @@ class Client:
                 except Exception:
                     print(traceback.format_exc())
                 print(
-                    f'    Client {self.id} sent local model for round {response.iteration_num}, task {response.ft_id}')
+                    f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
 
         print(f'    Client {self.id} is DONE')

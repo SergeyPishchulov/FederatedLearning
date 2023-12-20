@@ -57,7 +57,7 @@ def handle_messages(hub):
             if isinstance(r, MessageToHub):
                 # TODO understand what round is performed
                 print(
-                    f'Got update from client {r.client_id}. Round {r.iteration_num} for task {r.ft_id} is done. DL is {r.deadline}')
+                    f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
                 hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline,
                                        r.update_quality)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
