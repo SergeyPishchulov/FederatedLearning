@@ -70,10 +70,10 @@ class Client:
 
     def get_scheduler_cls(self, user_args):
         if user_args.local_scheduler == "CyclicalScheduler":
-            print(f'    Client {self.id} SCHEDULER is set to {CyclicalScheduler}')
+            print(f'    Client {self.id} SCHEDULER is set to CyclicalScheduler')
             return CyclicalScheduler
         elif user_args.local_scheduler == "MinDeadlineScheduler":
-            print(f'    Client {self.id} SCHEDULER is set to {MinDeadlineScheduler}')
+            print(f'    Client {self.id} SCHEDULER is set to MinDeadlineScheduler')
             return MinDeadlineScheduler
         raise argparse.ArgumentError(user_args.local_scheduler, "Unknown value")
 
