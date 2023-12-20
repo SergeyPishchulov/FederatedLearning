@@ -64,6 +64,8 @@ def handle_messages(hub):
             elif isinstance(r, ResponseToHub):
                 # print(f'Received ResponseToHub: {r}')
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
+                if r.final_message:
+                    hub.finished_by_client[r.client_id] = True
             del r
 
 
@@ -81,7 +83,7 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
 
 def run(tasks, hub, clients, user_args):
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
-    while not all(ft.done for ft in tasks):
+    while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if ready_tasks_dict:

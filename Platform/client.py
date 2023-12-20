@@ -141,7 +141,7 @@ class Client:
             self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
             required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
             delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
-            write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay))
+            write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=mes.should_finish))
             del mes
 
     def set_deadlines(self):

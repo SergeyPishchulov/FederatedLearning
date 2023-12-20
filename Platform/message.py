@@ -43,3 +43,4 @@ class ResponseToHub:
     ft_id: int
     round_num: int
     delay: timedelta
+    final_message: bool = False

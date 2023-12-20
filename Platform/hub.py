@@ -18,6 +18,7 @@ class Hub:
                                                                  for ft in tasks}, args)
         self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
         self._init_scheduler(args)
+        self.finished_by_client = {cl.id: False for cl in clients}
 
     def _init_scheduler(self, args):
         if args.aggregation_scheduler == 'random':
