@@ -42,7 +42,7 @@ class MinDeadlineScheduler(LocalScheduler):
         ready.sort()
         if not ready:
             return None
-        ft_id, deadline = ready[0]
+        deadline, ft_id = ready[0]
         return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
 
 
@@ -85,7 +85,6 @@ class Client:
         self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
         self.trained_ft_id_round = set()
         self.scheduler = self.get_scheduler(user_args)
-
 
     def get_scheduler(self, user_args):
         if user_args.local_scheduler == "CyclicalScheduler":
