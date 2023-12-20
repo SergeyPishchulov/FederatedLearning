@@ -55,6 +55,10 @@ class CyclicalScheduler(LocalScheduler):
                 return ft_id, r
         return None, None
 
+    def delete_from_plan(self, ft_id, r):
+        """It notifies the scheduler that round is performed successfully, so it should not be scheduled again"""
+        self.plan.remove((r, ft_id))
+
 
 class Client:
     def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args):
@@ -173,6 +177,7 @@ class Client:
                                         round_num=r)
                 try:
                     write_q.put(response)
+                    self.scheduler.delete_from_plan(ft_id, r)
                 except Exception:
                     print(traceback.format_exc())
                 print(
