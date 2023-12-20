@@ -164,12 +164,13 @@ class Client:
                 data_lens = self.data_lens_by_ft_id[ft_id]
                 update_quality = data_lens[-1] - data_lens[
                     -2]  # how much new data points was used in this training round
-                response = MessageToHub(node.iterations_performed - 1, ft_id,
+                response = MessageToHub(-1, ft_id,  # TODO delete -1
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),
                                         self.id,
                                         deadline,
-                                        update_quality)
+                                        update_quality,
+                                        round_num=r)
                 try:
                     write_q.put(response)
                 except Exception:

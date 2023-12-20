@@ -18,6 +18,8 @@ class MessageToHub:
     client_id: int
     deadline: datetime
     update_quality: float
+    round_num: int  # In which round client want to participate.
+    # model is fine-tuned model from prev round. See MessageToClient
 
 
 @dataclass
