@@ -56,9 +56,9 @@ class CyclicalScheduler(LocalScheduler):
             data_available = n.data_for_round_is_available(r)
             status[(r, ft_id)] = f"Data {int(data_available)}, prev_model {int(has_prev_model)}"
             if (has_prev_model and data_available):
-                print(f"    Client task is chosen {r, ft_id}")
+                # print(f"    Client task is chosen {r, ft_id}")
                 return ft_id, r
-        print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
+        # print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
         pprint(status)
         return None, None
 
@@ -189,6 +189,6 @@ class Client:
                     print(traceback.format_exc())
                 print(
                     f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
-            time.sleep(5)
+            # time.sleep(5)
 
         print(f'    Client {self.id}: CLIENT is DONE')

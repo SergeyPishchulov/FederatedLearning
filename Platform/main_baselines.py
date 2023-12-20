@@ -117,7 +117,7 @@ def run(tasks, hub, clients, user_args):
         hub.stat.plot_accuracy()
         hub.stat.plot_delay()
         # time.sleep(0.5)
-    print('All tasks are done')
+    print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
 
