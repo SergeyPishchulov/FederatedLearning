@@ -16,39 +16,45 @@ from client_funct import *
 
 
 class LocalScheduler:
-    pass
+    def __init__(self, trained_ft_id_round):
+        self.trained_ft_id_round: set = trained_ft_id_round
+
+    def delete_from_plan(self, ft_id, r):
+        """It notifies the scheduler that round is performed successfully, so it should not be scheduled again"""
+        self.trained_ft_id_round.add((ft_id, r))
 
 
-# class MinDeadlineScheduler(LocalScheduler):
-#     def __init__(self, *args):
-#         pass
-#
-#     def get_next_task(self, agr_model_by_ft_id_round, rounds_cnt, node_by_ft_id: Dict[int, Node], trained_ft_id_round):
-#         ready = []
-#         planning_round_by_ft_id = {}
-#         for ft_id in node_by_ft_id:
-#             n: Node = node_by_ft_id[ft_id]
-#             last_aggregated_round = max(k[1] for k in agr_model_by_ft_id_round if k[0] == ft_id)
-#             planning_round = last_aggregated_round + 1
-#             if ((ft_id, last_aggregated_round) not in trained_ft_id_round and
-#                     n.data_for_round_is_available(planning_round)):
-#                 ready.append((n.deadline_by_round[planning_round], ft_id))
-#                 planning_round_by_ft_id[ft_id] = planning_round
-#         ready.sort()
-#         if not ready:
-#             return None
-#         ft_id, deadline = ready[0]
-#         return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
+class MinDeadlineScheduler(LocalScheduler):
+    def __init__(self, trained_ft_id_round):
+        super().__init__(trained_ft_id_round)
+
+    def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node]):
+        ready = []
+        planning_round_by_ft_id = {}
+        for ft_id in node_by_ft_id:
+            n: Node = node_by_ft_id[ft_id]
+            last_aggregated_round = max(k[1] for k in agr_model_by_ft_id_round if k[0] == ft_id)
+            planning_round = last_aggregated_round + 1
+            if ((ft_id, planning_round) not in self.trained_ft_id_round and
+                    n.data_for_round_is_available(planning_round)):
+                ready.append((n.deadline_by_round[planning_round], ft_id))
+                planning_round_by_ft_id[ft_id] = planning_round
+        ready.sort()
+        if not ready:
+            return None
+        ft_id, deadline = ready[0]
+        return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
 
 
 class CyclicalScheduler(LocalScheduler):
-    def __init__(self, user_args, node_by_ft_id):
+    def __init__(self, trained_ft_id_round, user_args, node_by_ft_id):
+        super().__init__(trained_ft_id_round)
         rounds = user_args.T
         self.plan = combine_lists([
             [(round, ft_id) for round in range(rounds)] for ft_id in node_by_ft_id
         ])
 
-    def get_next_task(self, agr_model_by_ft_id_round, rounds_cnt, node_by_ft_id: Dict[int, Node], trained_ft_id_round):
+    def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node]):
         status = {}
         for (r, ft_id) in self.plan:
             n: Node = node_by_ft_id[ft_id]
@@ -64,6 +70,7 @@ class CyclicalScheduler(LocalScheduler):
 
     def delete_from_plan(self, ft_id, r):
         """It notifies the scheduler that round is performed successfully, so it should not be scheduled again"""
+        super().delete_from_plan(ft_id, r)
         self.plan.remove((r, ft_id))
 
 
@@ -76,16 +83,16 @@ class Client:
         self.user_args = user_args
         self.should_finish = False
         self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
-        self.scheduler = self.get_scheduler_cls(user_args)(user_args, node_by_ft_id)
+        self.scheduler = self.get_scheduler(user_args)
         self.trained_ft_id_round = set()
 
-    def get_scheduler_cls(self, user_args):
+    def get_scheduler(self, user_args):
         if user_args.local_scheduler == "CyclicalScheduler":
             print(f'    Client {self.id} SCHEDULER is set to CyclicalScheduler')
-            return CyclicalScheduler
+            return CyclicalScheduler(self.trained_ft_id_round, user_args, self.node_by_ft_id)
         elif user_args.local_scheduler == "MinDeadlineScheduler":
             print(f'    Client {self.id} SCHEDULER is set to MinDeadlineScheduler')
-            return MinDeadlineScheduler
+            return MinDeadlineScheduler(self.trained_ft_id_round)
         raise argparse.ArgumentError(user_args.local_scheduler, "Unknown value")
 
     def client_localTrain(self, args, node, loss=0.0):
@@ -160,8 +167,8 @@ class Client:
         self.set_deadlines()
         while not self.should_finish:  # TODO bug. on last iteration we need to computed delay
             self.handle_messages(read_q, write_q)
-            ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round, self.user_args.T,
-                                                    self.node_by_ft_id, self.trained_ft_id_round)
+            ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
+                                                    self.node_by_ft_id)
             if ft_id is not None:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
