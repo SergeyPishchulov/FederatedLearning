@@ -28,7 +28,7 @@ class MinDeadlineScheduler(LocalScheduler):
     def __init__(self, trained_ft_id_round):
         super().__init__(trained_ft_id_round)
 
-    def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node]):
+    def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node], rounds_cnt):
         ready = []
         planning_round_by_ft_id = {}
         for ft_id in node_by_ft_id:
@@ -36,7 +36,8 @@ class MinDeadlineScheduler(LocalScheduler):
             last_aggregated_round = max(k[1] for k in agr_model_by_ft_id_round if k[0] == ft_id)
             planning_round = last_aggregated_round + 1
             if ((ft_id, planning_round) not in self.trained_ft_id_round and
-                    n.data_for_round_is_available(planning_round)):
+                    n.data_for_round_is_available(planning_round)
+                    and planning_round < rounds_cnt):
                 ready.append((n.deadline_by_round[planning_round], ft_id))
                 planning_round_by_ft_id[ft_id] = planning_round
         ready.sort()
@@ -54,7 +55,7 @@ class CyclicalScheduler(LocalScheduler):
             [(round, ft_id) for round in range(rounds)] for ft_id in node_by_ft_id
         ])
 
-    def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node]):
+    def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node], rounds_cnt):
         status = {}
         for (r, ft_id) in self.plan:
             n: Node = node_by_ft_id[ft_id]
@@ -168,7 +169,7 @@ class Client:
         while not self.should_finish:  # TODO bug. on last iteration we need to computed delay
             self.handle_messages(read_q, write_q)
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
-                                                    self.node_by_ft_id)
+                                                    self.node_by_ft_id, self.user_args.T)
             if ft_id is not None:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
