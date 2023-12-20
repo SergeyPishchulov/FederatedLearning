@@ -59,7 +59,7 @@ class CyclicalScheduler(LocalScheduler):
                 # print(f"    Client task is chosen {r, ft_id}")
                 return ft_id, r
         # print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
-        pprint(status)
+        # pprint(status)
         return None, None
 
     def delete_from_plan(self, ft_id, r):
