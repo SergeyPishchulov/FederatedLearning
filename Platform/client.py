@@ -41,7 +41,7 @@ class MinDeadlineScheduler(LocalScheduler):
                 planning_round_by_ft_id[ft_id] = planning_round
         ready.sort()
         if not ready:
-            return None
+            return None, None
         deadline, ft_id = ready[0]
         return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
 
