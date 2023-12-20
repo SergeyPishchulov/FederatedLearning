@@ -188,5 +188,6 @@ class Client:
                     print(traceback.format_exc())
                 print(
                     f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
+            time.sleep(5)
 
         print(f'    Client {self.id}: CLIENT is DONE')
