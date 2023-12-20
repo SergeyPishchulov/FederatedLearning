@@ -56,6 +56,7 @@ class CyclicalScheduler(LocalScheduler):
             data_available = n.data_for_round_is_available(r)
             status[(r, ft_id)] = f"Data {int(data_available)}, prev_model {int(has_prev_model)}"
             if (has_prev_model and data_available):
+                print(f"    Client task is chosen {r, ft_id}")
                 return ft_id, r
         print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
         pprint(status)
