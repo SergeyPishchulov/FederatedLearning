@@ -3,6 +3,7 @@ import os
 import time
 import traceback
 from datetime import datetime, timedelta
+from pprint import pprint
 
 import torch
 from typing import Dict, List
@@ -48,11 +49,16 @@ class CyclicalScheduler(LocalScheduler):
         ])
 
     def get_next_task(self, agr_model_by_ft_id_round, rounds_cnt, node_by_ft_id: Dict[int, Node], trained_ft_id_round):
+        status = {}
         for (r, ft_id) in self.plan:
             n: Node = node_by_ft_id[ft_id]
-            if ((ft_id, r - 1) in agr_model_by_ft_id_round
-                    and n.data_for_round_is_available(r)):
+            has_prev_model = (ft_id, r - 1) in agr_model_by_ft_id_round
+            data_available = n.data_for_round_is_available(r)
+            status[(r, ft_id)] = f"Data {int(data_available)}, prev_model {int(has_prev_model)}"
+            if (has_prev_model and data_available):
                 return ft_id, r
+        print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
+        pprint(status)
         return None, None
 
     def delete_from_plan(self, ft_id, r):
@@ -183,4 +189,4 @@ class Client:
                 print(
                     f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
 
-        print(f'    Client {self.id} is DONE')
+        print(f'    Client {self.id}: CLIENT is DONE')
