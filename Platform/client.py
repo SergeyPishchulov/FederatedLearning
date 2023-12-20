@@ -83,8 +83,9 @@ class Client:
         self.user_args = user_args
         self.should_finish = False
         self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
-        self.scheduler = self.get_scheduler(user_args)
         self.trained_ft_id_round = set()
+        self.scheduler = self.get_scheduler(user_args)
+
 
     def get_scheduler(self, user_args):
         if user_args.local_scheduler == "CyclicalScheduler":
