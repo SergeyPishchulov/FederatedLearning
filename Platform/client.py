@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 import traceback
@@ -13,24 +14,68 @@ from server_funct import *
 from client_funct import *
 
 
+class LocalScheduler:
+    pass
+
+
+class MinDeadlineScheduler(LocalScheduler):
+    def __init__(self, *args):
+        pass
+
+    def get_next_task(self, agr_model_by_ft_id_round, rounds_cnt, node_by_ft_id: Dict[int, Node], trained_ft_id_round):
+        ready = []
+        planning_round_by_ft_id = {}
+        for ft_id in node_by_ft_id:
+            n: Node = node_by_ft_id[ft_id]
+            last_aggregated_round = max(k[1] for k in agr_model_by_ft_id_round if k[0] == ft_id)
+            planning_round = last_aggregated_round + 1
+            if ((ft_id, last_aggregated_round) not in trained_ft_id_round and
+                    n.data_for_round_is_available(planning_round)):
+                ready.append((n.deadline_by_round[planning_round], ft_id))
+                planning_round_by_ft_id[ft_id] = planning_round
+        ready.sort()
+        if not ready:
+            return None
+        ft_id, deadline = ready[0]
+        return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
+
+
+class CyclicalScheduler(LocalScheduler):
+    def __init__(self, user_args, node_by_ft_id):
+        rounds = user_args.T
+        self.plan = combine_lists([
+            [(round, ft_id) for round in range(rounds)] for ft_id in node_by_ft_id
+        ])
+
+    def get_next_task(self, agr_model_by_ft_id_round, rounds_cnt, node_by_ft_id: Dict[int, Node], trained_ft_id_round):
+        for (r, ft_id) in self.plan:
+            n: Node = node_by_ft_id[ft_id]
+            if ((ft_id, r - 1) in agr_model_by_ft_id_round
+                    and n.data_for_round_is_available(r)):
+                return ft_id, r
+        return None, None
+
+
 class Client:
     def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args):
-        self.id = id  # TODO set pipe
-        # self.hub = hub#temporary. instead of pipe
-        # self.args = args
+        self.id = id
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
         self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
         self.user_args = user_args
-        self.plan = self._get_plan()
         self.should_finish = False
-        self.data_len_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
+        self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
+        self.scheduler = self.get_scheduler_cls(user_args)(user_args, node_by_ft_id)
+        self.trained_ft_id_round = set()
 
-    def _get_plan(self):
-        rounds = self.user_args.T
-        return combine_lists([
-            [(round, ft_id) for round in range(rounds)] for ft_id in self.node_by_ft_id
-        ])
+    def get_scheduler_cls(self, user_args):
+        if user_args.local_scheduler == "CyclicalScheduler":
+            print(f'    Client {self.id} SCHEDULER is set to {CyclicalScheduler}')
+            return CyclicalScheduler
+        elif user_args.local_scheduler == "MinDeadlineScheduler":
+            print(f'    Client {self.id} SCHEDULER is set to {MinDeadlineScheduler}')
+            return MinDeadlineScheduler
+        raise argparse.ArgumentError(user_args.local_scheduler, "Unknown value")
 
     def client_localTrain(self, args, node, loss=0.0):
         node.model.train()
@@ -102,21 +147,21 @@ class Client:
     def run(self, read_q, write_q):
         self.setup()
         self.set_deadlines()
-        while self.plan:  # TODO bug. on last iteration we need to computed delay
-            r, ft_id = self.plan[0]
+        while not self.should_finish:  # TODO bug. on last iteration we need to computed delay
             self.handle_messages(read_q, write_q)
-
-            if (ft_id, r - 1) in self.agr_model_by_ft_id_round:
+            ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round, self.user_args.T,
+                                                    self.node_by_ft_id, self.trained_ft_id_round)
+            if ft_id is not None:
                 agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]
                 self._set_aggregated_model(ft_args, node, agr_model)
                 mean_loss, data_len = self._train_one_round(ft_args, node)
-                self.data_len_by_ft_id[ft_id].append(data_len)
+                self.data_lens_by_ft_id[ft_id].append(data_len)
                 acc = validate(ft_args, node)
                 node.iterations_performed += 1  # TODO not to mess with r
                 deadline = node.deadline_by_round[r]  # deadline to perform round r
-                data_lens = self.data_len_by_ft_id[ft_id]
+                data_lens = self.data_lens_by_ft_id[ft_id]
                 update_quality = data_lens[-1] - data_lens[
                     -2]  # how much new data points was used in this training round
                 response = MessageToHub(node.iterations_performed - 1, ft_id,
@@ -129,11 +174,7 @@ class Client:
                     write_q.put(response)
                 except Exception:
                     print(traceback.format_exc())
-                self.plan.pop(0)
                 print(
                     f'    Client {self.id} sent local model for round {response.iteration_num}, task {response.ft_id}')
-            else:
-                pass
-        while not self.should_finish:
-            self.handle_messages(read_q, write_q)
+
         print(f'    Client {self.id} is DONE')

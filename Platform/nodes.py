@@ -13,7 +13,6 @@ class Node(object):
         self.args = args
         self._local_data = local_data
         self._train_set = train_set
-        # self.node_num = node_num
         self.iterations_performed = 0
         self.deadline_by_round = None  # max time to perform round №r
         if num_id == -1:
@@ -57,6 +56,9 @@ class Node(object):
             self.zero_weights(v)
             self.v = v
 
+    def data_for_round_is_available(self, round_num):
+        return self.ds_train.parts_available >= (round_num + 1)
+
     def set_datasets(self, input_tss):
         self.local_data, self.validate_set = self.train_val_split(self._local_data, self._train_set, self.valid_ratio,
                                                                   input_tss)
@@ -77,6 +79,7 @@ class Node(object):
         ds_train = DatasetSplit(train_set, idxs_train)
         if input_tss is not None:
             ds_train = DatasetPartiallyAvailable(ds_train, input_tss)
+        self.ds_train = ds_train
         train_loader = DataLoader(ds_train,
                                   batch_size=self.args.batchsize, num_workers=0, shuffle=True)
 

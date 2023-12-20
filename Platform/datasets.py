@@ -39,14 +39,13 @@ class DatasetPartiallyAvailable(Dataset):
         self.input_timestamps = sorted(input_timestamps)
         self.num_parts = len(self.input_timestamps) + 1
         self.last_inds = np.cumsum(divide_almost_equally(len(dataset), self.num_parts))
+        self.parts_available = 1
         print(f'Original dataset size is {len(dataset)}, but will be available as {self.last_inds}')
 
     def __len__(self):
         cur = datetime.now()
-        parts_available = 1 + sum(ts < cur for ts in self.input_timestamps)
-        # print(f"Parts available {parts_available}")
-        # raise Exception(self.last_inds,  self.last_inds[parts_available - 1])
-        return self.last_inds[parts_available - 1]
+        self.parts_available = 1 + sum(ts < cur for ts in self.input_timestamps)
+        return self.last_inds[self.parts_available - 1]
 
     def __getitem__(self, item):
         image, label = self.dataset[item]

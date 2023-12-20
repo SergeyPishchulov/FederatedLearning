@@ -49,8 +49,14 @@ def args_parser():
     parser.add_argument('--aggregation_on', type=str, default='all_received',
                         help="""Event that will run aggregation process. 
                         Options:
-                         all_received - All clients have performed the round
-                         required_quality - Required quality of updates is reached. You should specify required_quality in an experiment configs""")
+                        all_received - All clients have performed the round
+                        required_quality - Required quality of updates is reached. You should specify required_quality in an experiment configs""")
+    parser.add_argument('--local_scheduler', type=str, default='CyclicalScheduler',
+                        help="""Strategy for scheduling tasks during local training.
+                        Options:
+                        CyclicalScheduler. e.g. 3 tasks and 2 rounds. Schedule will be [t1, t2, t3, t1, t2, t3]
+                        MinDeadlineScheduler
+                        """)
 
     # Server function
     parser.add_argument('--server_method', type=str, default='fedavg',
