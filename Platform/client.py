@@ -19,26 +19,26 @@ class LocalScheduler:
     pass
 
 
-class MinDeadlineScheduler(LocalScheduler):
-    def __init__(self, *args):
-        pass
-
-    def get_next_task(self, agr_model_by_ft_id_round, rounds_cnt, node_by_ft_id: Dict[int, Node], trained_ft_id_round):
-        ready = []
-        planning_round_by_ft_id = {}
-        for ft_id in node_by_ft_id:
-            n: Node = node_by_ft_id[ft_id]
-            last_aggregated_round = max(k[1] for k in agr_model_by_ft_id_round if k[0] == ft_id)
-            planning_round = last_aggregated_round + 1
-            if ((ft_id, last_aggregated_round) not in trained_ft_id_round and
-                    n.data_for_round_is_available(planning_round)):
-                ready.append((n.deadline_by_round[planning_round], ft_id))
-                planning_round_by_ft_id[ft_id] = planning_round
-        ready.sort()
-        if not ready:
-            return None
-        ft_id, deadline = ready[0]
-        return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
+# class MinDeadlineScheduler(LocalScheduler):
+#     def __init__(self, *args):
+#         pass
+#
+#     def get_next_task(self, agr_model_by_ft_id_round, rounds_cnt, node_by_ft_id: Dict[int, Node], trained_ft_id_round):
+#         ready = []
+#         planning_round_by_ft_id = {}
+#         for ft_id in node_by_ft_id:
+#             n: Node = node_by_ft_id[ft_id]
+#             last_aggregated_round = max(k[1] for k in agr_model_by_ft_id_round if k[0] == ft_id)
+#             planning_round = last_aggregated_round + 1
+#             if ((ft_id, last_aggregated_round) not in trained_ft_id_round and
+#                     n.data_for_round_is_available(planning_round)):
+#                 ready.append((n.deadline_by_round[planning_round], ft_id))
+#                 planning_round_by_ft_id[ft_id] = planning_round
+#         ready.sort()
+#         if not ready:
+#             return None
+#         ft_id, deadline = ready[0]
+#         return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
 
 
 class CyclicalScheduler(LocalScheduler):
