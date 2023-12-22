@@ -60,7 +60,9 @@ class Statistics:
 
     def plot_periods(self):
         fig, axes = plt.subplots(1, figsize=(10, 8))
-        colors = list(mcolors.BASE_COLORS.values())
+
+        ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
+        colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
         # print(f'Entities {entities}, e_ft_id{self.periods_by_entity_ft_id.keys()}')
         for i, e in enumerate(entities):
@@ -70,8 +72,11 @@ class Statistics:
                 # print(f'Plot for ent {e} task {ft_id}')
                 for p in periods:
                     p: Period
-                    axes.plot([p.start, p.end], [i] * 2, color=colors[ft_id])
-        axes.legend(f"Task {ft_id}" for _, ft_id in self.periods_by_entity_ft_id)
+                    axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
+                              linewidth=10
+                              )
+        axes.yticks(entities)
+        axes.legend([f"Task {ft_id}" for ft_id in ft_ids])
         fig.savefig(f'{self.pngs_directory}/periods.png')
         plt.close()
 
