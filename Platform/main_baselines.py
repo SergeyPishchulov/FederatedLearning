@@ -125,6 +125,7 @@ def run(tasks, hub, clients, user_args):
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
+    hub.stat.plot_periods()
 
 
 def main():
