@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -6,6 +8,8 @@ import torch.optim as optim
 import torch.nn as nn
 import copy
 from torch.optim.lr_scheduler import CosineAnnealingLR
+
+from message import Period
 from utils import init_model
 import math
 from copy import deepcopy
@@ -283,6 +287,7 @@ def Server_update(args, agr_model, client_models, select_list, size_weights):
     '''
 
     # receive the local models from clients
+    start_time = datetime.now()
     agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
 
     # update the global model
@@ -315,7 +320,8 @@ def Server_update(args, agr_model, client_models, select_list, size_weights):
 
     else:
         raise NotImplemented('Undefined server method...')
-
+    end_time = datetime.now()
+    return Period(start_time, end_time)
     # return central_node
 
 # FedAvg

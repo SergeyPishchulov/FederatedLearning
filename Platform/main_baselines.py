@@ -61,6 +61,7 @@ def handle_messages(hub):
                 hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline,
                                        r.update_quality)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+                hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
             elif isinstance(r, ResponseToHub):
                 # print(f'Received ResponseToHub: {r}')
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
@@ -94,12 +95,14 @@ def run(tasks, hub, clients, user_args):
             _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
             # _, next_ft_id, ag_round_num, client_models
             ft = tasks[next_ft_id]
-            Server_update(ft.args, ft.central_node.model, client_models,
-                          select_list=list(range(len(client_models))),  # NOTE: all ready clients will be aggregated
-                          # hub.get_select_list(ft, [c.id for c in clients]),
-                          size_weights=ft.size_weights)
+            p: Period = Server_update(ft.args, ft.central_node.model, client_models,
+                                      select_list=list(range(len(client_models))),
+                                      # NOTE: all ready clients will be aggregated
+                                      # hub.get_select_list(ft, [c.id for c in clients]),
+                                      size_weights=ft.size_weights)
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
+            hub.stat.save_ags_period(p)
             print(f'AGS Success. Task {ft.id}, round {ag_round_num}')
             all_aggregation_done = (ag_round_num == user_args.T - 1)
             if all_aggregation_done:
