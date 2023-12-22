@@ -67,7 +67,7 @@ class Statistics:
             for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
                 if ent != e:
                     continue
-                print(f'Plot for ent {e} task {ft_id}')
+                # print(f'Plot for ent {e} task {ft_id}')
                 for p in periods:
                     p: Period
                     axes.plot([p.start, p.end], [i] * 2, color=colors[ft_id])
