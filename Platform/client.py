@@ -8,7 +8,7 @@ from pprint import pprint
 import torch
 from typing import Dict, List
 
-from message import MessageToHub, MessageToClient, ResponseToHub
+from message import MessageToHub, MessageToClient, ResponseToHub, Period
 from utils import validate, setup_seed, combine_lists
 from utils import *
 from server_funct import *
@@ -124,6 +124,7 @@ class Client:
                 agr_model.state_dict()))
 
     def _train_one_round(self, ft_args, node):
+        start_time = datetime.now()
         epoch_losses = []
         data_len = -1
         if ft_args.client_method == 'local_train':
@@ -132,7 +133,8 @@ class Client:
                 loss, data_len = self.client_localTrain(ft_args, node)  # TODO check if not working
                 epoch_losses.append(loss)
             mean_loss = sum(epoch_losses) / len(epoch_losses)
-            return mean_loss, data_len
+            end_time = datetime.now()
+            return mean_loss, data_len, start_time, end_time
         else:
             raise NotImplemented('Still only local_train =(')
 
@@ -175,7 +177,7 @@ class Client:
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]
                 self._set_aggregated_model(ft_args, node, agr_model)
-                mean_loss, data_len = self._train_one_round(ft_args, node)
+                mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
                 self.data_lens_by_ft_id[ft_id].append(data_len)
                 acc = validate(ft_args, node)
                 node.iterations_performed += 1  # TODO not to mess with r
@@ -189,7 +191,7 @@ class Client:
                                         self.id,
                                         deadline,
                                         update_quality,
-                                        round_num=r)
+                                        r, Period(start_time, end_time))
                 try:
                     write_q.put(response)
                     self.scheduler.delete_from_plan(ft_id, r)

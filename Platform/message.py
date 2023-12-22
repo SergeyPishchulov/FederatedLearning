@@ -4,6 +4,12 @@ import torch
 
 
 @dataclass
+class Period:
+    start: datetime
+    end: datetime
+
+
+@dataclass
 class MessageToHub:
     """Message from client to hub with information about updated model
 
@@ -20,6 +26,7 @@ class MessageToHub:
     update_quality: float
     round_num: int  # In which round client want to participate.
     # model is fine-tuned model from prev round. See MessageToClient
+    period: Period
 
 
 @dataclass

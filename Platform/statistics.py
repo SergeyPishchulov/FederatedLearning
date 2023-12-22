@@ -6,6 +6,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+from message import Period
+
 
 class Statistics:
     def __init__(self, tasks, clients, args):
@@ -22,6 +24,8 @@ class Statistics:
         current_directory = os.getcwd()
         self.directory = os.path.join(current_directory, r'stat')
         self.pngs_directory = os.path.join(current_directory, r'stat/pngs')
+        entities = [f'client_{cl.id}' for cl in clients] + ['agr']
+        self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
@@ -46,6 +50,30 @@ class Statistics:
     def save_client_ac(self, client_id, ft_id, round, acc):
         self.acc_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = acc
 
+    def save_client_period(self, client_id, ft_id, period: Period):
+        entity = f'client_{client_id}'
+        self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
+
+    def save_ags_period(self, ft_id, period: Period):
+        entity = 'agr'
+        self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
+
+    def plot_periods(self):
+        plots = len(self.periods_by_entity_ft_id)
+        fig, axes = plt.subplots(1, figsize=(10, 8))
+        colors = list(mcolors.BASE_COLORS.values())
+        entities = sorted([e for e, _ in self.periods_by_entity_ft_id.keys()])
+        for i, e in enumerate(entities):
+            for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
+                if ent != e:
+                    continue
+                for p in periods:
+                    p: Period
+                    axes.plot([p.start, p.end], [i] * 2, color=colors[ft_id])
+        axes.legend(f"Task {ft_id}" for _, ft_id in self.periods_by_entity_ft_id)
+        fig.savefig(f'{self.pngs_directory}/periods.png')
+        plt.close()
+
     def save_client_delay(self, client_id, ft_id, round, delay):
         self.delay_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = delay
 
@@ -57,7 +85,7 @@ class Statistics:
         res = {}
         for ft in tasks:
             acs = self.acc_by_ft_id[ft.id]['agr']
-            #TODO join with round_done_ts_by_round_num
+            # TODO join with round_done_ts_by_round_num
 
     def print_delay(self):
         res = timedelta(0)
