@@ -75,7 +75,7 @@ class Statistics:
                     axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
                               linewidth=10
                               )
-        axes.yticks(entities)
+        plt.yticks(entities)
         axes.legend([f"Task {ft_id}" for ft_id in ft_ids])
         fig.savefig(f'{self.pngs_directory}/periods.png')
         plt.close()
