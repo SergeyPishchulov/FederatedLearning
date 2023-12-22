@@ -75,7 +75,7 @@ class Statistics:
                     axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
                               linewidth=10
                               )
-        # plt.yticks(entities)
+        plt.yticks(list(range(len(entities))))
         axes.set_yticklabels(entities)
         fig.savefig(f'{self.pngs_directory}/periods.png')
         plt.close()
