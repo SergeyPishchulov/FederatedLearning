@@ -59,7 +59,9 @@ class Statistics:
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
 
     def plot_periods(self):
-        fig, axes = plt.subplots(1, figsize=(10, 8))
+        fig, axes = plt.subplots(1,
+                                 # figsize=(10, 8)
+                                 )
 
         ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
         colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
