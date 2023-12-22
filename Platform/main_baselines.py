@@ -114,7 +114,6 @@ def run(tasks, hub, clients, user_args):
                                  acc=acc)
             send_agr_model_to_clients(clients, hub, ag_round_num, ft,
                                       should_finish=all(ft.done for ft in tasks))
-
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         hub.stat.plot_delay()

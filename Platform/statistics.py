@@ -59,10 +59,10 @@ class Statistics:
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
 
     def plot_periods(self):
-        plots = len(self.periods_by_entity_ft_id)
         fig, axes = plt.subplots(1, figsize=(10, 8))
         colors = list(mcolors.BASE_COLORS.values())
         entities = sorted([e for e, _ in self.periods_by_entity_ft_id.keys()])
+        axes.plot([datetime.now(), datetime.now() + timedelta(hours=1)])
         for i, e in enumerate(entities):
             for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
                 if ent != e:
