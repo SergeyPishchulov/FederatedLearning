@@ -76,7 +76,7 @@ class Statistics:
                               linewidth=10
                               )
         plt.yticks(entities)
-        axes.legend([f"Task {ft_id}" for ft_id in ft_ids])
+        axes.set_yticklabels([f"Task {ft_id}" for ft_id in ft_ids])
         fig.savefig(f'{self.pngs_directory}/periods.png')
         plt.close()
 
