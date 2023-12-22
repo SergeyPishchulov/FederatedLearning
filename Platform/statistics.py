@@ -62,7 +62,7 @@ class Statistics:
         fig, axes = plt.subplots(1, figsize=(10, 8))
         colors = list(mcolors.BASE_COLORS.values())
         entities = sorted([e for e, _ in self.periods_by_entity_ft_id.keys()])
-        axes.plot([datetime.now(), datetime.now() + timedelta(hours=1)])
+        print(f'Entities {entities}, e_ft_id{self.periods_by_entity_ft_id.keys()}')
         for i, e in enumerate(entities):
             for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
                 if ent != e:
