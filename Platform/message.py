@@ -11,6 +11,9 @@ class Period:
     def __str__(self):
         return f'[{self.start.strftime("%H:%M:%S")} --- {self.end.strftime("%H:%M:%S")}]'
 
+    def __repr__(self):
+        return self.__str__()
+
 
 @dataclass
 class MessageToHub:
