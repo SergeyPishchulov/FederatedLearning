@@ -59,7 +59,7 @@ class Statistics:
     def save_ags_period(self, ft_id, period: Period):
         entity = 'agr'
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
-        all_periods = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id
+        all_periods = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                            if e == entity])
         print(f"save_ags_period. len is {all_periods} ")  # TODO delete
 
@@ -112,7 +112,7 @@ class Statistics:
         fig, axes = plt.subplots(1, figsize=(10, 8))
         axes.set_title(f"Delay by round. Sum of clients delays for each task")
         for ft_id, df in self.delay_by_ft_id.items():
-            sum_by_all_clients = np.vectorize(lambda x: x.total_seconds())(df).sum(axis=1)
+            sum_by_all_clients = np.vectorize(lambda x: x.total_seconds())(df).sum(axis=1)#bug
             # sum_by_all_clients = df.map(lambda x: x.total_seconds()).sum(axis=1)
             axes.plot(sum_by_all_clients,
                       label=f'task {ft_id}',
