@@ -60,7 +60,7 @@ class Statistics:
     def save_ags_period(self, ft_id, period: Period):
         entity = 'agr'
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
-        periods_by_task = {ft_id: periods for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
+        periods_by_task = {ft_id: len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                  if e == entity}
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
