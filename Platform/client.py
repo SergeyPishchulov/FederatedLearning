@@ -146,7 +146,7 @@ class Client:
     def handle_messages(self, read_q, write_q):
         while not read_q.empty():
             mes: MessageToClient = read_q.get()
-            print(f'    Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
+            # print(f'    Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
             self.should_finish = mes.should_finish
             self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
             required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
@@ -197,8 +197,7 @@ class Client:
                     self.scheduler.delete_from_plan(ft_id, r)
                 except Exception:
                     print(traceback.format_exc())
-                print(
-                    f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
+                # print(f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
             # time.sleep(5)
 
         print(f'    Client {self.id}: CLIENT is DONE')
