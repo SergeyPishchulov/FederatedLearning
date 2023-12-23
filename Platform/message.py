@@ -8,6 +8,9 @@ class Period:
     start: datetime
     end: datetime
 
+    def __str__(self):
+        return f'[{self.start.strftime("%H:%M:%S")} --- {self.end.strftime("%H:%M:%S")}]'
+
 
 @dataclass
 class MessageToHub:
