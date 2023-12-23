@@ -83,6 +83,7 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
 
 
 def run(tasks, hub, clients, user_args):
+    total_aggragations = 0
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
         handle_messages(hub)
@@ -100,6 +101,8 @@ def run(tasks, hub, clients, user_args):
                                       # NOTE: all ready clients will be aggregated
                                       # hub.get_select_list(ft, [c.id for c in clients]),
                                       size_weights=ft.size_weights)
+            total_aggragations += 1
+            print(f"total_aggragations {total_aggragations}")
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
             hub.stat.save_ags_period(ft.id, p)

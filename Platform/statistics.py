@@ -61,7 +61,7 @@ class Statistics:
         entity = 'agr'
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
         periods_by_task = {ft_id: len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
-                 if e == entity}
+                           if e == entity}
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
         print(f"save_ags_period. len is {all_periods_cnt}. periods {periods_by_task} ")  # TODO delete
@@ -76,15 +76,20 @@ class Statistics:
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
         # print(f'Entities {entities}, e_ft_id{self.periods_by_entity_ft_id.keys()}')
         for i, e in enumerate(entities):
+            total_aggragations = 0
             for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
                 if ent != e:
                     continue
-                # print(f'Plot for ent {e} task {ft_id}')
+                    # print(f'Plot for ent {e} task {ft_id}')
                 for p in periods:
+                    if ent == 'agr':
+                        total_aggragations += 1
                     p: Period
                     axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
                               linewidth=10
                               )
+            if e == 'agr':
+                print(f"Plot for ags {total_aggragations} periods")
         plt.yticks(list(range(len(entities))))
         axes.set_yticklabels(entities)
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
