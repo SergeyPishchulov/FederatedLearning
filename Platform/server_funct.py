@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 import numpy as np
@@ -288,6 +289,7 @@ def Server_update(args, agr_model, client_models, select_list, size_weights):
 
     # receive the local models from clients
     start_time = datetime.now()
+    time.sleep(3)
     agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
 
     # update the global model
