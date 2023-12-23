@@ -2,6 +2,8 @@ import copy
 import os
 from datetime import timedelta, datetime
 from typing import List
+
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -110,7 +112,8 @@ class Statistics:
         fig, axes = plt.subplots(1, figsize=(10, 8))
         axes.set_title(f"Delay by round. Sum of clients delays for each task")
         for ft_id, df in self.delay_by_ft_id.items():
-            sum_by_all_clients = df.map(lambda x: x.total_seconds()).sum(axis=1)
+            sum_by_all_clients = np.vectorize(lambda x: x.total_seconds())(df).sum(axis=1)
+            # sum_by_all_clients = df.map(lambda x: x.total_seconds()).sum(axis=1)
             axes.plot(sum_by_all_clients,
                       label=f'task {ft_id}',
                       # linestyle='dashed'
