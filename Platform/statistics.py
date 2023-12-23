@@ -57,6 +57,9 @@ class Statistics:
     def save_ags_period(self, ft_id, period: Period):
         entity = 'agr'
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
+        all_periods = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id
+                           if e == entity])
+        print(f"save_ags_period. len is {all_periods} ")  # TODO delete
 
     def plot_periods(self):
         fig, axes = plt.subplots(1,
