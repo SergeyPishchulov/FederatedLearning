@@ -144,11 +144,12 @@ class Client:
         torch.cuda.set_device('cuda:' + self.user_args.device)
 
     def set_aggregated_model(self, ft_id, round_num, agr_model):
-        local_model = self.agr_model_by_ft_id_round[(ft_id, round_num)]
+        local_model = copy.deepcopy(self.agr_model_by_ft_id_round[(ft_id, -1)])
         if 'fedlaw' in self.user_args.server_method:
             local_model.load_param(copy.deepcopy(agr_model.get_param(clone=True)))
         else:
             local_model.load_state_dict(copy.deepcopy(agr_model.state_dict()))
+        self.agr_model_by_ft_id_round[(ft_id, round_num)] = local_model
         # self.agr_model_by_ft_id_round[(ft_id, round_num)] = copy.deepcopy(agr_model)#My version.BUG?
 
     def handle_messages(self, read_q, write_q):
