@@ -115,7 +115,7 @@ def run(tasks, hub, clients, user_args):
                                       # hub.get_select_list(ft, [c.id for c in clients]),
                                       size_weights=ft.size_weights)
             total_aggragations += 1
-            print(f"total_aggragations {total_aggragations}")
+            # print(f"total_aggragations {total_aggragations}")
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
             hub.stat.save_ags_period(ft.id, p)

@@ -65,7 +65,7 @@ class Statistics:
                            if e == entity}
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
-        print(f"save_ags_period. len is {all_periods_cnt}. periods {periods_by_task} ")  # TODO delete
+        # print(f"save_ags_period. len is {all_periods_cnt}. periods {periods_by_task} ")  # TODO delete
 
     def plot_periods(self):
         fig, axes = plt.subplots(1,

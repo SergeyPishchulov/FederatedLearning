@@ -21,7 +21,7 @@ def args_parser():
                         help="longtail_proxyset")
     parser.add_argument('--longtail_clients', type=str, default='none',
                         help="longtail_clients")
-    parser.add_argument('--partially_available', type=int, default=1,
+    parser.add_argument('--partially_available', type=int, default=0,
                         help="If this flag is raised the clients" +
                              " will get the data gradually by one portion after each deadline")
 
