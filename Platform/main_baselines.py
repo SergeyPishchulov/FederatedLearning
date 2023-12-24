@@ -1,3 +1,4 @@
+import argparse
 import traceback
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -82,9 +83,18 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
             print(traceback.format_exc())
 
 
+def get_updater(user_args):
+    if user_args.server_method == 'fedlaw':
+        return Server_update_fedlaw
+    if user_args.server_method == 'fedavg':
+        return Server_update
+    raise argparse.ArgumentError(user_args.server_method, "Unknown argument value")
+
+
 def run(tasks, hub, clients, user_args):
     total_aggragations = 0
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
+    updater = get_updater(user_args)
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
@@ -96,10 +106,10 @@ def run(tasks, hub, clients, user_args):
             _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
             # _, next_ft_id, ag_round_num, client_models
             ft = tasks[next_ft_id]
-            p: Period = Server_update_fedlaw(ft.args, ft.central_node, client_models,
-                                 select_list=list(range(len(client_models))),
-                                 size_weights=ft.size_weights)
-            p: Period = Server_update(ft.args, ft.central_node, client_models,
+            # p: Period = updater(ft.args, ft.central_node, client_models,
+            #                                  select_list=list(range(len(client_models))),
+            #                                  size_weights=ft.size_weights)
+            p: Period = updater(ft.args, ft.central_node, client_models,
                                       select_list=list(range(len(client_models))),
                                       # NOTE: all ready clients will be aggregated
                                       # hub.get_select_list(ft, [c.id for c in clients]),

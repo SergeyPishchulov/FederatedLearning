@@ -60,7 +60,7 @@ def args_parser():
 
     # Server function
     parser.add_argument('--server_method', type=str, default='fedavg',
-                        help="fedavg, feddf, fedbe, finetune, feddyn, fedadam")
+                        help="fedavg, feddf, fedbe, finetune, feddyn, fedadam, fedlaw")
     parser.add_argument('--server_epochs', type=int, default=20,
                         help="optimizer epochs on server, change it to 1, 2, 3, 5, 10")
     parser.add_argument('--server_optimizer', type=str, default='adam',
