@@ -37,31 +37,31 @@ def Client_update(args, client_nodes, central_node):
             client_losses.append(sum(epoch_losses)/len(epoch_losses))
             train_loss = sum(client_losses)/len(client_losses)
 
-    elif args.client_method == 'fedprox':
-        global_model_param = copy.deepcopy(list(central_node.model.parameters()))
-        client_losses = []
-        for i in range(len(client_nodes)):
-            epoch_losses = []
-            for epoch in range(args.E):
-                loss = client_fedprox(global_model_param, args, client_nodes[i])
-                epoch_losses.append(loss)
-            client_losses.append(sum(epoch_losses)/len(epoch_losses))
-            train_loss = sum(client_losses)/len(client_losses)
-
-    elif args.client_method == 'feddyn':
-        global_model_vector = copy.deepcopy(model_parameter_vector(args, central_node.model).detach().clone())
-        client_losses = []
-        for i in range(len(client_nodes)):
-            epoch_losses = []
-            for epoch in range(args.E):
-                loss = client_feddyn(global_model_vector, args, client_nodes[i])
-                epoch_losses.append(loss)
-            client_losses.append(sum(epoch_losses)/len(epoch_losses))
-            train_loss = sum(client_losses)/len(client_losses)
-
-            # update old grad
-            v1 = model_parameter_vector(args, client_nodes[i].model).detach()
-            client_nodes[i].old_grad = client_nodes[i].old_grad - args.mu * (v1 - global_model_vector)
+    # elif args.client_method == 'fedprox':
+    #     global_model_param = copy.deepcopy(list(central_node.model.parameters()))
+    #     client_losses = []
+    #     for i in range(len(client_nodes)):
+    #         epoch_losses = []
+    #         for epoch in range(args.E):
+    #             loss = client_fedprox(global_model_param, args, client_nodes[i])
+    #             epoch_losses.append(loss)
+    #         client_losses.append(sum(epoch_losses)/len(epoch_losses))
+    #         train_loss = sum(client_losses)/len(client_losses)
+    #
+    # elif args.client_method == 'feddyn':
+    #     global_model_vector = copy.deepcopy(model_parameter_vector(args, central_node.model).detach().clone())
+    #     client_losses = []
+    #     for i in range(len(client_nodes)):
+    #         epoch_losses = []
+    #         for epoch in range(args.E):
+    #             loss = client_feddyn(global_model_vector, args, client_nodes[i])
+    #             epoch_losses.append(loss)
+    #         client_losses.append(sum(epoch_losses)/len(epoch_losses))
+    #         train_loss = sum(client_losses)/len(client_losses)
+    #
+    #         # update old grad
+    #         v1 = model_parameter_vector(args, client_nodes[i].model).detach()
+    #         client_nodes[i].old_grad = client_nodes[i].old_grad - args.mu * (v1 - global_model_vector)
 
     else:
         raise ValueError('Undefined server method...')
@@ -123,27 +123,27 @@ def client_fedprox(global_model_param, args, node, loss = 0.0):
     return loss/len(train_loader)
 
 #FedDyn
-def client_feddyn(global_model_vector, args, node, loss = 0.0):
-    node.model.train()
-
-    loss = 0.0
-    train_loader = node.local_data  # iid
-    for idx, (data, target) in enumerate(train_loader):
-        # zero_grad
-        node.optimizer.zero_grad()
-        # train model
-        data, target = data.cuda(), target.cuda()
-        output_local = node.model(data)
-
-        loss_local =  F.cross_entropy(output_local, target)
-        loss = loss + loss_local.item()
-
-        # feddyn update
-        v1 = model_parameter_vector(args, node.model)
-        loss_local += args.mu/2 * torch.norm(v1 - global_model_vector, 2)
-        loss_local -= torch.dot(v1, node.old_grad)
-
-        loss_local.backward()
-        node.optimizer.step()
-
-    return loss/len(train_loader)
+# def client_feddyn(global_model_vector, args, node, loss = 0.0):
+#     node.model.train()
+#
+#     loss = 0.0
+#     train_loader = node.local_data  # iid
+#     for idx, (data, target) in enumerate(train_loader):
+#         # zero_grad
+#         node.optimizer.zero_grad()
+#         # train model
+#         data, target = data.cuda(), target.cuda()
+#         output_local = node.model(data)
+#
+#         loss_local =  F.cross_entropy(output_local, target)
+#         loss = loss + loss_local.item()
+#
+#         # feddyn update
+#         v1 = model_parameter_vector(args, node.model)
+#         loss_local += args.mu/2 * torch.norm(v1 - global_model_vector, 2)
+#         loss_local -= torch.dot(v1, node.old_grad)
+#
+#         loss_local.backward()
+#         node.optimizer.step()
+#
+#     return loss/len(train_loader)

@@ -92,8 +92,9 @@ class Statistics:
                               linewidth=10
                               )
             if e == 'agr':
-                print(f"Plot for ags {total_aggragations} periods")
-                pprint(agr_periods)
+                pass #TODO delete
+                # print(f"Plot for ags {total_aggragations} periods")
+                # pprint(agr_periods)
         plt.yticks(list(range(len(entities))))
         axes.set_yticklabels(entities)
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG

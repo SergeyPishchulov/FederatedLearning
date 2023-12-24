@@ -143,12 +143,20 @@ class Client:
         os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
         torch.cuda.set_device('cuda:' + self.user_args.device)
 
+    def set_aggregated_model(self, ft_id, round_num, agr_model):
+        local_model = self.agr_model_by_ft_id_round[(ft_id, round_num)]
+        if 'fedlaw' in self.user_args.server_method:
+            local_model.load_param(copy.deepcopy(agr_model.get_param(clone=True)))
+        else:
+            local_model.load_state_dict(copy.deepcopy(agr_model.state_dict()))
+        # self.agr_model_by_ft_id_round[(ft_id, round_num)] = copy.deepcopy(agr_model)#My version.BUG?
+
     def handle_messages(self, read_q, write_q):
         while not read_q.empty():
             mes: MessageToClient = read_q.get()
             # print(f'    Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
             self.should_finish = mes.should_finish
-            self.agr_model_by_ft_id_round[(mes.ft_id, mes.round_num)] = copy.deepcopy(mes.agr_model)
+            self.set_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model)
             required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
             delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
             write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=mes.should_finish))

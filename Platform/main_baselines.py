@@ -96,7 +96,10 @@ def run(tasks, hub, clients, user_args):
             _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
             # _, next_ft_id, ag_round_num, client_models
             ft = tasks[next_ft_id]
-            p: Period = Server_update(ft.args, ft.central_node.model, client_models,
+            p: Period = Server_update_fedlaw(ft.args, ft.central_node, client_models,
+                                 select_list=list(range(len(client_models))),
+                                 size_weights=ft.size_weights)
+            p: Period = Server_update(ft.args, ft.central_node, client_models,
                                       select_list=list(range(len(client_models))),
                                       # NOTE: all ready clients will be aggregated
                                       # hub.get_select_list(ft, [c.id for c in clients]),
