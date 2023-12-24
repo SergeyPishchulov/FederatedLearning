@@ -57,11 +57,9 @@ class Node(object):
             self.v = v
 
     def data_for_round_is_available(self, round_num):
-        res = self.ds_train.get_parts_available() >= (round_num + 1)
-        # if not res:
-            # print(
-                # f"Node {self.num_id} parts_available = {self.ds_train.get_parts_available()} but required {round_num + 1} ")
-        return res
+        if isinstance(self.ds_train, DatasetPartiallyAvailable):
+            return self.ds_train.get_parts_available() >= (round_num + 1)
+        return True
 
     def set_datasets(self, input_tss):
         self.local_data, self.validate_set = self.train_val_split(self._local_data, self._train_set, self.valid_ratio,
