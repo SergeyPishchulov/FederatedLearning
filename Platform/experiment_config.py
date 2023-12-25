@@ -13,7 +13,7 @@ def get_configs(user_args):
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='ResNet20',
-        target_acc=45,
+        target_acc=45,#65
     ))
     custom_configs.append(dict(
         dataset='cifar10',
