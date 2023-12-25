@@ -138,6 +138,7 @@ def run(tasks, hub, clients, user_args):
         hub.stat.plot_accuracy()
         # hub.stat.plot_delay()
         hub.stat.plot_periods()
+        hub.stat.print_time_target_acc()
         # time.sleep(0.5)
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
