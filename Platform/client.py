@@ -178,7 +178,7 @@ class Client:
         client_start_time = time.time()
         self.setup()
         self.set_deadlines()
-        while not self.should_finish:  # TODO bug. on last iteration we need to computed delay
+        while not self.should_finish:
             self.handle_messages(read_q, write_q)
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)

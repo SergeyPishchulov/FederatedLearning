@@ -56,7 +56,6 @@ def handle_messages(hub):
         while not q.empty():
             r = q.get()
             if isinstance(r, MessageToHub):
-                # TODO understand what round is performed
                 # print(
                 #     f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
                 hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline,
@@ -92,6 +91,10 @@ def get_updater(user_args):
     raise argparse.ArgumentError(user_args.server_method, "Unknown argument value")
 
 
+def get_params_cnt(model):
+    return sum(p.numel() for p in model.parameters())
+
+
 def run(tasks, hub, clients, user_args):
     total_aggragations = 0
     hub_start_time = time.time()
@@ -101,7 +104,7 @@ def run(tasks, hub, clients, user_args):
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if ready_tasks_dict:
-            jobs = [Job(ft_id, deadline, round_num, processing_time_coef=1)  # TODO specify
+            jobs = [Job(ft_id, deadline, round_num, processing_time_coef=get_params_cnt(models[0]))
                     for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
             best_job = hub.aggregation_scheduler.plan_next(jobs)
             next_ft_id = best_job.ft_id

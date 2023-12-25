@@ -77,7 +77,6 @@ class Statistics:
                            if e == entity}
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
-        # print(f"save_ags_period. len is {all_periods_cnt}. periods {periods_by_task} ")  # TODO delete
 
     def plot_periods(self):
         fig, axes = plt.subplots(1,
@@ -103,10 +102,7 @@ class Statistics:
                     axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
                               linewidth=10
                               )
-            if e == 'agr':
-                pass  # TODO delete
-                # print(f"Plot for ags {total_aggragations} periods")
-                # pprint(agr_periods)
+
         plt.yticks(list(range(len(entities))))
         axes.set_yticklabels(entities, fontsize=20)
         plt.xlabel('time', fontsize=20)

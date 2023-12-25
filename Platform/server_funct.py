@@ -313,7 +313,6 @@ def Server_update(args, central_node, client_models, select_list, size_weights):
     # receive the local models from clients
     start_time = datetime.now()
     agr_model = central_node.model
-    time.sleep(3)  # TODO USED only for correct plotting agr. DELETE
     agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
 
     # update the global model
