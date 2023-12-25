@@ -61,7 +61,7 @@ def handle_messages(hub):
                 #     f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
                 hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline,
                                        r.update_quality)
-                hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+                hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc, r.time_to_target_acc_sec)
                 hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
             elif isinstance(r, ResponseToHub):
                 # print(f'Received ResponseToHub: {r}')
@@ -110,10 +110,10 @@ def run(tasks, hub, clients, user_args):
             #                                  select_list=list(range(len(client_models))),
             #                                  size_weights=ft.size_weights)
             p: Period = updater(ft.args, ft.central_node, client_models,
-                                      select_list=list(range(len(client_models))),
-                                      # NOTE: all ready clients will be aggregated
-                                      # hub.get_select_list(ft, [c.id for c in clients]),
-                                      size_weights=ft.size_weights)
+                                select_list=list(range(len(client_models))),
+                                # NOTE: all ready clients will be aggregated
+                                # hub.get_select_list(ft, [c.id for c in clients]),
+                                size_weights=ft.size_weights)
             total_aggragations += 1
             # print(f"total_aggragations {total_aggragations}")
             hub.journal.mark_as_aggregated(ft.id)
@@ -142,6 +142,7 @@ def run(tasks, hub, clients, user_args):
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
+    hub.stat.print_time_target_acc()
     hub.stat.plot_periods()
 
 

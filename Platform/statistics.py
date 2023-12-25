@@ -30,6 +30,8 @@ class Statistics:
         self.pngs_directory = os.path.join(current_directory, r'stat/pngs')
         entities = [f'client_{cl.id}' for cl in clients] + ['agr']
         self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
+        self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
+                                               columns=self.client_cols)
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
@@ -51,8 +53,11 @@ class Statistics:
             res += all_rounds_duration
         print(f"All rounds duration (sum by all tasks) {res.total_seconds()} s")
 
-    def save_client_ac(self, client_id, ft_id, round, acc):
+    def save_client_ac(self, client_id, ft_id, round, acc, time_to_target_acc_sec):
         self.acc_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = acc
+        if (time_to_target_acc_sec != -1) and (
+                self.time_to_target_acc.loc[ft_id, f'client_{client_id}'] is None):
+            self.time_to_target_acc.loc[ft_id, f'client_{client_id}'] = time_to_target_acc_sec
 
     def save_client_period(self, client_id, ft_id, period: Period):
         entity = f'client_{client_id}'
@@ -92,7 +97,7 @@ class Statistics:
                               linewidth=10
                               )
             if e == 'agr':
-                pass #TODO delete
+                pass  # TODO delete
                 # print(f"Plot for ags {total_aggragations} periods")
                 # pprint(agr_periods)
         plt.yticks(list(range(len(entities))))
@@ -107,12 +112,14 @@ class Statistics:
     def save_agr_ac(self, ft_id, round_num, acc):
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
-    def print_time_target_acc(self, tasks):
-        """Prints time required to reach target accuracy for the specified task"""
-        res = {}
-        for ft in tasks:
-            acs = self.acc_by_ft_id[ft.id]['agr']
-            # TODO join with round_done_ts_by_round_num
+    def print_time_target_acc(self):
+        """Prints time required to reach target accuracy for the all tasks"""
+        df = self.time_to_target_acc
+        mean_by_ft_id = df.mean(axis=1)
+        print("mean time to target_acc by ft_id:")
+        print(mean_by_ft_id)
+        metric_value = mean_by_ft_id.mean()
+        print(f"MEAN TIME TO TARGET ACC = {metric_value}")
 
     def print_delay(self):
         res = timedelta(0)

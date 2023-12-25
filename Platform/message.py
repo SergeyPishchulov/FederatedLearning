@@ -33,6 +33,7 @@ class MessageToHub:
     round_num: int  # In which round client want to participate.
     # model is fine-tuned model from prev round. See MessageToClient
     period: Period
+    time_to_target_acc_sec: int
 
 
 @dataclass
