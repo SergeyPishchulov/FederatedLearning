@@ -30,8 +30,10 @@ class Statistics:
         self.pngs_directory = os.path.join(current_directory, r'stat/pngs')
         entities = [f'client_{cl.id}' for cl in clients] + ['agr']
         self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
-        self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
-                                               columns=self.client_cols)
+        # self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
+        #                                        columns=self.client_cols)
+
+        self.time_to_target_acc_by_ft_id = [None] * len(tasks)
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
@@ -117,6 +119,11 @@ class Statistics:
     def save_agr_ac(self, ft_id, round_num, acc):
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
+    def save_time_to_target_acc(self, ft_id, t):
+        if not self.time_to_target_acc_by_ft_id[ft_id]:
+            self.time_to_target_acc_by_ft_id[ft_id] = t
+
+
     def print_mean_result_acc(self):
         mean_accs = [df.mean(axis=1).iloc[-1] for df in self.acc_by_ft_id.values()]
         res = round(np.mean(mean_accs))
@@ -124,12 +131,7 @@ class Statistics:
 
     def print_time_target_acc(self):
         """Prints time required to reach target accuracy for the all tasks"""
-        df = self.time_to_target_acc
-        mean_by_ft_id = df.mean(axis=1, skipna=False)
-        # print(df)
-        # print("mean time to target_acc by ft_id:")
-        # print(mean_by_ft_id)
-        metric_value = mean_by_ft_id.mean(skipna=False).round()
+        metric_value = pd.Series(self.time_to_target_acc_by_ft_id).mean(skipna=False).round()
         print(f"MEAN TIME TO TARGET ACC = {metric_value}")
 
     def print_delay(self):

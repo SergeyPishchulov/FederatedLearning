@@ -94,13 +94,14 @@ def get_updater(user_args):
 
 def run(tasks, hub, clients, user_args):
     total_aggragations = 0
+    hub_start_time = time.time()
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     updater = get_updater(user_args)
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if ready_tasks_dict:
-            jobs = [Job(ft_id, deadline, round_num, processing_time_coef=1)#TODO specify
+            jobs = [Job(ft_id, deadline, round_num, processing_time_coef=1)  # TODO specify
                     for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
             best_job = hub.aggregation_scheduler.plan_next(jobs)
             next_ft_id = best_job.ft_id
@@ -128,11 +129,13 @@ def run(tasks, hub, clients, user_args):
             hub.stat.save_agr_ac(ft.id,
                                  round_num=ag_round_num,
                                  acc=acc)
+            if acc > ft.args.target_acc:
+                hub.stat.save_time_to_target_acc(ft.id, time.time() - hub_start_time)
             send_agr_model_to_clients(clients, hub, ag_round_num, ft,
                                       should_finish=all(ft.done for ft in tasks))
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
-        # hub.stat.plot_delay()
+        hub.stat.print_time_target_acc()
         hub.stat.plot_periods()
 
         # time.sleep(0.5)
@@ -163,7 +166,8 @@ def main():
 
     for proc in procs:
         proc.join()
-    print(f"TOTAL FL TIME IS {round(time.time() - global_start)} s")
+    seconds = round(time.time() - global_start)
+    print(f"TOTAL FL TIME IS {seconds} s == {round(seconds / 60., 1)} min")
 
 
 if __name__ == '__main__':
