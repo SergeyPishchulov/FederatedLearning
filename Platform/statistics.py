@@ -120,6 +120,7 @@ class Statistics:
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
     def save_time_to_target_acc(self, ft_id, t):
+        print(f'SAVING {self.time_to_target_acc_by_ft_id}')
         if not self.time_to_target_acc_by_ft_id[ft_id]:
             self.time_to_target_acc_by_ft_id[ft_id] = t
 

@@ -131,6 +131,7 @@ def run(tasks, hub, clients, user_args):
                                  acc=acc)
             hub.stat.print_time_target_acc()
             if acc > ft.args.target_acc:
+                print(f"Acc is {acc}. target is {ft.args.target_acc}")
                 hub.stat.save_time_to_target_acc(ft.id, time.time() - hub_start_time)
             send_agr_model_to_clients(clients, hub, ag_round_num, ft,
                                       should_finish=all(ft.done for ft in tasks))
