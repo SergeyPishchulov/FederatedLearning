@@ -27,8 +27,8 @@ class Statistics:
             for ft in tasks}
         self.round_done_ts_by_round_num = {}
         current_directory = os.getcwd()
-        self.directory = os.path.join(current_directory, r'stat')
-        self.pngs_directory = os.path.join(current_directory, r'stat/pngs')
+        self.directory = os.path.join(current_directory, r'stat' + f"|{self.experiment_name}")
+        self.pngs_directory = os.path.join(self.directory, 'pngs')  # os.path.join(current_directory, r'stat/pngs')
         entities = [f'client_{cl.id}' for cl in clients] + ['agr']
         self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
         # self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
@@ -138,7 +138,7 @@ class Statistics:
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
             # print(df)
-            name = f"{self.pngs_directory}/csv/{self.experiment_name}" + f'|ft_id{ft_id}.csv'
+            name = f"{self.pngs_directory}/{self.experiment_name}" + f'|ft_id{ft_id}.csv'
             df[self.client_cols].to_csv(name)
             res += df[self.client_cols].sum().sum()
         print(f'SUM_DELAY: {round(res.total_seconds())} s')
