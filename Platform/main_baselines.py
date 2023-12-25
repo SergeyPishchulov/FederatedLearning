@@ -149,6 +149,7 @@ def run(tasks, hub, clients, user_args):
 
 
 def main():
+    global_start = time.time()
     user_args = args_parser()
     setup_seed(user_args.random_seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
@@ -166,6 +167,7 @@ def main():
 
     for proc in procs:
         proc.join()
+    print(f"TOTAL FL TIME IS {round(time.time() - global_start)} s")
 
 
 if __name__ == '__main__':

@@ -55,12 +55,12 @@ class Statistics:
 
     def save_client_ac(self, client_id, ft_id, round_num, acc, time_to_target_acc_sec):
         self.acc_by_ft_id[ft_id].loc[round_num, f'client_{client_id}'] = acc
-        print(f"Saved acc for {f'client_{client_id}'} is {round(acc, 3)}")
+        # print(f"Saved acc for {f'client_{client_id}'} is {round(acc, 3)}")
         if (time_to_target_acc_sec != -1):
             print("Target acc is reached")
             if (pd.isnull(self.time_to_target_acc.loc[ft_id, f'client_{client_id}'])):
                 self.time_to_target_acc.loc[ft_id, f'client_{client_id}'] = time_to_target_acc_sec
-                print("SAVED")
+                # print("SAVED")
         print(self.time_to_target_acc)
 
     def save_client_period(self, client_id, ft_id, period: Period):
