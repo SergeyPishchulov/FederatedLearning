@@ -124,11 +124,11 @@ class Statistics:
     def print_time_target_acc(self):
         """Prints time required to reach target accuracy for the all tasks"""
         df = self.time_to_target_acc
-        mean_by_ft_id = df.mean(axis=1)
+        mean_by_ft_id = df.mean(axis=1, skipna=False)
         print(df)
         print("mean time to target_acc by ft_id:")
         print(mean_by_ft_id)
-        metric_value = mean_by_ft_id.mean().round()
+        metric_value = mean_by_ft_id.mean(skipna=False).round()
         print(f"MEAN TIME TO TARGET ACC = {metric_value}")
 
     def print_delay(self):
