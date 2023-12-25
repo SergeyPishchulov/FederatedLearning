@@ -175,7 +175,7 @@ class Client:
                 n.set_datasets(None)  # node have all the date initially
 
     def run(self, read_q, write_q):
-        start_time = time.time()
+        client_start_time = time.time()
         self.setup()
         self.set_deadlines()
         while not self.should_finish:  # TODO bug. on last iteration we need to computed delay
@@ -196,7 +196,7 @@ class Client:
                 update_quality = data_lens[-1] - data_lens[
                     -2]  # how much new data points was used in this training round
                 target_acc = self.args_by_ft_id[ft_id].target_acc
-                time_to_target_acc = -1 if (acc < target_acc) else time.time() - start_time
+                time_to_target_acc = -1 if (acc < target_acc) else time.time() - client_start_time
                 response = MessageToHub(-1, ft_id,  # TODO delete -1
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),
