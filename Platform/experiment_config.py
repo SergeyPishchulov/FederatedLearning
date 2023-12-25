@@ -8,18 +8,18 @@ def get_configs(user_args):
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='CNN',
-        target_acc=25,
+        target_acc=65,
     ))
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='ResNet20',
-        target_acc=25,#65
+        target_acc=65,
     ))
-    # custom_configs.append(dict(
-    #     dataset='cifar10',
-    #     local_model='ResNet56',
-    #     target_acc=45,#55,
-    # ))
+    custom_configs.append(dict(
+        dataset='cifar10',
+        local_model='ResNet56',
+        target_acc=55,
+    ))
     return [Namespace(**(vars(user_args) | common_config | cc)) for cc in custom_configs]
 
 
