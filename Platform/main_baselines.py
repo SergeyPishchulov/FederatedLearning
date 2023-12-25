@@ -63,6 +63,7 @@ def handle_messages(hub):
                                        r.update_quality)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc, r.time_to_target_acc_sec)
                 hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
+                hub.stat.print_time_target_acc()
             elif isinstance(r, ResponseToHub):
                 # print(f'Received ResponseToHub: {r}')
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
@@ -138,7 +139,7 @@ def run(tasks, hub, clients, user_args):
         hub.stat.plot_accuracy()
         # hub.stat.plot_delay()
         hub.stat.plot_periods()
-        hub.stat.print_time_target_acc()
+
         # time.sleep(0.5)
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
