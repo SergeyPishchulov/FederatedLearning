@@ -178,8 +178,8 @@ class Statistics:
 
             axes[ft_id].plot(stat_df['agr'], label='agr_ac')
             axes[ft_id].legend()
-            axes.tick_params(axis='both', which='major', labelsize=20)
-            axes.xlabel('№ round', fontsize=20)
-            axes.ylabel('Accuracy', fontsize=20)
+            axes[ft_id].tick_params(axis='both', which='major', labelsize=20)
+            axes[ft_id].xlabel('№ round', fontsize=20)
+            axes[ft_id].ylabel('Accuracy', fontsize=20)
         fig.savefig(f'{self.pngs_directory}/ac.png')
         plt.close()
