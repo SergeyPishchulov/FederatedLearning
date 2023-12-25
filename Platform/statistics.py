@@ -121,7 +121,7 @@ class Statistics:
 
     def save_time_to_target_acc(self, ft_id, t):
         print(f'SAVING {self.time_to_target_acc_by_ft_id}')
-        if not self.time_to_target_acc_by_ft_id[ft_id]:
+        if self.time_to_target_acc_by_ft_id[ft_id] is np.nan:
             self.time_to_target_acc_by_ft_id[ft_id] = t
 
 
