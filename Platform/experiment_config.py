@@ -2,7 +2,7 @@ from argparse import Namespace
 
 
 def get_configs(user_args):
-    common_config = dict(interdeadline_time_sec=10,
+    common_config = dict(interdeadline_time_sec=25,
                          required_quality=1_000)
     custom_configs = []
     custom_configs.append(dict(

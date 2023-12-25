@@ -100,23 +100,18 @@ def run(tasks, hub, clients, user_args):
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if ready_tasks_dict:
-            jobs = [Job(ft_id, deadline, round_num, processing_time_coef=1)
+            jobs = [Job(ft_id, deadline, round_num, processing_time_coef=1)#TODO specify
                     for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
             best_job = hub.aggregation_scheduler.plan_next(jobs)
             next_ft_id = best_job.ft_id
             _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
-            # _, next_ft_id, ag_round_num, client_models
             ft = tasks[next_ft_id]
-            # p: Period = updater(ft.args, ft.central_node, client_models,
-            #                                  select_list=list(range(len(client_models))),
-            #                                  size_weights=ft.size_weights)
             p: Period = updater(ft.args, ft.central_node, client_models,
                                 select_list=list(range(len(client_models))),
                                 # NOTE: all ready clients will be aggregated
                                 # hub.get_select_list(ft, [c.id for c in clients]),
                                 size_weights=ft.size_weights)
             total_aggragations += 1
-            # print(f"total_aggragations {total_aggragations}")
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
             hub.stat.save_ags_period(ft.id, p)
@@ -144,6 +139,7 @@ def run(tasks, hub, clients, user_args):
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
+    hub.stat.print_mean_result_acc()
     hub.stat.print_time_target_acc()
     hub.stat.plot_periods()
 

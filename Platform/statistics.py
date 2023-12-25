@@ -116,13 +116,18 @@ class Statistics:
     def save_agr_ac(self, ft_id, round_num, acc):
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
+    def print_mean_result_acc(self):
+        mean_accs = [df.mean(axis=1).iloc[-1] for df in self.acc_by_ft_id.values()]
+        res = round(np.mean(mean_accs))
+        print(f"MEAN RESULT ACCURACY IS {res}")
+
     def print_time_target_acc(self):
         """Prints time required to reach target accuracy for the all tasks"""
         df = self.time_to_target_acc
         mean_by_ft_id = df.mean(axis=1)
-        print("mean time to target_acc by ft_id:")
-        print(mean_by_ft_id)
-        metric_value = mean_by_ft_id.mean()
+        # print("mean time to target_acc by ft_id:")
+        # print(mean_by_ft_id)
+        metric_value = round(mean_by_ft_id.mean())
         print(f"MEAN TIME TO TARGET ACC = {metric_value}")
 
     def print_delay(self):
@@ -130,7 +135,7 @@ class Statistics:
         for ft_id, df in self.delay_by_ft_id.items():
             # print(df)
             res += df[self.client_cols].sum().sum()
-        print(f'SUM_DELAY: {res.total_seconds()} s')
+        print(f'SUM_DELAY: {round(res.total_seconds())} s')
 
     def plot_delay(self):
         fig, axes = plt.subplots(1, figsize=(10, 8))
