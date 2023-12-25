@@ -27,7 +27,7 @@ class Statistics:
             for ft in tasks}
         self.round_done_ts_by_round_num = {}
         current_directory = os.getcwd()
-        self.directory = os.path.join(current_directory, r'stat' + f"|{self.experiment_name}")
+        self.directory = os.path.join(current_directory, r'stat/' + f"{self.experiment_name}")
         self.pngs_directory = os.path.join(self.directory, 'pngs')  # os.path.join(current_directory, r'stat/pngs')
         entities = [f'client_{cl.id}' for cl in clients] + ['agr']
         self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
