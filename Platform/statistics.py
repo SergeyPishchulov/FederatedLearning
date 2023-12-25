@@ -138,7 +138,7 @@ class Statistics:
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
             # print(df)
-            name = self.experiment_name + f'|ft_id{ft_id}.csv'
+            name = f"{self.pngs_directory}/csv/{self.experiment_name}" + f'|ft_id{ft_id}.csv'
             df[self.client_cols].to_csv(name)
             res += df[self.client_cols].sum().sum()
         print(f'SUM_DELAY: {round(res.total_seconds())} s')
