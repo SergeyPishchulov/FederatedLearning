@@ -120,7 +120,6 @@ class Statistics:
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
     def save_time_to_target_acc(self, ft_id, t):
-        print(f'SAVING {self.time_to_target_acc_by_ft_id}')
         if self.time_to_target_acc_by_ft_id[ft_id] is np.nan:
             self.time_to_target_acc_by_ft_id[ft_id] = t
 
@@ -133,7 +132,7 @@ class Statistics:
     def print_time_target_acc(self):
         """Prints time required to reach target accuracy for the all tasks"""
         metric_value = pd.Series(self.time_to_target_acc_by_ft_id).mean(skipna=False).round()
-        print(f"MEAN TIME TO TARGET ACC = {metric_value}")
+        print(f"TIME TO TARGET ACC = {metric_value}")
 
     def print_delay(self):
         res = timedelta(0)
