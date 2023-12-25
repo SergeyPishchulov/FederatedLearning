@@ -127,7 +127,7 @@ class Statistics:
         mean_by_ft_id = df.mean(axis=1)
         # print("mean time to target_acc by ft_id:")
         # print(mean_by_ft_id)
-        metric_value = round(mean_by_ft_id.mean())
+        metric_value = mean_by_ft_id.mean().round()
         print(f"MEAN TIME TO TARGET ACC = {metric_value}")
 
     def print_delay(self):
