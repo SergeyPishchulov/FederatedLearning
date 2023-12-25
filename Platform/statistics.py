@@ -15,6 +15,7 @@ from message import Period
 
 class Statistics:
     def __init__(self, tasks, clients, args):
+        self.experiment_name = f'{args.aggregation_on}|{args.server_method}|partially_available={args.partially_available}'
         self.client_cols = [f'client_{c.id}' for c in clients]
         self.acc_by_ft_id = {
             ft.id: pd.DataFrame(columns=['agr'] + self.client_cols,
@@ -59,10 +60,10 @@ class Statistics:
         self.acc_by_ft_id[ft_id].loc[round_num, f'client_{client_id}'] = acc
         # print(f"Saved acc for {f'client_{client_id}'} is {round(acc, 3)}")
         # if (time_to_target_acc_sec != -1):
-            # print("Target acc is reached")
-            # if (pd.isnull(self.time_to_target_acc.loc[ft_id, f'client_{client_id}'])):
-            #     self.time_to_target_acc.loc[ft_id, f'client_{client_id}'] = time_to_target_acc_sec
-                # print("SAVED")
+        # print("Target acc is reached")
+        # if (pd.isnull(self.time_to_target_acc.loc[ft_id, f'client_{client_id}'])):
+        #     self.time_to_target_acc.loc[ft_id, f'client_{client_id}'] = time_to_target_acc_sec
+        # print("SAVED")
         # print(self.time_to_target_acc)
 
     def save_client_period(self, client_id, ft_id, period: Period):
@@ -123,7 +124,6 @@ class Statistics:
         if self.time_to_target_acc_by_ft_id[ft_id] is np.nan:
             self.time_to_target_acc_by_ft_id[ft_id] = t
 
-
     def print_mean_result_acc(self):
         mean_accs = [df.mean(axis=1).iloc[-1] for df in self.acc_by_ft_id.values()]
         res = round(np.mean(mean_accs))
@@ -138,6 +138,8 @@ class Statistics:
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
             # print(df)
+            name = self.experiment_name + f'|ft_id{ft_id}.csv'
+            df[self.client_cols].to_csv(name)
             res += df[self.client_cols].sum().sum()
         print(f'SUM_DELAY: {round(res.total_seconds())} s')
 
