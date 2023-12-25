@@ -78,7 +78,7 @@ class Statistics:
 
     def plot_periods(self):
         fig, axes = plt.subplots(1,
-                                 figsize=(16, 9)
+                                 figsize=(16, 5)
                                  )
 
         ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
