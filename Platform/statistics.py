@@ -33,7 +33,7 @@ class Statistics:
         # self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
         #                                        columns=self.client_cols)
 
-        self.time_to_target_acc_by_ft_id = [None] * len(tasks)
+        self.time_to_target_acc_by_ft_id = [np.nan] * len(tasks)
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
