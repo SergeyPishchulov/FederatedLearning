@@ -106,6 +106,7 @@ class Statistics:
                 # pprint(agr_periods)
         plt.yticks(list(range(len(entities))))
         axes.set_yticklabels(entities, fontsize=20)
+        plt.xlabel('time', fontsize=20)
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
         fig.savefig(f'{self.pngs_directory}/periods.png')
         plt.close()
@@ -167,7 +168,7 @@ class Statistics:
         if len(self.acc_by_ft_id) == 1:
             axes = [axes]
         for ft_id, stat_df in self.acc_by_ft_id.items():
-            axes[ft_id].set_title(ft_id)
+            axes[ft_id].set_title(f"Accuracy for task {ft_id}")
             for c in stat_df.columns:
                 if 'client' in c:
                     axes[ft_id].plot(stat_df[c],
@@ -177,6 +178,8 @@ class Statistics:
 
             axes[ft_id].plot(stat_df['agr'], label='agr_ac')
             axes[ft_id].legend()
-        # plt.show()
+            axes.tick_params(axis='both', which='major', labelsize=20)
+            axes.xlabel('№ round', fontsize=20)
+            axes.ylabel('Accuracy', fontsize=20)
         fig.savefig(f'{self.pngs_directory}/ac.png')
         plt.close()
