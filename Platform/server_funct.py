@@ -298,7 +298,7 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
 
 def Server_update_fedlaw(args, central_node, client_models, select_list, size_weights):
     start_time = datetime.now()
-    print(f'Server_update_fedlaw')
+    # print(f'Server_update_fedlaw')
     agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
     gamma, optmized_weights = fedlaw_optimization(args, agg_weights, client_params, central_node)
     fedlaw_generate_global_model(gamma, optmized_weights, client_params, central_node)
