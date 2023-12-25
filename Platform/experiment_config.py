@@ -8,12 +8,12 @@ def get_configs(user_args):
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='CNN',
-        target_acc=0.6,
+        target_acc=0.5,
     ))
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='ResNet20',
-        target_acc=0.6,
+        target_acc=0.5,
     ))
     # custom_configs.append(dict(
     #     dataset='cifar10',

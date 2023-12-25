@@ -59,6 +59,7 @@ class Statistics:
         if (time_to_target_acc_sec != -1) and (
                 self.time_to_target_acc.loc[ft_id, f'client_{client_id}'] is None):
             self.time_to_target_acc.loc[ft_id, f'client_{client_id}'] = time_to_target_acc_sec
+        print(self.time_to_target_acc)
 
     def save_client_period(self, client_id, ft_id, period: Period):
         entity = f'client_{client_id}'
