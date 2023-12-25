@@ -197,6 +197,7 @@ class Client:
                     -2]  # how much new data points was used in this training round
                 target_acc = self.args_by_ft_id[ft_id].target_acc
                 time_to_target_acc = -1 if (acc < target_acc) else time.time() - client_start_time
+                print(f"    Client {self.id} acc is {acc} time_to_target_acc is {time_to_target_acc}")
                 response = MessageToHub(-1, ft_id,  # TODO delete -1
                                         acc, mean_loss,
                                         copy.deepcopy(node.model),
