@@ -129,13 +129,13 @@ def run(tasks, hub, clients, user_args):
             hub.stat.save_agr_ac(ft.id,
                                  round_num=ag_round_num,
                                  acc=acc)
+            hub.stat.print_time_target_acc()
             if acc > ft.args.target_acc:
                 hub.stat.save_time_to_target_acc(ft.id, time.time() - hub_start_time)
             send_agr_model_to_clients(clients, hub, ag_round_num, ft,
                                       should_finish=all(ft.done for ft in tasks))
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
-        hub.stat.print_time_target_acc()
         hub.stat.plot_periods()
 
         # time.sleep(0.5)
