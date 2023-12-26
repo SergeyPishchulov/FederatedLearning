@@ -141,7 +141,7 @@ def run(tasks, hub, clients, user_args):
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         hub.stat.plot_periods()
-        hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
+        # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
 
         # time.sleep(0.5)
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
@@ -151,7 +151,7 @@ def run(tasks, hub, clients, user_args):
     hub.stat.print_time_target_acc()
     hub.stat.plot_periods()
     end = datetime.now()
-    hub.stat.plot_periods(plotting_period=Period(end, end - timedelta(minutes=5)))
+    hub.stat.plot_periods(plotting_period=Period(end - timedelta(minutes=2), end))
 
 
 def main():
