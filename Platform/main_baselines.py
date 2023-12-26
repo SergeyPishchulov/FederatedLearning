@@ -151,7 +151,7 @@ def run(tasks, hub, clients, user_args):
     hub.stat.print_time_target_acc()
     hub.stat.plot_periods()
     end = datetime.now()
-    hub.stat.plot_periods(plotting_period=Period(end - timedelta(minutes=2), end))
+    hub.stat.plot_periods(plotting_period=Period(end - timedelta(minutes=5), end))
 
 
 def main():
