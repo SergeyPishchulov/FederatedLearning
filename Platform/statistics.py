@@ -78,7 +78,7 @@ class Statistics:
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
 
-    def plot_periods(self):
+    def plot_periods(self, plotting_period: Period = None):
         fig, axes = plt.subplots(1,
                                  figsize=(16, 5)
                                  )
@@ -93,21 +93,25 @@ class Statistics:
             for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
                 if ent != e:
                     continue
-                    # print(f'Plot for ent {e} task {ft_id}')
                 for p in periods:
                     if ent == 'agr':
                         total_aggragations += 1
                         agr_periods.append(p)
                     p: Period
-                    axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
-                              linewidth=10
-                              )
+                    if ((plotting_period is None) or (plotting_period.start < p.start < plotting_period.end)
+                            or (plotting_period.start < p.end < plotting_period.end)):
+                        axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
+                                  linewidth=10
+                                  )
 
         plt.yticks(list(range(len(entities))))
         axes.set_yticklabels(entities, fontsize=20)
         plt.xlabel('time', fontsize=20)
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
-        fig.savefig(f'{self.pngs_directory}/periods.png')
+        if plotting_period is None:
+            fig.savefig(f'{self.pngs_directory}/periods.png')
+        else:
+            fig.savefig(f'{self.pngs_directory}/periods_part.png')
         plt.close()
 
     def save_client_delay(self, client_id, ft_id, round, delay):

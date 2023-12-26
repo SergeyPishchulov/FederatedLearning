@@ -98,6 +98,7 @@ def get_params_cnt(model):
 def run(tasks, hub, clients, user_args):
     total_aggragations = 0
     hub_start_time = time.time()
+    hub_start_dt = datetime.now()
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     updater = get_updater(user_args)
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
@@ -140,6 +141,7 @@ def run(tasks, hub, clients, user_args):
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         hub.stat.plot_periods()
+        hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
 
         # time.sleep(0.5)
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
@@ -148,6 +150,7 @@ def run(tasks, hub, clients, user_args):
     hub.stat.print_mean_result_acc()
     hub.stat.print_time_target_acc()
     hub.stat.plot_periods()
+    hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
 
 
 def main():
