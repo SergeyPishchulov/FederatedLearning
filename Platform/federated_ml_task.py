@@ -6,6 +6,7 @@ class FederatedMLTask:
     def __init__(self, id, args):
         self.args = args
         self.data = Data(args)  # TODO dumb
+        print(f'DATA SIZE for task {id} {len(self.data.train_set)}')
         self.node_cnt = args.node_num
         self.id = id
         self.name = f'Task {id} {args.dataset} {args.local_model}'

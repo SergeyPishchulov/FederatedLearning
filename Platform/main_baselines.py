@@ -28,6 +28,7 @@ except RuntimeError:
 def create_clients(tasks, user_args):
     clients = []
     for client_id in range(user_args.node_num):
+        ft:FederatedMLTask
         node_by_ft_id = {ft.id:
                              Node(client_id, ft.data.train_loader[client_id],
                                   ft.data.train_set, ft.args)

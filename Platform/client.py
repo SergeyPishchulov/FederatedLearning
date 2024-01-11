@@ -173,7 +173,7 @@ class Client:
                 n.set_datasets(n.deadline_by_round)  # node will get data gradually through DatasetPartiallyAvailable
             else:
                 n.set_datasets(None)  # node have all the date initially
-            print(f"client {self.id} task {ft_id} data sizes: for train {len(n.local_data.dataset)} for val {len(n.validate_set.dataset)}")
+            # print(f"client {self.id} task {ft_id} data sizes: for train {len(n.local_data.dataset)} for val {len(n.validate_set.dataset)}")
 
 
     def run(self, read_q, write_q):
