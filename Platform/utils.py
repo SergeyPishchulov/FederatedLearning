@@ -113,6 +113,7 @@ def init_model(model_type, args):
         elif model_type == 'LeNet5':
             model = cnn.LeNet5()
 
+    print(model)
     return model
 
 
