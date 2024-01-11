@@ -112,8 +112,8 @@ def init_model(model_type, args):
             model = cnn.MLP()
         elif model_type == 'LeNet5':
             model = cnn.LeNet5()
-    print(f'PRINTING MODEL {model_type}')
-    print(model)
+    # print(f'PRINTING MODEL {model_type}')
+    # print(model)
     return model
 
 
