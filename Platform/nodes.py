@@ -64,6 +64,7 @@ class Node(object):
     def set_datasets(self, input_tss):
         self.local_data, self.validate_set = self.train_val_split(self._local_data, self._train_set, self.valid_ratio,
                                                                   input_tss)
+        print(f"data sizes: for train {len(self.local_data.dataset)} for val {len(self.validate_set.dataset)}")
 
     def zero_weights(self, model):
         for n, p in model.named_parameters():
