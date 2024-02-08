@@ -18,7 +18,7 @@ def get_configs(user_args):
         interdeadline_time_sec=25
     ))
     custom_configs.append(dict(
-        dataset='cifar100',
+        dataset='fmnist',
         local_model='ResNet56',
         target_acc=55,
         interdeadline_time_sec=15

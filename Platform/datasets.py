@@ -147,40 +147,40 @@ class Data(object):
             )
             self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
 
-        # elif args.dataset == 'fmnist':
-        #     # Data enhancement
-        #     tra_transformer = transforms.Compose(
-        #         [
-        #             transforms.ToTensor(),
-        #         ]
-        #     )
-        #     val_transformer = transforms.Compose(
-        #         [
-        #             transforms.ToTensor()
-        #         ]
-        #     )
-        #     self.train_set = torchvision.datasets.FashionMNIST(
-        #         root="/home/Dataset/FashionMNIST", train=True, download=False, transform=tra_transformer
-        #     )
-        #     if args.iid == 0:  # noniid
-        #         random_state = np.random.RandomState(int(args.random_seed))
-        #         num_indices = len(self.train_set)
-        #         if args.dirichlet_alpha2:
-        #             groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state, dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=100, num_indices=num_indices, n_workers=node_num)
-        #         else:
-        #             groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set, non_iid_alpha=args.dirichlet_alpha, num_classes=100, num_indices=num_indices, n_workers=node_num)
-        #         self.train_loader = groups
-        #         self.groups = groups
-        #         self.proportion = proportion
-        #     else:
-        #         data_num = [int(60000/node_num) for _ in range(node_num)]
-        #         splited_set = torch.utils.data.random_split(self.train_set, data_num)
-        #         self.train_loader = splited_set
-        #
-        #     self.test_set = torchvision.datasets.FashionMNIST(
-        #         root="/home/Dataset/FashionMNIST", train=False, download=False, transform=val_transformer
-        #     )
-        #     self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
+        elif args.dataset == 'fmnist':
+            # Data enhancement
+            tra_transformer = transforms.Compose(
+                [
+                    transforms.ToTensor(),
+                ]
+            )
+            val_transformer = transforms.Compose(
+                [
+                    transforms.ToTensor()
+                ]
+            )
+            self.train_set = torchvision.datasets.FashionMNIST(
+                root="/home/Dataset/FashionMNIST", train=True, download=True, transform=tra_transformer
+            )
+            if args.iid == 0:  # noniid
+                random_state = np.random.RandomState(int(args.random_seed))
+                num_indices = len(self.train_set)
+                if False: #args.dirichlet_alpha2:
+                    groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state, dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=100, num_indices=num_indices, n_workers=node_num)
+                else:
+                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set, non_iid_alpha=args.dirichlet_alpha, num_classes=100, num_indices=num_indices, n_workers=args.node_num)
+                self.train_loader = groups
+                self.groups = groups
+                self.proportion = proportion
+            else:
+                data_num = [int(60000/args.node_num) for _ in range(args.node_num)]
+                splited_set = torch.utils.data.random_split(self.train_set, data_num)
+                self.train_loader = splited_set
+
+            self.test_set = torchvision.datasets.FashionMNIST(
+                root="/home/Dataset/FashionMNIST", train=False, download=True, transform=val_transformer
+            )
+            self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
 
 
 ### Dirichlet noniid functions ###
