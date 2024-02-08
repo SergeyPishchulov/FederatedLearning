@@ -158,14 +158,15 @@ def run(tasks, hub, clients, user_args):
     end = datetime.now()
     hub.stat.plot_periods(plotting_period=Period(end - timedelta(minutes=5), end))
 
-
+INTERDEADLINE_SIGMA = 3
 def get_interdeadline_periods(tasks: List[FederatedMLTask], clients_cnt: int):
     res = {}
     for ft in tasks:
         task_mean = ft.args.interdeadline_time_sec  # task's characteristics
         client_means = np.linspace(task_mean - 6, task_mean + 6, clients_cnt)
         for cl_id, cl_m in enumerate(client_means):
-            interdeadline_periods = norm.rvs(loc=cl_m, scale=1.5, size=ft.args.T)
+
+            interdeadline_periods = norm.rvs(loc=cl_m, scale=INTERDEADLINE_SIGMA, size=ft.args.T)
             if cl_id not in res:
                 res[cl_id] = {}
             res[cl_id][ft.id] = interdeadline_periods
