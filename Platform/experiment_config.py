@@ -12,13 +12,13 @@ def get_configs(user_args):
         interdeadline_time_sec=25
     ))
     custom_configs.append(dict(
-        dataset='cifar10',
+        dataset='cifar100',
         local_model='ResNet20',
         target_acc=65,
         interdeadline_time_sec=25
     ))
     custom_configs.append(dict(
-        dataset='cifar10',
+        dataset='cifar100',
         local_model='ResNet56',
         target_acc=55,
         interdeadline_time_sec=15
