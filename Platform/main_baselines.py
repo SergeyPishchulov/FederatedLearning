@@ -1,6 +1,5 @@
 import argparse
 import traceback
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
@@ -18,7 +17,6 @@ from utils import *
 from server_funct import *
 from client_funct import *
 import os
-from scipy.stats import norm
 
 try:
     set_start_method('spawn')
@@ -166,7 +164,7 @@ def get_interdeadline_periods(tasks: List[FederatedMLTask], clients_cnt: int):
         client_means = np.linspace(task_mean - 6, task_mean + 6, clients_cnt)
         for cl_id, cl_m in enumerate(client_means):
 
-            interdeadline_periods = norm.rvs(loc=cl_m, scale=INTERDEADLINE_SIGMA, size=ft.args.T)
+            interdeadline_periods = np.random.normal(loc=cl_m, scale=INTERDEADLINE_SIGMA, size=ft.args.T)
             if cl_id not in res:
                 res[cl_id] = {}
             res[cl_id][ft.id] = interdeadline_periods
