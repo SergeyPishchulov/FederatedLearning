@@ -76,7 +76,8 @@ class CyclicalScheduler(LocalScheduler):
 
 
 class Client:
-    def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args):
+    def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args,
+                 inter_ddl_periods_by_ft_id):
         self.id = id
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
@@ -86,6 +87,7 @@ class Client:
         self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
         self.trained_ft_id_round = set()
         self.scheduler = self.get_scheduler(user_args)
+        self.inter_ddl_periods_by_ft_id = inter_ddl_periods_by_ft_id
 
     def get_scheduler(self, user_args):
         if user_args.local_scheduler == "CyclicalScheduler":
@@ -167,8 +169,9 @@ class Client:
         for ft_id, n in self.node_by_ft_id.items():
             n: Node
             n.deadline_by_round = [
-                datetime.now() + timedelta(seconds=self.args_by_ft_id[ft_id].interdeadline_time_sec) * (i + 1)
-                for i in range(self.user_args.T)]
+                datetime.now() + timedelta(seconds=p)
+                for p in np.cumsum(self.inter_ddl_periods_by_ft_id[ft_id])
+            ]
             if self.user_args.partially_available:
                 n.set_datasets(n.deadline_by_round)  # node will get data gradually through DatasetPartiallyAvailable
             else:

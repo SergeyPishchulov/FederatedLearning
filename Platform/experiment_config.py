@@ -23,7 +23,8 @@ def get_configs(user_args):
         target_acc=55,
         interdeadline_time_sec=15
     ))
-    return [Namespace(**(vars(user_args) | common_config | cc)) for cc in custom_configs]
+    return [Namespace(**(vars(user_args) | common_config | cc))
+            for cc in custom_configs]
 
 
 #

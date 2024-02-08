@@ -18,6 +18,7 @@ from utils import *
 from server_funct import *
 from client_funct import *
 import os
+from scipy.stats import norm
 
 try:
     set_start_method('spawn')
@@ -27,8 +28,10 @@ except RuntimeError:
 
 def create_clients(tasks, user_args):
     clients = []
+    inter_ddl_prds = get_interdeadline_periods(tasks, clients_cnt=user_args.node_num)
+
     for client_id in range(user_args.node_num):
-        ft:FederatedMLTask
+        ft: FederatedMLTask
         node_by_ft_id = {ft.id:
                              Node(client_id, ft.data.train_loader[client_id],
                                   ft.data.train_set, ft.args)
@@ -37,7 +40,8 @@ def create_clients(tasks, user_args):
                         node_by_ft_id,
                         args_by_ft_id={ft.id: ft.args for ft in tasks},
                         agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks},
-                        user_args=user_args)
+                        user_args=user_args,
+                        inter_ddl_periods_by_ft_id=inter_ddl_prds[client_id])
         clients.append(client)
     return clients
 
@@ -153,6 +157,19 @@ def run(tasks, hub, clients, user_args):
     hub.stat.plot_periods()
     end = datetime.now()
     hub.stat.plot_periods(plotting_period=Period(end - timedelta(minutes=5), end))
+
+
+def get_interdeadline_periods(tasks: List[FederatedMLTask], clients_cnt: int):
+    res = {}
+    for ft in tasks:
+        task_mean = ft.args.interdeadline_time_sec  # task's characteristics
+        client_means = np.linspace(task_mean - 6, task_mean + 6, clients_cnt)
+        for cl_id, cl_m in enumerate(client_means):
+            interdeadline_periods = norm.rvs(loc=cl_m, scale=1.5, size=ft.args.T)
+            if cl_id not in res:
+                res[cl_id] = {}
+            res[cl_id][ft.id] = interdeadline_periods
+    return res
 
 
 def main():
