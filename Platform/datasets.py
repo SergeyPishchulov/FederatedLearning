@@ -108,44 +108,45 @@ class Data(object):
 
             self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
 
-        # elif args.dataset == 'cifar100':
-        #     # Data enhancement
-        #     tra_transformer = transforms.Compose(
-        #         [
-        #             transforms.ToTensor(),
-        #             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-        #         ]
-        #     )
-        #     val_transformer = transforms.Compose(
-        #         [
-        #             transforms.ToTensor(),
-        #             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-        #         ]
-        #     )
-        #
-        #     self.train_set = torchvision.datasets.CIFAR100(
-        #         root="/home/Dataset/cifar/", train=True, download=False, transform=tra_transformer
-        #     )
-        #     if args.iid == 0:  # noniid
-        #         random_state = np.random.RandomState(int(args.random_seed))
-        #         num_indices = len(self.train_set)
-        #         if args.dirichlet_alpha2:
-        #             groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state, dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=100, num_indices=num_indices, n_workers=node_num)
-        #         else:
-        #             groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set, non_iid_alpha=args.dirichlet_alpha, num_classes=100, num_indices=num_indices, n_workers=node_num)
-        #         self.train_loader = groups
-        #         self.groups = groups
-        #         self.proportion = proportion
-        #     else:
-        #         data_num = [int(50000/node_num) for _ in range(node_num)]
-        #         splited_set = torch.utils.data.random_split(self.train_set, data_num)
-        #         self.train_loader = splited_set
-        #
-        #     self.test_set = torchvision.datasets.CIFAR100(
-        #         root="/home/Dataset/cifar/", train=False, download=False, transform=val_transformer
-        #     )
-        #     self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
-        #
+        elif args.dataset == 'cifar100':
+            # Data enhancement
+            tra_transformer = transforms.Compose(
+                [
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]
+            )
+            val_transformer = transforms.Compose(
+                [
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]
+            )
+
+            self.train_set = torchvision.datasets.CIFAR100(
+                root="/home/Dataset/cifar/", train=True, download=True, transform=tra_transformer
+            )
+            if args.iid == 0:  # noniid
+                random_state = np.random.RandomState(int(args.random_seed))
+                num_indices = len(self.train_set)
+                if False:#args.dirichlet_alpha2:
+                    # groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state, dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=100, num_indices=num_indices, n_workers=node_num)
+                    pass
+                else:
+                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set, non_iid_alpha=args.dirichlet_alpha, num_classes=100, num_indices=num_indices, n_workers=args.node_num)
+                self.train_loader = groups
+                self.groups = groups
+                self.proportion = proportion
+            else:
+                data_num = [int(50000/args.node_num) for _ in range(args.node_num)]
+                splited_set = torch.utils.data.random_split(self.train_set, data_num)
+                self.train_loader = splited_set
+
+            self.test_set = torchvision.datasets.CIFAR100(
+                root="/home/Dataset/cifar/", train=False, download=True, transform=val_transformer
+            )
+            self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
+
         # elif args.dataset == 'fmnist':
         #     # Data enhancement
         #     tra_transformer = transforms.Compose(
