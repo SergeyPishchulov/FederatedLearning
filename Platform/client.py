@@ -178,7 +178,7 @@ class Client:
             else:
                 n.set_datasets(None)  # node have all the date initially
             # print(f"client {self.id} task {ft_id} data sizes: for train {len(n.local_data.dataset)} for val {len(n.validate_set.dataset)}")
-        exit()
+        # exit()
 
     def run(self, read_q, write_q):
         client_start_time = time.time()
