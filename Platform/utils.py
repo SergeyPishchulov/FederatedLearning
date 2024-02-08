@@ -12,6 +12,12 @@ from itertools import zip_longest
 # Tools
 ##############################################################################
 
+def print_dates(dts, message):
+    print(f"============={message}=============")
+    l = [dt.isoformat() for dt in dts]
+    print(*l, sep='\n')
+    print(f"==========================")
+
 
 class RunningAverage():
     """A simple class that maintains the running average of a quantity

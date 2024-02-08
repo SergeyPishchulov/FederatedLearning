@@ -172,8 +172,7 @@ class Client:
                 datetime.now() + timedelta(seconds=p)
                 for p in np.cumsum(self.inter_ddl_periods_by_ft_id[ft_id])
             ]
-            print(f"DEADLINES FOR CL {self.id}: {n.deadline_by_round}")
-
+            print_dates(n.deadline_by_round, f"DEADLINES FOR CL {self.id}:")
             if self.user_args.partially_available:
                 n.set_datasets(n.deadline_by_round)  # node will get data gradually through DatasetPartiallyAvailable
             else:
