@@ -58,12 +58,14 @@ class TrainingJournal:
 
     def required_quality_reached(self, ft_id, round_num, client_ids):
         sum_quality = 0
+        participants_cnt = 0
         for cl_id in client_ids:
             if (ft_id, cl_id, round_num + 1) in self.d:
                 sum_quality += self.d[(ft_id, cl_id, round_num + 1)].update_quality
+                participants_cnt += 1
         # print(
-            # f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}. SUM is{sum_quality}")
-        if sum_quality >= self.required_quality_by_ft_id[ft_id]:
+        # f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}. SUM is{sum_quality}")
+        if sum_quality >= self.required_quality_by_ft_id[ft_id] and participants_cnt >= 2:
             # print(f"JOURNAL: Quality reached.")
             return True
         # print(f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}")
