@@ -3,25 +3,28 @@ from argparse import Namespace
 
 def get_configs(user_args):
     common_config = dict(
-        required_quality=1_000)
+        required_quality=1_000,
+        interdeadline_time_sec=25
+
+    )
     custom_configs = []
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='CNN',
         target_acc=65,
-        interdeadline_time_sec=25
+        # interdeadline_time_sec=25
     ))
     custom_configs.append(dict(
         dataset='cifar100',
         local_model='ResNet20',
         target_acc=65,
-        interdeadline_time_sec=25
+        # interdeadline_time_sec=25
     ))
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='ResNet56',
         target_acc=55,
-        interdeadline_time_sec=30
+        # interdeadline_time_sec=30
     ))
     return [Namespace(**(vars(user_args) | common_config | cc))
             for cc in custom_configs]
