@@ -1,9 +1,9 @@
 import argparse
 from typing import List
 
-from ..aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
-from ..federated_ml_task import FederatedMLTask
-from ..utils import generate_selectlist
+from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
+from federated_ml_task import FederatedMLTask
+from utils import generate_selectlist
 from training_journal import TrainingJournal
 from statistics import Statistics
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
