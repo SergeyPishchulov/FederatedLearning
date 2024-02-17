@@ -123,7 +123,7 @@ def run(tasks, hub, clients, user_args):
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
             hub.stat.save_ags_period(ft.id, p)
             hub.stat.plot_periods(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
-            print(f'AGS Success. Task {ft.id}, round {ag_round_num}')
+            print(f'AGS Success. Task {ft.id}, round {ag_round_num}. {datetime.now().strftime("%H:%M:%S")}')
             all_aggregation_done = (ag_round_num == user_args.T - 1)
             if all_aggregation_done:
                 ft.done = True

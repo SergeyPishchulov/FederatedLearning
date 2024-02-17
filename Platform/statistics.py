@@ -81,6 +81,7 @@ class Statistics:
     def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, axes, height, colors_by_ft_id):
         if first_time_ready_to_aggr is None:
             return
+        pprint(first_time_ready_to_aggr)
         for (ft_id, r), dt in first_time_ready_to_aggr.items():
             axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id],
                       # linewidth=10
