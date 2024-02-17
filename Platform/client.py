@@ -182,6 +182,7 @@ class Client:
 
     def run(self, read_q, write_q):
         client_start_time = time.time()
+        print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
         self.setup()
         self.set_deadlines()
         while not self.should_finish:

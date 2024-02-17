@@ -46,6 +46,7 @@ def create_clients(tasks, user_args):
 def get_client_procs(clients, hub):
     procs = []
     for client in clients:
+        client: Client
         p = Process(target=client.run,
                     args=(hub.write_q_by_cl_id[client.id],
                           hub.read_q_by_cl_id[client.id]))
