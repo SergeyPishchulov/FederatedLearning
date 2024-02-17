@@ -77,7 +77,7 @@ class CyclicalScheduler(LocalScheduler):
 
 class Client:
     def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args,
-                 inter_ddl_periods_by_ft_id):
+                 inter_ddl_periods_by_ft_id, wakeup_time):
         self.id = id
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
@@ -88,6 +88,7 @@ class Client:
         self.trained_ft_id_round = set()
         self.scheduler = self.get_scheduler(user_args)
         self.inter_ddl_periods_by_ft_id = inter_ddl_periods_by_ft_id
+        self.wakeup_time = wakeup_time
 
     def get_scheduler(self, user_args):
         if user_args.local_scheduler == "CyclicalScheduler":
@@ -181,6 +182,10 @@ class Client:
         # exit()
 
     def run(self, read_q, write_q):
+        if datetime.now() < self.wakeup_time:
+            delta = (self.wakeup_time - datetime.now()).total_seconds()
+            print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
+            time.sleep(delta)
         client_start_time = time.time()
         print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
         self.setup()

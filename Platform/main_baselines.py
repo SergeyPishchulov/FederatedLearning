@@ -27,6 +27,7 @@ def create_clients(tasks, user_args):
     clients = []
     inter_ddl_prds = get_interdeadline_periods(tasks, clients_cnt=user_args.node_num)
 
+    wakeup_time = datetime.now() + timedelta(seconds=60)
     for client_id in range(user_args.node_num):
         ft: FederatedMLTask
         node_by_ft_id = {ft.id:
@@ -38,7 +39,8 @@ def create_clients(tasks, user_args):
                         args_by_ft_id={ft.id: ft.args for ft in tasks},
                         agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks},
                         user_args=user_args,
-                        inter_ddl_periods_by_ft_id=inter_ddl_prds[client_id])
+                        inter_ddl_periods_by_ft_id=inter_ddl_prds[client_id],
+                        wakeup_time=wakeup_time)
         clients.append(client)
     return clients
 
