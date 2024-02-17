@@ -199,8 +199,9 @@ class Client:
                 node.iterations_performed += 1  # TODO not to mess with r
                 deadline = node.deadline_by_round[r]  # deadline to perform round r
                 data_lens = self.data_lens_by_ft_id[ft_id]
-                update_quality = data_lens[-1] - data_lens[
-                    -2]  # how much new data points was used in this training round
+                # update_quality = (data_lens[-1] - data_lens[-2])
+                update_quality = 1_000
+                # how much new data points was used in this training round
                 target_acc = self.args_by_ft_id[ft_id].target_acc
                 time_to_target_acc = -1 if (acc < target_acc) else (time.time() - client_start_time)
                 # print(f"    Client {self.id} acc is {acc} target_acc is {target_acc} time_to_target_acc is {time_to_target_acc}")

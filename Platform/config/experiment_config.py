@@ -3,7 +3,7 @@ from argparse import Namespace
 
 def get_configs(user_args):
     common_config = dict(
-        required_quality=1_000,
+        required_quality=2_000,
         interdeadline_time_sec=25
 
     )
