@@ -8,7 +8,7 @@ from typing import List
 from aggregation_station import Job
 from client import Client
 from federated_ml_task import FederatedMLTask
-from hub import Hub
+from Hub.hub import Hub
 from message import MessageToClient, MessageToHub, ResponseToHub
 from config.experiment_config import get_configs
 from config.args import args_parser
