@@ -92,7 +92,7 @@ class Statistics:
         if first_time_ready_to_aggr is None:
             return
         uniq_times = set()
-        pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
+        # pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
         for (ft_id, r), dt_orig in first_time_ready_to_aggr.items():
             dt = self.get_distinguishable_times(ceil_seconds(dt_orig), uniq_times)
             axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id],
