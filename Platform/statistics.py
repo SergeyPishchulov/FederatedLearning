@@ -78,7 +78,15 @@ class Statistics:
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
 
-    def plot_periods(self, plotting_period: Period = None):
+    def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, axes, height, colors_by_ft_id):
+        if first_time_ready_to_aggr is None:
+            return
+        for (ft_id, r), dt in first_time_ready_to_aggr.items():
+            axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id],
+                      # linewidth=10
+                      )
+
+    def plot_periods(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
         """
         Plotting load-plot of clients and AgS
 
@@ -92,6 +100,7 @@ class Statistics:
         colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
         # clients and AgS
+        mult_const = 2
         for i, e in enumerate(entities):
             total_aggregations = 0
             agr_periods = []
@@ -105,13 +114,17 @@ class Statistics:
                     p: Period
                     if ((plotting_period is None) or (plotting_period.start < p.start < plotting_period.end)
                             or (plotting_period.start < p.end < plotting_period.end)):
-                        axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
+                        axes.plot([p.start, p.end], [i] * mult_const, color=colors_by_ft_id[ft_id],
                                   linewidth=10
                                   )
 
         plt.yticks(list(range(len(entities))))
         axes.set_yticklabels(entities, fontsize=20)
         plt.xlabel('time', fontsize=20)
+        self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
+                                            axes,
+                                            height=(len(entities)) * mult_const,
+                                            colors_by_ft_id=colors_by_ft_id)
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
         if plotting_period is None:
             fig.savefig(f'{self.pngs_directory}/periods.png')

@@ -21,12 +21,17 @@ class JournalRecord:
     update_quality: float
 
 
+FT_ID = int
+ROUND = int
+
+
 class TrainingJournal:
     def __init__(self, task_ids, required_quality, args):  # TODO should not have args
         self.d: Dict[tuple, JournalRecord] = {}  # key is (ft_id, client_id, round); value is Record(model, deadline)
         self.latest_aggregated_round = {i: -1 for i in task_ids}
         self.required_quality_by_ft_id = required_quality
         self.args = args
+        self.first_time_ready_to_aggr: Dict[(FT_ID, ROUND), datetime] = {}
 
     def mark_as_aggregated(self, ft_id):
         self.latest_aggregated_round[ft_id] += 1
@@ -50,6 +55,9 @@ class TrainingJournal:
             condition = decision_func(ft_id, latest_round, client_ids)
             if condition:
                 res.append((ft_id, latest_round + 1))
+                if (ft_id, latest_round + 1) not in self.first_time_ready_to_aggr:
+                    self.first_time_ready_to_aggr[(ft_id, latest_round + 1)] = datetime.now()
+
         return res
 
     def all_clients_performed_round(self, ft_id, round_num, client_ids):

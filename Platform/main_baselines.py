@@ -122,7 +122,7 @@ def run(tasks, hub, clients, user_args):
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
             hub.stat.save_ags_period(ft.id, p)
-            hub.stat.plot_periods()
+            hub.stat.plot_periods(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
             print(f'AGS Success. Task {ft.id}, round {ag_round_num}')
             all_aggregation_done = (ag_round_num == user_args.T - 1)
             if all_aggregation_done:
@@ -142,7 +142,7 @@ def run(tasks, hub, clients, user_args):
                                       should_finish=all(ft.done for ft in tasks))
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
-        hub.stat.plot_periods()
+        hub.stat.plot_periods(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
         # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
 
         # time.sleep(0.5)
@@ -151,9 +151,10 @@ def run(tasks, hub, clients, user_args):
     hub.stat.print_sum_round_duration()
     hub.stat.print_mean_result_acc()
     hub.stat.print_time_target_acc()
-    hub.stat.plot_periods()
+    hub.stat.plot_periods(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
     end = datetime.now()
-    hub.stat.plot_periods(plotting_period=Period(end - timedelta(minutes=5), end))
+    hub.stat.plot_periods(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
+                          plotting_period=Period(end - timedelta(minutes=5), end))
 
 
 INTERDEADLINE_SIGMA = 3
