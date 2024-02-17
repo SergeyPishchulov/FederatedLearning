@@ -79,6 +79,11 @@ class Statistics:
                                if e == entity])
 
     def plot_periods(self, plotting_period: Period = None):
+        """
+        Plotting load-plot of clients and AgS
+
+        :param plotting_period: Period of time that will be represented on the plot
+        """
         fig, axes = plt.subplots(1,
                                  figsize=(16, 5)
                                  )
@@ -86,16 +91,16 @@ class Statistics:
         ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
         colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
-        # print(f'Entities {entities}, e_ft_id{self.periods_by_entity_ft_id.keys()}')
+        # clients and AgS
         for i, e in enumerate(entities):
-            total_aggragations = 0
+            total_aggregations = 0
             agr_periods = []
             for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
                 if ent != e:
                     continue
                 for p in periods:
                     if ent == 'agr':
-                        total_aggragations += 1
+                        total_aggregations += 1
                         agr_periods.append(p)
                     p: Period
                     if ((plotting_period is None) or (plotting_period.start < p.start < plotting_period.end)

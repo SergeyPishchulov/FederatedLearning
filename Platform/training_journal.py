@@ -11,7 +11,7 @@ from typing import Dict
 @dataclass
 class JournalRecord:
     """
-    Representation of a client's message.
+    Record about message from client
 
     model - locally trained model
     deadline - max time the aggregation should have been done to
