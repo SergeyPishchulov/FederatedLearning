@@ -10,7 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-from utils import format_time
+from utils import format_time, ceil_seconds
 from message import Period
 
 
@@ -79,11 +79,22 @@ class Statistics:
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
 
+    def get_distinguishable_times(self, dt, uniq_times):
+        """
+        In order not to plot same lines one above another
+        """
+        while dt in uniq_times:
+            dt = dt + timedelta(seconds=1)
+        uniq_times.add(dt)
+        return dt
+
     def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, axes, height, colors_by_ft_id):
         if first_time_ready_to_aggr is None:
             return
+        uniq_times = set()
         pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
-        for (ft_id, r), dt in first_time_ready_to_aggr.items():
+        for (ft_id, r), dt_orig in first_time_ready_to_aggr.items():
+            dt = self.get_distinguishable_times(ceil_seconds(dt_orig), uniq_times)
             axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id],
                       # linewidth=10
                       )
@@ -102,7 +113,6 @@ class Statistics:
         colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
         # clients and AgS
-        mult_const = 2
         for i, e in enumerate(entities):
             total_aggregations = 0
             agr_periods = []
@@ -116,7 +126,7 @@ class Statistics:
                     p: Period
                     if ((plotting_period is None) or (plotting_period.start < p.start < plotting_period.end)
                             or (plotting_period.start < p.end < plotting_period.end)):
-                        axes.plot([p.start, p.end], [i] * mult_const, color=colors_by_ft_id[ft_id],
+                        axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
                                   linewidth=10
                                   )
 
@@ -125,7 +135,7 @@ class Statistics:
         plt.xlabel('time', fontsize=20)
         self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
                                             axes,
-                                            height=(len(entities)) * mult_const,
+                                            height=(len(entities)),
                                             colors_by_ft_id=colors_by_ft_id)
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
         if plotting_period is None:

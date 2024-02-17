@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 import torch
@@ -23,6 +23,12 @@ def print_dates(dts, message):
 
 def format_time(dt: datetime):
     return dt.strftime("%H:%M:%S")
+
+
+def ceil_seconds(obj: datetime) -> datetime:
+    # if obj.microsecond >= 500_000:
+    obj += timedelta(seconds=1)
+    return obj.replace(microsecond=0)
 
 
 class RunningAverage():
