@@ -10,6 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+from utils import format_time
 from message import Period
 
 
@@ -81,7 +82,7 @@ class Statistics:
     def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, axes, height, colors_by_ft_id):
         if first_time_ready_to_aggr is None:
             return
-        pprint(first_time_ready_to_aggr)
+        pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
         for (ft_id, r), dt in first_time_ready_to_aggr.items():
             axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id],
                       # linewidth=10
