@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -17,6 +19,10 @@ def print_dates(dts, message):
     l = [dt.isoformat() for dt in dts]
     print(*l, sep='\n')
     print(f"==========================")
+
+
+def format_time(dt: datetime):
+    return dt.strftime("%H:%M:%S")
 
 
 class RunningAverage():
