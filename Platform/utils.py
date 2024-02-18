@@ -8,6 +8,8 @@ from torch.backends import cudnn
 from torch.optim import Optimizer
 from models_dict import densenet, resnet, cnn
 from itertools import zip_longest
+from functools import wraps
+from time import time
 
 
 ##############################################################################
@@ -29,6 +31,18 @@ def ceil_seconds(obj: datetime) -> datetime:
     # if obj.microsecond >= 500_000:
     obj += timedelta(seconds=1)
     return obj.replace(microsecond=0)
+
+
+def timing(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        start = time()
+        result = f(*args, **kwargs)
+        end = time()
+        print(f"[T] {f.__name__} {int(end - start)}s")
+        return result
+
+    return wrapper
 
 
 class RunningAverage():
@@ -200,6 +214,7 @@ class PerturbedGradientDescent(Optimizer):
 # Validation function
 ##############################################################################
 
+@timing
 def validate(args, node, which_dataset='validate'):
     node.model.cuda().eval()
     if which_dataset == 'validate':

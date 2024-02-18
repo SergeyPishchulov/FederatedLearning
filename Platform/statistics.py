@@ -4,7 +4,7 @@ import os
 from datetime import timedelta, datetime
 from pprint import pprint
 from typing import List
-
+from utils import timing
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -99,6 +99,7 @@ class Statistics:
                       # linewidth=10
                       )
 
+    @timing
     def plot_periods(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
         """
         Plotting load-plot of clients and AgS

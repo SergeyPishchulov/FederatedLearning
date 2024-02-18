@@ -3,6 +3,7 @@ from datetime import datetime
 import random
 
 from typing import List
+from utils import timing
 
 
 @dataclass
@@ -14,6 +15,7 @@ class Job:
 
 
 class SFAggregationStationScheduler:
+    @timing
     @staticmethod
     def plan_next(jobs: List[Job]):
         if not jobs:

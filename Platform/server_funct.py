@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-
+from utils import timing
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -305,6 +305,8 @@ def Server_update_fedlaw(args, central_node, client_models, select_list, size_we
     end_time = datetime.now()
     return Period(start_time, end_time)
 
+
+@timing
 def Server_update(args, central_node, client_models, select_list, size_weights):
     '''
     server update functions for baselines

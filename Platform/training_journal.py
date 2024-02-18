@@ -7,6 +7,8 @@ from datetime import datetime, date
 
 from typing import Dict
 
+from utils import timing
+
 
 @dataclass
 class JournalRecord:
@@ -79,6 +81,7 @@ class TrainingJournal:
         # print(f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}")
         return False or self.all_clients_performed_round(ft_id, round_num, client_ids)
 
+    @timing
     def get_ft_to_aggregate(self, client_ids):
         ready = self._get_ft_ready_to_agr(client_ids)
         if not ready:

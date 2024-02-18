@@ -23,6 +23,7 @@ except RuntimeError:
     pass
 
 
+@timing
 def create_clients(tasks, user_args, wakeup_time):
     clients = []
     inter_ddl_prds = get_interdeadline_periods(tasks, clients_cnt=user_args.node_num)
@@ -55,6 +56,7 @@ def get_client_procs(clients, hub):
     return procs
 
 
+@timing
 def handle_messages(hub):
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
@@ -75,6 +77,7 @@ def handle_messages(hub):
             del r
 
 
+@timing
 def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
     for c in clients:
         try:
