@@ -23,11 +23,10 @@ except RuntimeError:
     pass
 
 
-def create_clients(tasks, user_args):
+def create_clients(tasks, user_args, wakeup_time):
     clients = []
     inter_ddl_prds = get_interdeadline_periods(tasks, clients_cnt=user_args.node_num)
 
-    wakeup_time = datetime.now() + timedelta(seconds=60)
     for client_id in range(user_args.node_num):
         ft: FederatedMLTask
         node_by_ft_id = {ft.id:
@@ -178,7 +177,7 @@ def get_interdeadline_periods(tasks: List[FederatedMLTask], clients_cnt: int):
 
 
 def main():
-    global_start = time.time()
+    # global_start = time.time()
     user_args = args_parser()
     setup_seed(user_args.random_seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
@@ -186,7 +185,8 @@ def main():
 
     federated_tasks_configs = get_configs(user_args)
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(federated_tasks_configs)]
-    clients = create_clients(tasks, user_args)
+    wakeup_time = datetime.now() + timedelta(seconds=60)
+    clients = create_clients(tasks, user_args, wakeup_time)
     hub = Hub(tasks, clients, user_args)
     procs = get_client_procs(clients, hub)
     for p in procs:
@@ -196,7 +196,9 @@ def main():
 
     for proc in procs:
         proc.join()
-    seconds = round(time.time() - global_start)
+
+    seconds = round((datetime.now() - wakeup_time).total_seconds())
+    # NOTE we can not trust this time because it includes 1 minute untill all clients will wake up
     print(f"TOTAL FL TIME IS {seconds} s == {round(seconds / 60., 1)} min")
 
 
