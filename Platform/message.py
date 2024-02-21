@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import torch
+from typing import Optional
+
+from nodes import Node
 
 
 @dataclass
@@ -33,7 +36,7 @@ class MessageToHub:
     round_num: int  # In which round client want to participate.
     # model is fine-tuned model from prev round. See MessageToClient
     period: Period
-    time_to_target_acc_sec: int#TODO delete
+    time_to_target_acc_sec: int  # TODO delete
 
 
 @dataclass
@@ -58,3 +61,14 @@ class ResponseToHub:
     round_num: int
     delay: timedelta
     final_message: bool = False
+
+
+@dataclass
+class MessageToValidator:
+    node: Optional[Node]
+    should_finish: bool = False
+
+
+@dataclass
+class MessageValidatorToHub:
+    acc: float

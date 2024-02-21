@@ -2,14 +2,15 @@ import argparse
 import traceback
 from datetime import timedelta
 
-from torch.multiprocessing import Process, set_start_method
+from torch.multiprocessing import Process, set_start_method, Queue
 from typing import List
 
+from validator import Validator
 from aggregation_station import Job
 from client import Client
 from federated_ml_task import FederatedMLTask
 from hub import Hub
-from message import MessageToClient, MessageToHub, ResponseToHub
+from message import MessageToClient, MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub
 from config.experiment_config import get_configs
 from config.args import args_parser
 from utils import *
@@ -56,6 +57,11 @@ def get_client_procs(clients, hub):
     return procs
 
 
+def get_validator_proc(validator: Validator, read_q, write_q):
+    return Process(target=validator.run,
+                   args=(write_q, read_q))
+
+
 @timing
 def handle_messages(hub):
     for cl_id, q in hub.read_q_by_cl_id.items():
@@ -74,6 +80,8 @@ def handle_messages(hub):
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
                 if r.final_message:
                     hub.finished_by_client[r.client_id] = True
+            elif isinstance(r, MessageValidatorToHub):
+                acc = r.acc
             del r
 
 
@@ -102,8 +110,8 @@ def get_params_cnt(model):
     return sum(p.numel() for p in model.parameters())
 
 
-def run(tasks, hub, clients, user_args):
-    total_aggragations = 0
+def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
+    total_aggregations = 0
     hub_start_time = time.time()
     hub_start_dt = datetime.now()
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
@@ -123,7 +131,7 @@ def run(tasks, hub, clients, user_args):
                                 # NOTE: all ready clients will be aggregated
                                 # hub.get_select_list(ft, [c.id for c in clients]),
                                 size_weights=ft.size_weights)
-            total_aggragations += 1
+            total_aggregations += 1
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
             hub.stat.save_ags_period(ft.id, p)
@@ -136,11 +144,11 @@ def run(tasks, hub, clients, user_args):
             else:
                 print(f'HUB: Performed {ag_round_num + 1}/{user_args.T} rounds in task {ft.id}')
 
-            acc = validate(ft.args, ft.central_node, which_dataset='local')
+            # acc = validate(ft.args, ft.central_node, which_dataset='local')
+            val_write_q.put(MessageToValidator(ft.central_node))  # TODO copy.deepcopy?
             hub.stat.save_agr_ac(ft.id,
                                  round_num=ag_round_num,
                                  acc=acc)
-            # hub.stat.print_time_target_acc()
             if acc > ft.args.target_acc:
                 hub.stat.save_time_to_target_acc(ft.id, time.time() - hub_start_time)
             send_agr_model_to_clients(clients, hub, ag_round_num, ft,
@@ -151,6 +159,7 @@ def run(tasks, hub, clients, user_args):
         # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
 
         # time.sleep(0.5)
+    val_write_q.put(MessageToValidator(node=None, should_finish=True))
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
@@ -191,11 +200,15 @@ def main():
     wakeup_time = datetime.now() + timedelta(seconds=60)
     clients = create_clients(tasks, user_args, wakeup_time)
     hub = Hub(tasks, clients, user_args)
-    procs = get_client_procs(clients, hub)
+
+    val_read_q, val_write_q = Queue(), Queue()
+    validator = Validator()
+    val_proc = get_validator_proc(validator, val_read_q, val_write_q)
+    procs = [val_proc] + get_client_procs(clients, hub)
     for p in procs:
         p.start()
 
-    run(tasks, hub, clients, user_args)
+    run(tasks, hub, clients, user_args, val_read_q, val_write_q)
 
     for proc in procs:
         proc.join()
