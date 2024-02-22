@@ -49,7 +49,8 @@ class Statistics:
 
     def print_jobs_cnt_in_ags_statistics(self):
         d = self.jobs_cnt_in_ags
-        print(f"Flood measure mode={np.median(d)}, mean={np.mean(d)}")
+        if d:
+            print(f"Flood measure mode={np.median(d)}, mean={np.mean(d)}")
 
     def plot_jobs_cnt_in_ags(self):
         ax = sns.histplot(self.jobs_cnt_in_ags, discrete=True, shrink=0.8)
