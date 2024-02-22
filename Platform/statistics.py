@@ -20,7 +20,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 class Statistics:
     def __init__(self, tasks, clients, args, start_time):
-        self.experiment_name = f'{args.aggregation_on}|{args.server_method}|partially_available={args.partially_available}'
+        self.experiment_name = 'exp'#f'{args.aggregation_on}|{args.server_method}|partially_available={args.partially_available}'
         self.client_cols = [f'client_{c.id}' for c in clients]
         self.acc_by_ft_id = {
             ft.id: pd.DataFrame(columns=['agr'] + self.client_cols,
