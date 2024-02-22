@@ -1,3 +1,4 @@
+import collections
 import copy
 import itertools
 import os
@@ -51,9 +52,12 @@ class Statistics:
         d = self.jobs_cnt_in_ags
         if d:
             print(f"Flood measure mode={np.median(d)}, mean={np.mean(d)}")
+            print(collections.Counter(d))
 
     def plot_jobs_cnt_in_ags(self):
-        ax = sns.histplot(self.jobs_cnt_in_ags, discrete=True, shrink=0.8)
+        if not self.jobs_cnt_in_ags:
+            return
+        ax = sns.histplot(self.jobs_cnt_in_ags, discrete=True, shrink=0.8, color='royalblue')
         plt.xlabel('Number of jobs ready for aggregation')
         plt.ylabel('Frequency')
         # plt.xticks(list(range(max(data)+1)))
