@@ -28,7 +28,7 @@ def format_time(dt: datetime):
 
 
 def norm(dt: datetime, global_start_time):
-    return datetime.min + (dt - global_start_time)
+    return datetime(year=1970, month=1, day=1) + (dt - global_start_time)
 
 
 def ceil_seconds(obj: datetime) -> datetime:
