@@ -1,4 +1,4 @@
-from FederatedLearning.Platform.utils import validate
+from utils import validate
 from message import MessageToValidator, MessageValidatorToHub, ValidatorShouldFinish
 
 
