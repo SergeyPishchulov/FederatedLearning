@@ -12,6 +12,7 @@ import matplotlib.colors as mcolors
 
 from utils import format_time, ceil_seconds
 from message import Period
+import seaborn as sns
 
 
 class Statistics:
@@ -32,6 +33,7 @@ class Statistics:
         self.pngs_directory = os.path.join(self.directory, 'pngs')  # os.path.join(current_directory, r'stat/pngs')
         entities = [f'client_{cl.id}' for cl in clients] + ['agr']
         self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
+        self.jobs_cnt_in_ags = []
         # self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
         #                                        columns=self.client_cols)
 
@@ -41,6 +43,22 @@ class Statistics:
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
             os.makedirs(self.pngs_directory)
+
+    def upd_jobs_cnt_in_ags(self, x):
+        self.jobs_cnt_in_ags.append(x)
+
+    def print_jobs_cnt_in_ags_statistics(self):
+        d = self.jobs_cnt_in_ags
+        print(f"Flood measure mode={np.median(d)}, mean={np.mean(d)}")
+
+    def plot_jobs_cnt_in_ags(self):
+        ax = sns.histplot(self.jobs_cnt_in_ags, discrete=True, shrink=0.8)
+        plt.xlabel('Number of jobs ready for aggregation')
+        plt.ylabel('Frequency')
+        # plt.xticks(list(range(max(data)+1)))
+        plt.title('Distribution of the number of jobs in AgS')
+        fig = ax.get_figure()
+        fig.savefig(f'{self.pngs_directory}/job_cnt_dist.png')
 
     def set_init_round_beginning(self, task_ids):
         for ft_id in task_ids:

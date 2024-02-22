@@ -130,6 +130,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
             jobs = [Job(ft_id, deadline, round_num, processing_time_coef=get_params_cnt(models[0]))
                     for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
             best_job = hub.aggregation_scheduler.plan_next(jobs)
+            hub.stat.upd_jobs_cnt_in_ags(len(jobs))
             next_ft_id = best_job.ft_id
             _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
             ft = tasks[next_ft_id]
@@ -162,6 +163,8 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
         hub.stat.to_csv()
         hub.stat.plot_accuracy()
         hub.stat.plot_periods(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
+        hub.stat.plot_jobs_cnt_in_ags()
+        hub.stat.print_jobs_cnt_in_ags_statistics()
         # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
 
         # time.sleep(0.5)
@@ -175,7 +178,8 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
     end = datetime.now()
     hub.stat.plot_periods(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
                           plotting_period=Period(end - timedelta(minutes=5), end))
-
+    hub.stat.plot_jobs_cnt_in_ags()
+    hub.stat.print_jobs_cnt_in_ags_statistics()
 
 INTERDEADLINE_SIGMA = 3
 
