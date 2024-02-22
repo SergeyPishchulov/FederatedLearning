@@ -65,10 +65,19 @@ class ResponseToHub:
 
 @dataclass
 class MessageToValidator:
+    ft_id: int
+    ag_round_num: int
     node: Optional[Node]
     should_finish: bool = False
 
 
 @dataclass
+class ValidatorShouldFinish:
+    pass
+
+
+@dataclass
 class MessageValidatorToHub:
+    ft_id: int
+    ag_round_num: int
     acc: float

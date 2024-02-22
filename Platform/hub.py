@@ -1,4 +1,5 @@
 import argparse
+import datetime
 from typing import List
 
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
@@ -10,7 +11,7 @@ from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
 
 class Hub:
-    def __init__(self, tasks: List[FederatedMLTask], clients, args):
+    def __init__(self, tasks: List[FederatedMLTask], clients, args, start_time):
         self.tasks = tasks
         self.clients = clients
         self.stat = Statistics(tasks, clients, args)
@@ -19,6 +20,7 @@ class Hub:
         self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
         self._init_scheduler(args)
         self.finished_by_client = {cl.id: False for cl in clients}
+        self.start_time: datetime.datetime = start_time
 
     def _init_scheduler(self, args):
         if args.aggregation_scheduler == 'random':

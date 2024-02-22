@@ -1,5 +1,5 @@
 from FederatedLearning.Platform.utils import validate
-from message import MessageToValidator, MessageValidatorToHub
+from message import MessageToValidator, MessageValidatorToHub, ValidatorShouldFinish
 
 
 class Validator:
@@ -8,17 +8,24 @@ class Validator:
 
     def handle_messages(self, read_q, write_q):
         while not read_q.empty():
-            mes: MessageToValidator = read_q.get()
-            self.should_finish = mes.should_finish
+            mes = read_q.get()
+            if isinstance(mes, MessageToValidator):
+                if self.should_finish:
+                    return
 
-            if self.should_finish:
+                acc = validate(args=None,
+                               node=mes.node,
+                               which_dataset='local')
+                response = MessageValidatorToHub(mes.ft_id,
+                                                 mes.ag_round_num,
+                                                 acc)
+                write_q.put(response)
+            elif isinstance(mes, ValidatorShouldFinish):
+                self.should_finish = True
+                # del mes# TODO do we need it here?
                 return
-
-            acc = validate(args=None,
-                           node=mes.node,
-                           which_dataset='local')
-            response = MessageValidatorToHub(acc)
-            write_q.put(response)
+            else:
+                raise ValueError(f"Unknown message {mes}")
             del mes
 
     def run(self, read_q, write_q):

@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import traceback
 from datetime import timedelta
 
@@ -10,7 +11,8 @@ from aggregation_station import Job
 from client import Client
 from federated_ml_task import FederatedMLTask
 from hub import Hub
-from message import MessageToClient, MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub
+from message import MessageToClient, MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub, \
+    ValidatorShouldFinish
 from config.experiment_config import get_configs
 from config.args import args_parser
 from utils import *
@@ -81,7 +83,13 @@ def handle_messages(hub):
                 if r.final_message:
                     hub.finished_by_client[r.client_id] = True
             elif isinstance(r, MessageValidatorToHub):
-                acc = r.acc
+                hub.stat.save_agr_ac(r.ft_id,
+                                     round_num=r.ag_round_num,
+                                     acc=r.acc)
+                ft = hub.tasks[r.ft_id]
+                if r.acc > ft.args.target_acc:
+                    seconds_spent = int((datetime.datetime.now() - hub.start_time).total_seconds())
+                    hub.stat.save_time_to_target_acc(ft.id, seconds_spent)
             del r
 
 
@@ -112,8 +120,7 @@ def get_params_cnt(model):
 
 def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
     total_aggregations = 0
-    hub_start_time = time.time()
-    hub_start_dt = datetime.now()
+    # hub_start_dt = datetime.now()
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     updater = get_updater(user_args)
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
@@ -145,12 +152,11 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
                 print(f'HUB: Performed {ag_round_num + 1}/{user_args.T} rounds in task {ft.id}')
 
             # acc = validate(ft.args, ft.central_node, which_dataset='local')
-            val_write_q.put(MessageToValidator(ft.central_node))  # TODO copy.deepcopy?
-            hub.stat.save_agr_ac(ft.id,
-                                 round_num=ag_round_num,
-                                 acc=acc)
-            if acc > ft.args.target_acc:
-                hub.stat.save_time_to_target_acc(ft.id, time.time() - hub_start_time)
+            val_write_q.put(MessageToValidator(
+                ft.id, ag_round_num,
+                copy.deepcopy(ft.central_node)  # TODO check if ot will work
+            ))
+
             send_agr_model_to_clients(clients, hub, ag_round_num, ft,
                                       should_finish=all(ft.done for ft in tasks))
         hub.stat.to_csv()
@@ -159,7 +165,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
         # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
 
         # time.sleep(0.5)
-    val_write_q.put(MessageToValidator(node=None, should_finish=True))
+    val_write_q.put(ValidatorShouldFinish())
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
@@ -199,7 +205,7 @@ def main():
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(federated_tasks_configs)]
     wakeup_time = datetime.now() + timedelta(seconds=60)
     clients = create_clients(tasks, user_args, wakeup_time)
-    hub = Hub(tasks, clients, user_args)
+    hub = Hub(tasks, clients, user_args, start_time=wakeup_time)  # TODO check all start time
 
     val_read_q, val_write_q = Queue(), Queue()
     validator = Validator()
