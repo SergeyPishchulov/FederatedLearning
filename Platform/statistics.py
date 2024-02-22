@@ -89,18 +89,21 @@ class Statistics:
         uniq_times.add(dt)
         return dt
 
-    def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, axes, height, colors_by_ft_id):
+    def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, axes, height, colors_by_ft_id,
+                                       plotting_period):
         """
         Plot vertical line to show in what moment the decision about
         ability of aggregation was made
         """
+        normed_plot_period = None if plotting_period is None else plotting_period.norm(self.start_time)
         if first_time_ready_to_aggr is None:
             return
         uniq_times = set()
         # pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
         for (ft_id, r), dt_orig in first_time_ready_to_aggr.items():
             dt = self.get_distinguishable_times(ceil_seconds(norm(dt_orig, self.start_time)), uniq_times)
-            axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
+            if (normed_plot_period is None) or (normed_plot_period.start < dt < normed_plot_period.end):
+                axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
 
     @timing
     def plot_periods(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
@@ -127,8 +130,9 @@ class Statistics:
                         agr_periods.append(p)
                     p: Period
                     p = p.norm(self.start_time)
-                    if ((plotting_period is None) or (plotting_period.start < p.start < plotting_period.end)
-                            or (plotting_period.start < p.end < plotting_period.end)):
+                    normed_plot_period = None if plotting_period is None else plotting_period.norm(self.start_time)
+                    if ((normed_plot_period is None) or (normed_plot_period.start < p.start < normed_plot_period.end)
+                            or (normed_plot_period.start < p.end < normed_plot_period.end)):
                         axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
                                   linewidth=10
                                   )
@@ -139,7 +143,8 @@ class Statistics:
         self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
                                             axes,
                                             height=(len(entities)),
-                                            colors_by_ft_id=colors_by_ft_id)
+                                            colors_by_ft_id=colors_by_ft_id,
+                                            plotting_period=plotting_period)
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
         if plotting_period is None:
             fig.savefig(f'{self.pngs_directory}/periods.png')
