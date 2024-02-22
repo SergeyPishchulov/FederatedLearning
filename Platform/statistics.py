@@ -15,6 +15,8 @@ from utils import format_time, ceil_seconds
 from message import Period
 import seaborn as sns
 
+import warnings
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 class Statistics:
     def __init__(self, tasks, clients, args, start_time):
