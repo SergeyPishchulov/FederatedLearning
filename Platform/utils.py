@@ -27,6 +27,10 @@ def format_time(dt: datetime):
     return dt.strftime("%H:%M:%S")
 
 
+def norm(dt: datetime, global_start_time):
+    return datetime.min + (dt - global_start_time)
+
+
 def ceil_seconds(obj: datetime) -> datetime:
     # if obj.microsecond >= 500_000:
     obj += timedelta(seconds=1)

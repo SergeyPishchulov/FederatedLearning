@@ -4,12 +4,17 @@ import torch
 from typing import Optional
 
 from nodes import Node
+from utils import norm
 
 
 @dataclass
 class Period:
     start: datetime
     end: datetime
+
+    def norm(self, global_start_time: datetime):
+        return Period(norm(self.start, global_start_time),
+                      norm(self.end, global_start_time))
 
     def __str__(self):
         return f'[{self.start.strftime("%H:%M:%S")} --- {self.end.strftime("%H:%M:%S")}]\n'

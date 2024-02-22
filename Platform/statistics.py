@@ -4,7 +4,7 @@ import os
 from datetime import timedelta, datetime
 from pprint import pprint
 from typing import List
-from utils import timing
+from utils import timing, norm
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ from message import Period
 
 
 class Statistics:
-    def __init__(self, tasks, clients, args):
+    def __init__(self, tasks, clients, args, start_time):
         self.experiment_name = f'{args.aggregation_on}|{args.server_method}|partially_available={args.partially_available}'
         self.client_cols = [f'client_{c.id}' for c in clients]
         self.acc_by_ft_id = {
@@ -36,6 +36,7 @@ class Statistics:
         #                                        columns=self.client_cols)
 
         self.time_to_target_acc_by_ft_id = [np.nan] * len(tasks)
+        self.start_time = start_time
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
@@ -89,15 +90,17 @@ class Statistics:
         return dt
 
     def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, axes, height, colors_by_ft_id):
+        """
+        Plot vertical line to show in what moment the decision about
+        ability of aggregation was made
+        """
         if first_time_ready_to_aggr is None:
             return
         uniq_times = set()
         # pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
         for (ft_id, r), dt_orig in first_time_ready_to_aggr.items():
-            dt = self.get_distinguishable_times(ceil_seconds(dt_orig), uniq_times)
-            axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id],
-                      # linewidth=10
-                      )
+            dt = self.get_distinguishable_times(ceil_seconds(norm(dt_orig, self.start_time)), uniq_times)
+            axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
 
     @timing
     def plot_periods(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
@@ -106,9 +109,7 @@ class Statistics:
 
         :param plotting_period: Period of time that will be represented on the plot
         """
-        fig, axes = plt.subplots(1,
-                                 figsize=(16, 5)
-                                 )
+        fig, axes = plt.subplots(1, figsize=(16, 5))
 
         ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
         colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
@@ -125,6 +126,7 @@ class Statistics:
                         total_aggregations += 1
                         agr_periods.append(p)
                     p: Period
+                    p = p.norm(self.start_time)
                     if ((plotting_period is None) or (plotting_period.start < p.start < plotting_period.end)
                             or (plotting_period.start < p.end < plotting_period.end)):
                         axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
