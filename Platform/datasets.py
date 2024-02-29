@@ -75,7 +75,7 @@ class Data(object):
             )
 
             self.train_set = torchvision.datasets.CIFAR10(
-                root="/home/Dataset/cifar/", train=True, download=True, transform=tra_transformer
+                root="/tmp/cifar/", train=True, download=True, transform=tra_transformer
             )
             if args.iid == 0:  # noniid
                 # raise NotImplemented()
@@ -103,7 +103,7 @@ class Data(object):
                 self.train_loader = splited_set
 
             self.test_set = torchvision.datasets.CIFAR10(
-                root="/home/Dataset/cifar/", train=False, download=True, transform=val_transformer
+                root="/tmp/cifar/", train=False, download=True, transform=val_transformer
             )
 
             self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
@@ -124,7 +124,7 @@ class Data(object):
             )
 
             self.train_set = torchvision.datasets.CIFAR100(
-                root="/home/Dataset/cifar/", train=True, download=True, transform=tra_transformer
+                root="/tmp/cifar/", train=True, download=True, transform=tra_transformer
             )
             if args.iid == 0:  # noniid
                 random_state = np.random.RandomState(int(args.random_seed))
@@ -143,7 +143,7 @@ class Data(object):
                 self.train_loader = splited_set
 
             self.test_set = torchvision.datasets.CIFAR100(
-                root="/home/Dataset/cifar/", train=False, download=True, transform=val_transformer
+                root="/tmp/cifar/", train=False, download=True, transform=val_transformer
             )
             self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
 
@@ -160,7 +160,7 @@ class Data(object):
                 ]
             )
             self.train_set = torchvision.datasets.FashionMNIST(
-                root="/home/Dataset/FashionMNIST", train=True, download=True, transform=tra_transformer
+                root="/tmp/FashionMNIST", train=True, download=True, transform=tra_transformer
             )
             if args.iid == 0:  # noniid
                 random_state = np.random.RandomState(int(args.random_seed))
@@ -178,7 +178,7 @@ class Data(object):
                 self.train_loader = splited_set
 
             self.test_set = torchvision.datasets.FashionMNIST(
-                root="/home/Dataset/FashionMNIST", train=False, download=True, transform=val_transformer
+                root="/tmp/FashionMNIST", train=False, download=True, transform=val_transformer
             )
             self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
 
