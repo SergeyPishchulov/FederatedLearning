@@ -27,7 +27,7 @@ def args_parser():
 
     # System
     parser.add_argument('--device', type=str, default='0',
-                        help="device: {cuda, cpu}")
+                        help="device: {0 = cuda, -1 = cpu}")
     parser.add_argument('--node_num', type=int, default=6,  # 200
                         help="Number of nodes")
     parser.add_argument('--T', type=int, default=5,  # 30

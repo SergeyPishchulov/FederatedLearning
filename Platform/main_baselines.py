@@ -212,7 +212,7 @@ def main():
     hub = Hub(tasks, clients, user_args, start_time=wakeup_time)  # TODO check all start time
 
     val_read_q, val_write_q = Queue(), Queue()
-    validator = Validator()
+    validator = Validator(user_args)
     val_proc = get_validator_proc(validator, val_read_q, val_write_q)
     procs = [val_proc] + get_client_procs(clients, hub)
     for p in procs:

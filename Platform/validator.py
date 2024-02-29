@@ -1,9 +1,13 @@
 from utils import validate
 from message import MessageToValidator, MessageValidatorToHub, ValidatorShouldFinish
+import torch
+import os
+from utils import setup_seed
 
 
 class Validator:
-    def __init__(self):
+    def __init__(self, user_args):
+        self.user_args = user_args
         self.should_finish = False
 
     def handle_messages(self, read_q, write_q):
@@ -28,6 +32,12 @@ class Validator:
                 raise ValueError(f"Unknown message {mes}")
             del mes
 
+    def setup(self):
+        setup_seed(self.user_args.random_seed)
+        os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
+        torch.cuda.set_device('cuda:' + self.user_args.device)
+
     def run(self, read_q, write_q):
+        self.setup()
         while not self.should_finish:
             self.handle_messages(read_q, write_q)
