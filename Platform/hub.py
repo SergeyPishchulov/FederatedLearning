@@ -6,7 +6,7 @@ from aggregation_station import RandomAggregationStationScheduler, SFAggregation
 from federated_ml_task import FederatedMLTask
 from utils import generate_selectlist
 from training_journal import TrainingJournal
-from statistics import Statistics
+from statistics_handler import Statistics
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
 
