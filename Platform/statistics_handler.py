@@ -193,7 +193,7 @@ class Statistics:
                         p = p.norm(self.start_time)
                         p: Period
                         fig.add_trace(go.Scatter(
-                            x=[p.start.time(), p.end.time()], y=[i] * 2, mode='lines',
+                            x=[p.start, p.end], y=[i] * 2, mode='lines',
                             line=dict(color=color, width=10),
                             legendgroup=legendgroup, showlegend=first_scatter_in_group,
                             name=legendgroup))
