@@ -130,7 +130,7 @@ class Statistics:
         uniq_times.add(dt)
         return dt
 
-    def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, axes, height, colors_by_ft_id,
+    def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, fig, height, colors_by_ft_id,
                                        plotting_period):
         """
         Plot vertical line to show in what moment the decision about
@@ -140,11 +140,19 @@ class Statistics:
         if first_time_ready_to_aggr is None:
             return
         uniq_times = set()
+        first_time=True
         # pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
         for (ft_id, r), dt_orig in first_time_ready_to_aggr.items():
             dt = self.get_distinguishable_times(ceil_seconds(norm(dt_orig, self.start_time)), uniq_times)
             if (normed_plot_period is None) or (normed_plot_period.start < dt < normed_plot_period.end):
-                axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
+                fig.add_trace(go.Scatter(
+                    x=[dt, dt], y=[0, height], mode='lines',
+                    line=dict(color=colors_by_ft_id[ft_id], width=10),
+                    legendgroup="decision", showlegend=first_time,
+                    name="Ready for aggr"))
+                if first_time:
+                    first_time=False
+                # axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
 
     def _set_plotly_layout(self, fig, y_ticks_texts):
         fig.update_layout(font=dict(size=40))
@@ -201,12 +209,11 @@ class Statistics:
                             first_scatter_in_group = False
 
         self._set_plotly_layout(fig, entities)
-        # self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
-        #                                     axes,
-        #                                     height=(len(entities)),
-        #                                     colors_by_ft_id=colors_by_ft_id,
-        #                                     plotting_period=plotting_period)
-        # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
+        self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
+                                            fig,
+                                            height=(len(entities)),
+                                            colors_by_ft_id=colors_by_ft_id,
+                                            plotting_period=plotting_period)
         if plotting_period is None:
             fname = f'{self.pngs_directory}/load'
             plotly.offline.plot(fig, filename=fname + ".html")
