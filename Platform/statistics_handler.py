@@ -1,6 +1,8 @@
 import collections
 import plotly
 import plotly.graph_objects as go
+import plotly.express as px
+
 import os
 from datetime import timedelta, datetime
 from pprint import pprint
@@ -21,6 +23,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 def get_plotly_colors():
+    return list(px.colors.qualitative.Plotly)
     return [f'rgb{x}' for x in list(mcolors.BASE_COLORS.values())]
 
 
@@ -144,6 +147,7 @@ class Statistics:
                 axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
 
     def _set_plotly_layout(self, fig, y_ticks_texts):
+        fig.update_layout(font=dict(size=40))
         fig.update_layout(
             yaxis=dict(
                 tickfont=dict(size=40),
@@ -152,12 +156,14 @@ class Statistics:
                 ticktext=y_ticks_texts
             ),
             xaxis=dict(
-                tickfont=dict(size=40),
-                title="time"
+                tickfont=dict(size=20),
+                title="time",
             )
         )
         fig.update_layout(
-            title=dict(text="System load", font=dict(size=40))
+            title=dict(text="System load",
+                       # font=dict(size=40)
+                       )
         )
         return fig
 
@@ -188,7 +194,8 @@ class Statistics:
                         fig.add_trace(go.Scatter(
                             x=[p.start, p.end], y=[i] * 2, mode='lines',
                             line=dict(color=color, width=10),
-                            legendgroup=legendgroup, showlegend=first_scatter_in_group))
+                            legendgroup=legendgroup, showlegend=first_scatter_in_group,
+                            name=legendgroup))
                         if first_scatter_in_group:
                             first_scatter_in_group = False
 
@@ -201,8 +208,8 @@ class Statistics:
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
         if plotting_period is None:
             fname = f'{self.pngs_directory}/load'
-            plotly.offline.plot(fig, filename=fname+".html")
-            fig.write_image(fname+".png")
+            plotly.offline.plot(fig, filename=fname + ".html")
+            fig.write_image(fname + ".png")
         else:
             fname = f'{self.pngs_directory}/load_part'
             plotly.offline.plot(fig, filename=fname + ".html")
