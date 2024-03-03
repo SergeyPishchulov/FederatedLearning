@@ -147,7 +147,9 @@ class Statistics:
             if (normed_plot_period is None) or (normed_plot_period.start < dt < normed_plot_period.end):
                 fig.add_trace(go.Scatter(
                     x=[dt, dt], y=[0, height], mode='lines',
-                    line=dict(color=colors_by_ft_id[ft_id], width=10),
+                    line=dict(color=colors_by_ft_id[ft_id],
+                              # width=10
+                              ),
                     legendgroup="decision", showlegend=first_time,
                     name="Ready for aggr"))
                 if first_time:

@@ -7,7 +7,7 @@ from datetime import datetime, date
 
 from typing import Dict
 
-from utils import timing
+from utils import timing, print_dates
 
 
 @dataclass
@@ -59,6 +59,9 @@ class TrainingJournal:
                 res.append((ft_id, latest_round + 1))
                 if (ft_id, latest_round + 1) not in self.first_time_ready_to_aggr:
                     self.first_time_ready_to_aggr[(ft_id, latest_round + 1)] = datetime.now()
+                    dt = self.first_time_ready_to_aggr[(ft_id, latest_round + 1)]
+                    print_dates([dt], f"Datetime when readu to aggregate. ft_id={ft_id}, latest_round+1={latest_round+1}")
+
 
         return res
 
