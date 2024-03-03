@@ -146,7 +146,7 @@ class Statistics:
             dt = self.get_distinguishable_times(ceil_seconds(norm(dt_orig, self.start_time)), uniq_times)
             if (normed_plot_period is None) or (normed_plot_period.start < dt < normed_plot_period.end):
                 fig.add_trace(go.Scatter(
-                    x=[dt, dt], y=[0, height], mode='lines',
+                    x=[dt, dt], y=[0, height-1], mode='lines',
                     line=dict(color=colors_by_ft_id[ft_id],
                               # width=10
                               ),
