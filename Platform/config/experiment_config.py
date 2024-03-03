@@ -15,10 +15,10 @@ def get_configs(user_args):
         # interdeadline_time_sec=25
     ))
     custom_configs.append(dict(
-        dataset='cifar100',
+        dataset='cifar10',
         local_model='ResNet20',
-        target_acc=65,
-        # interdeadline_time_sec=25
+        target_acc=55,
+        # interdeadline_time_sec=30
     ))
     custom_configs.append(dict(
         dataset='cifar10',
@@ -26,6 +26,47 @@ def get_configs(user_args):
         target_acc=55,
         # interdeadline_time_sec=30
     ))
+    custom_configs.append(dict(
+        dataset='cifar10',
+        local_model='WRN56_2',
+        target_acc=55,
+        # interdeadline_time_sec=30
+    ))
+    custom_configs.append(dict(
+        dataset='cifar10',
+        local_model='DenseNet201',
+        target_acc=55,
+        # interdeadline_time_sec=30
+    ))
+#######################################################################
+    custom_configs.append(dict(
+        dataset='cifar100',
+        local_model='CNN',
+        target_acc=65,
+        # interdeadline_time_sec=25
+    ))
+    custom_configs.append(dict(
+        dataset='cifar100',
+        local_model='ResNet20',
+        target_acc=65,
+    ))
+
+    custom_configs.append(dict(
+        dataset='cifar100',
+        local_model='ResNet56',
+        target_acc=65,
+    ))
+    custom_configs.append(dict(
+        dataset='cifar100',
+        local_model='WRN56_2',
+        target_acc=65,
+    ))
+    custom_configs.append(dict(
+        dataset='cifar100',
+        local_model='DenseNet201',
+        target_acc=65,
+    ))
+
     return [Namespace(**(vars(user_args) | common_config | cc))
             for cc in custom_configs]
 
