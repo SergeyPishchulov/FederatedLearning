@@ -15,7 +15,7 @@ class Job:
 
 
 class SFAggregationStationScheduler:
-    @timing
+    # @timing
     @staticmethod
     def plan_next(jobs: List[Job]):
         if not jobs:

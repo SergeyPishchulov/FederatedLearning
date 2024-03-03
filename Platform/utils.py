@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+from collections import Counter
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -21,6 +21,15 @@ def print_dates(dts, message):
     l = [dt.isoformat() for dt in dts]
     print(*l, sep='\n')
     print(f"==========================")
+
+
+def normalize_cntr(x: Counter):
+    c = x.copy()
+    total = sum(c.values(), 0.0)
+    for key in c:
+        c[key] /= total
+        c[key] = np.round(c[key], 2)  # TODO it should not be here
+    return c
 
 
 def format_time(dt: datetime):

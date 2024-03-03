@@ -306,7 +306,7 @@ def Server_update_fedlaw(args, central_node, client_models, select_list, size_we
     return Period(start_time, end_time)
 
 
-@timing
+# @timing
 def Server_update(args, central_node, client_models, select_list, size_weights):
     '''
     server update functions for baselines

@@ -5,7 +5,7 @@ import os
 from datetime import timedelta, datetime
 from pprint import pprint
 from typing import List
-from utils import timing, norm
+from utils import timing, norm, normalize_cntr
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -51,10 +51,17 @@ class Statistics:
         self.jobs_cnt_in_ags.append(x)
 
     def print_jobs_cnt_in_ags_statistics(self):
+        """
+        Prints statistics showing measure of AgS flooding.
+        It means how much tasks does AgS have for aggregation each time it is ready to aggregate.
+
+        Also prints distribution of cnt of ready tasks in AgS.
+        """
+
         d = self.jobs_cnt_in_ags
         if d:
-            print(f"Flood measure mode={np.median(d)}, mean={np.mean(d)}")
-            print(collections.Counter(d))
+            print(f"Flood measure mean={np.round(np.mean(d),2)}, mode={np.median(d)}")
+            print(f"Distribution: {normalize_cntr(collections.Counter(d))}")
 
     def plot_jobs_cnt_in_ags(self):
         if not self.jobs_cnt_in_ags:
@@ -130,7 +137,7 @@ class Statistics:
             if (normed_plot_period is None) or (normed_plot_period.start < dt < normed_plot_period.end):
                 axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
 
-    @timing
+    # @timing
     def plot_periods(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
         """
         Plotting load-plot of clients and AgS
