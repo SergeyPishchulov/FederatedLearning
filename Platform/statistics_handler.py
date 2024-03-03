@@ -121,12 +121,12 @@ class Statistics:
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
 
-    def get_distinguishable_times(self, dt, uniq_times):
+    def get_distinguishable_times(self, dt: datetime, uniq_times: List[datetime]):
         """
         In order not to plot same lines one above another
         """
-        while dt in uniq_times:
-            dt = dt + timedelta(seconds=1)
+        while min(([abs(dt - x) for x in uniq_times])) < timedelta(seconds=0.05):
+            dt = dt + timedelta(seconds=0.05)
         uniq_times.add(dt)
         return dt
 
@@ -140,20 +140,20 @@ class Statistics:
         if first_time_ready_to_aggr is None:
             return
         uniq_times = set()
-        first_time=True
+        first_time = True
         # pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
         for (ft_id, r), dt_orig in first_time_ready_to_aggr.items():
-            dt = self.get_distinguishable_times(ceil_seconds(norm(dt_orig, self.start_time)), uniq_times)
+            dt = self.get_distinguishable_times(norm(dt_orig, self.start_time), uniq_times)
             if (normed_plot_period is None) or (normed_plot_period.start < dt < normed_plot_period.end):
                 fig.add_trace(go.Scatter(
-                    x=[dt, dt], y=[0, height-1], mode='lines',
+                    x=[dt, dt], y=[0, height - 1], mode='lines',
                     line=dict(color=colors_by_ft_id[ft_id],
                               # width=10
                               ),
                     legendgroup="decision", showlegend=first_time,
                     name="Ready for aggr"))
                 if first_time:
-                    first_time=False
+                    first_time = False
                 # axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
 
     def _set_plotly_layout(self, fig, y_ticks_texts):
