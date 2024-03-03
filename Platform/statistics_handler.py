@@ -6,7 +6,7 @@ import plotly.express as px
 import os
 from datetime import timedelta, datetime
 from pprint import pprint
-from typing import List
+from typing import List, Set
 from utils import timing, norm, normalize_cntr
 import numpy as np
 import pandas as pd
@@ -121,11 +121,11 @@ class Statistics:
         all_periods_cnt = sum([len(periods) for (e, ft_id), periods in self.periods_by_entity_ft_id.items()
                                if e == entity])
 
-    def get_distinguishable_times(self, dt: datetime, uniq_times: List[datetime]):
+    def get_distinguishable_times(self, dt: datetime, uniq_times: Set[datetime]):
         """
         In order not to plot same lines one above another
         """
-        while min(([abs(dt - x) for x in uniq_times])) < timedelta(seconds=0.05):
+        while uniq_times and (min(([abs(dt - x) for x in uniq_times])) < timedelta(seconds=0.05)):
             dt = dt + timedelta(seconds=0.05)
         uniq_times.add(dt)
         return dt
