@@ -1,6 +1,6 @@
 import collections
-import copy
-import itertools
+import plotly
+import plotly.graph_objects as go
 import os
 from datetime import timedelta, datetime
 from pprint import pprint
@@ -16,11 +16,17 @@ from message import Period
 import seaborn as sns
 
 import warnings
+
 warnings.simplefilter(action="ignore", category=FutureWarning)
+
+
+def get_plotly_colors():
+    return [f'rgb{x}' for x in list(mcolors.BASE_COLORS.values())]
+
 
 class Statistics:
     def __init__(self, tasks, clients, args, start_time):
-        self.experiment_name = 'exp'#f'{args.aggregation_on}|{args.server_method}|partially_available={args.partially_available}'
+        self.experiment_name = 'exp'  # f'{args.aggregation_on}|{args.server_method}|partially_available={args.partially_available}'
         self.client_cols = [f'client_{c.id}' for c in clients]
         self.acc_by_ft_id = {
             ft.id: pd.DataFrame(columns=['agr'] + self.client_cols,
@@ -60,7 +66,7 @@ class Statistics:
 
         d = self.jobs_cnt_in_ags
         if d:
-            print(f"Flood measure mean={np.round(np.mean(d),2)}, mode={np.median(d)}")
+            print(f"Flood measure mean={np.round(np.mean(d), 2)}, mode={np.median(d)}")
             print(f"Distribution: {normalize_cntr(collections.Counter(d))}")
 
     def plot_jobs_cnt_in_ags(self):
@@ -137,52 +143,116 @@ class Statistics:
             if (normed_plot_period is None) or (normed_plot_period.start < dt < normed_plot_period.end):
                 axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
 
+    def _set_plotly_layout(self, fig, y_ticks_texts):
+        fig.update_layout(
+            yaxis=dict(
+                tickfont=dict(size=40),
+                tickmode='array',
+                tickvals=list(range(len(y_ticks_texts))),
+                ticktext=y_ticks_texts
+            ),
+            xaxis=dict(
+                tickfont=dict(size=40),
+                title="time"
+            )
+        )
+        fig.update_layout(
+            title=dict(text="System load", font=dict(size=40))
+        )
+        return fig
+
     # @timing
-    def plot_periods(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
+
+    def plot_system_load(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
         """
         Plotting load-plot of clients and AgS
 
         :param plotting_period: Period of time that will be represented on the plot
         """
-        fig, axes = plt.subplots(1, figsize=(16, 5))
 
         ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
-        colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
+        colors_by_ft_id = get_plotly_colors()[:len(ft_ids)]
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
         # clients and AgS
-        for i, e in enumerate(entities):
-            total_aggregations = 0
-            agr_periods = []
-            for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
-                if ent != e:
-                    continue
-                for p in periods:
-                    if ent == 'agr':
-                        total_aggregations += 1
-                        agr_periods.append(p)
-                    p: Period
-                    p = p.norm(self.start_time)
-                    normed_plot_period = None if plotting_period is None else plotting_period.norm(self.start_time)
-                    if ((normed_plot_period is None) or (normed_plot_period.start < p.start < normed_plot_period.end)
-                            or (normed_plot_period.start < p.end < normed_plot_period.end)):
-                        axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
-                                  linewidth=10
-                                  )
+        fig = go.Figure()
+        for ft_id in ft_ids:
+            color = colors_by_ft_id[ft_id]
+            legendgroup = f"Task {ft_id}"
+            first_scatter_in_group = True
+            for i, e in enumerate(entities):
+                for (ent, ft_id_2), periods in self.periods_by_entity_ft_id.items():
+                    if ent != e or ft_id != ft_id_2:
+                        continue
+                    for p in periods:
+                        p = p.norm(self.start_time)
+                        fig.add_trace(go.Scatter(
+                            x=[p.start, p.end], y=[i] * 2, mode='lines',
+                            line=dict(color=color, width=10),
+                            legendgroup=legendgroup, showlegend=first_scatter_in_group))
+                        if first_scatter_in_group:
+                            first_scatter_in_group = False
 
-        plt.yticks(list(range(len(entities))))
-        axes.set_yticklabels(entities, fontsize=20)
-        plt.xlabel('time', fontsize=20)
-        self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
-                                            axes,
-                                            height=(len(entities)),
-                                            colors_by_ft_id=colors_by_ft_id,
-                                            plotting_period=plotting_period)
+        self._set_plotly_layout(fig, entities)
+        # self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
+        #                                     axes,
+        #                                     height=(len(entities)),
+        #                                     colors_by_ft_id=colors_by_ft_id,
+        #                                     plotting_period=plotting_period)
         # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
         if plotting_period is None:
-            fig.savefig(f'{self.pngs_directory}/periods.png')
+            fname = f'{self.pngs_directory}/load'
+            plotly.offline.plot(fig, filename=fname+".html")
+            fig.write_image(fname+".png")
         else:
-            fig.savefig(f'{self.pngs_directory}/periods_part.png')
-        plt.close()
+            fname = f'{self.pngs_directory}/load_part'
+            plotly.offline.plot(fig, filename=fname + ".html")
+            fig.write_image(fname + ".png")
+
+    # def plot_system_load_obsolete(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
+    #     """
+    #     Plotting load-plot of clients and AgS
+    #
+    #     :param plotting_period: Period of time that will be represented on the plot
+    #     """
+    #     fig, axes = plt.subplots(1, figsize=(16, 5))
+    #
+    #     ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
+    #     colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
+    #     entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
+    #     # clients and AgS
+    #     for i, e in enumerate(entities):
+    #         total_aggregations = 0
+    #         agr_periods = []
+    #         for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
+    #             if ent != e:
+    #                 continue
+    #             for p in periods:
+    #                 if ent == 'agr':
+    #                     total_aggregations += 1
+    #                     agr_periods.append(p)
+    #                 p: Period
+    #                 p = p.norm(self.start_time)
+    #                 normed_plot_period = None if plotting_period is None else plotting_period.norm(self.start_time)
+    #                 if ((normed_plot_period is None) or (normed_plot_period.start < p.start < normed_plot_period.end)
+    #                         or (normed_plot_period.start < p.end < normed_plot_period.end)):
+    #                     axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
+    #                               linewidth=10
+    #                               )
+    #
+    #     plt.yticks(list(range(len(entities))))
+    #     axes.set_yticklabels(entities, fontsize=20)
+    #     plt.xlabel('time', fontsize=20)
+    #     self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
+    #                                         axes,
+    #                                         height=(len(entities)),
+    #                                         colors_by_ft_id=colors_by_ft_id,
+    #                                         plotting_period=plotting_period)
+    #     # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
+    #     if plotting_period is None:
+    #         fig.savefig(f'{self.pngs_directory}/periods.png')
+    #     else:
+    #         fig.savefig(f'{self.pngs_directory}/periods_part.png')
+    #     plt.close()
 
     def save_client_delay(self, client_id, ft_id, round, delay):
         self.delay_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = delay
