@@ -181,6 +181,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
     hub.stat.plot_jobs_cnt_in_ags()
     hub.stat.print_jobs_cnt_in_ags_statistics()
 
+
 INTERDEADLINE_SIGMA = 3
 
 
@@ -207,7 +208,7 @@ def main():
 
     federated_tasks_configs = get_configs(user_args)
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(federated_tasks_configs)]
-    wakeup_time = datetime.now() + timedelta(seconds=60)
+    wakeup_time = datetime.now() + timedelta(seconds=15 * user_args.node_num)
     clients = create_clients(tasks, user_args, wakeup_time)
     hub = Hub(tasks, clients, user_args, start_time=wakeup_time)  # TODO check all start time
 
