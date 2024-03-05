@@ -298,6 +298,7 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
 
 def Server_update_fedlaw(args, central_node, client_models, select_list, size_weights):
     start_time = datetime.now()
+    central_node.model.cuda()
     # print(f'Server_update_fedlaw')
     agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
     gamma, optmized_weights = fedlaw_optimization(args, agg_weights, client_params, central_node)
@@ -314,6 +315,7 @@ def Server_update(args, central_node, client_models, select_list, size_weights):
 
     # receive the local models from clients
     start_time = datetime.now()
+    central_node.model.cpu()
     agr_model = central_node.model
     agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
 

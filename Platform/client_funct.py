@@ -68,18 +68,18 @@ def Client_update(args, client_nodes, central_node):
 
     return client_nodes, train_loss
 
-def Client_validate(args, client_nodes):
-    '''
-    client validation functions, for testing local personalization
-    '''
-    client_acc = []
-    for idx in range(len(client_nodes)):
-        acc = validate(args, client_nodes[idx])
-        # print('client ', idx, ', after  training, acc is', acc)
-        client_acc.append(acc)
-    avg_client_acc = sum(client_acc) / len(client_acc)
-
-    return avg_client_acc
+# def Client_validate(args, client_nodes):
+#     '''
+#     client validation functions, for testing local personalization
+#     '''
+#     client_acc = []
+#     for idx in range(len(client_nodes)):
+#         acc = validate(args, client_nodes[idx])
+#         # print('client ', idx, ', after  training, acc is', acc)
+#         client_acc.append(acc)
+#     avg_client_acc = sum(client_acc) / len(client_acc)
+#
+#     return avg_client_acc
 
 # Vanilla local training
 def client_localTrain(args, node, loss = 0.0):
