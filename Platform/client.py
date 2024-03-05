@@ -1,4 +1,5 @@
 import argparse
+import gc
 import os
 import time
 import traceback
@@ -115,6 +116,9 @@ class Client:
             loss_local.backward()
             loss = loss + loss_local.item()
             node.optimizer.step()
+            data = None
+            target = None
+            loss_local = None
 
         return loss / len(train_loader), len(train_loader) * node.args.batchsize
 
@@ -137,9 +141,11 @@ class Client:
                 epoch_losses.append(loss)
             mean_loss = sum(epoch_losses) / len(epoch_losses)
             end_time = datetime.now()
+            gc.collect()
             return mean_loss, data_len, start_time, end_time
         else:
             raise NotImplemented('Still only local_train =(')
+
 
     def setup(self):
         setup_seed(self.user_args.random_seed)
