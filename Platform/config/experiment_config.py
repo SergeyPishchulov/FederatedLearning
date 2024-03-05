@@ -34,7 +34,7 @@ def get_configs(user_args):
     ))
     custom_configs.append(dict(
         dataset='cifar10',
-        local_model='ResNet56',#'DenseNet201',
+        local_model='DenseNet121',
         target_acc=55,
         # interdeadline_time_sec=30
     ))
@@ -63,7 +63,7 @@ def get_configs(user_args):
     ))
     custom_configs.append(dict(
         dataset='cifar100',
-        local_model='ResNet56',#'DenseNet201',
+        local_model='DenseNet121',
         target_acc=65,
     ))
 
