@@ -140,7 +140,6 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
                                 # hub.get_select_list(ft, [c.id for c in clients]),
                                 size_weights=ft.size_weights)
             ft.central_node.model.cpu()
-            # print_dates([p.start,p.end], "Period from updater")
             total_aggregations += 1
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
