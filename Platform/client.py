@@ -116,9 +116,10 @@ class Client:
             loss_local.backward()
             loss = loss + loss_local.item()
             node.optimizer.step()
-            data = None
-            target = None
-            loss_local = None
+            del data
+            del target
+            del loss_local
+        torch.cuda.empty_cache()
 
         return loss / len(train_loader), len(train_loader) * node.args.batchsize
 
@@ -145,7 +146,6 @@ class Client:
             return mean_loss, data_len, start_time, end_time
         else:
             raise NotImplemented('Still only local_train =(')
-
 
     def setup(self):
         setup_seed(self.user_args.random_seed)
