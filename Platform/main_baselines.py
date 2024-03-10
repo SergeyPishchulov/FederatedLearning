@@ -144,6 +144,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
                                 # hub.get_select_list(ft, [c.id for c in clients]),
                                 size_weights=ft.size_weights)
             print(f"=== 2nd part (AgS works) {round(time.time() - ag_start_time, 1)}s")
+            third_part_start_time = time.time()
             # print_dates([p.start,p.end], "Period from updater")
             ft.central_node.model.cpu()
             total_aggregations += 1
@@ -173,6 +174,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
         hub.stat.plot_jobs_cnt_in_ags()
         hub.stat.print_jobs_cnt_in_ags_statistics()
         # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
+        print(f"=== 3rd part (save the stuff) {round(time.time() - third_part_start_time, 1)}s")
 
         # time.sleep(0.5)
     val_write_q.put(ValidatorShouldFinish())
