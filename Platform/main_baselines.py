@@ -124,6 +124,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     updater = get_updater(user_args)
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
+        start_time = time.time()
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if ready_tasks_dict:
@@ -134,11 +135,15 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
             next_ft_id = best_job.ft_id
             _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
             ft = tasks[next_ft_id]
+            print(f"=== 1st part {round(time.time() - start_time, 1)}s")
+            ag_start_time = time.time()
+            print(f"****** ags runs at {datetime.datetime.now().isoformat()}")
             p: Period = updater(ft.args, ft.central_node, client_models,
                                 select_list=list(range(len(client_models))),
                                 # NOTE: all ready clients will be aggregated
                                 # hub.get_select_list(ft, [c.id for c in clients]),
                                 size_weights=ft.size_weights)
+            print(f"=== 2nd part (AgS works) {round(time.time() - ag_start_time, 1)}s")
             # print_dates([p.start,p.end], "Period from updater")
             total_aggregations += 1
             hub.journal.mark_as_aggregated(ft.id)
