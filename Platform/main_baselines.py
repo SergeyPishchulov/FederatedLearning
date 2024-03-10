@@ -137,7 +137,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
             ft = tasks[next_ft_id]
             print(f"=== 1st part {round(time.time() - start_time, 1)}s")
             ag_start_time = time.time()
-            print(f"****** ags runs at {datetime.datetime.now().isoformat()}")
+            print(f"****** ags runs at {datetime.now().isoformat()}")
             p: Period = updater(ft.args, ft.central_node, client_models,
                                 select_list=list(range(len(client_models))),
                                 # NOTE: all ready clients will be aggregated
