@@ -228,7 +228,7 @@ class PerturbedGradientDescent(Optimizer):
 # Validation function
 ##############################################################################
 
-@timing
+# @timing
 def validate(args, node, which_dataset='validate'):
     node.model.cuda().eval()
     if which_dataset == 'validate':
@@ -246,6 +246,7 @@ def validate(args, node, which_dataset='validate'):
             pred = output.argmax(dim=1)
             correct += pred.eq(target.view_as(pred)).sum().item()
         acc = correct / len(test_loader.dataset) * 100
+    node.model.cpu()  # TODO not sure
     return acc
 
 

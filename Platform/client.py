@@ -1,4 +1,5 @@
 import argparse
+import gc
 import os
 import time
 import traceback
@@ -100,6 +101,7 @@ class Client:
         raise argparse.ArgumentError(user_args.local_scheduler, "Unknown value")
 
     def client_localTrain(self, args, node, loss=0.0):
+        node.model.cuda()
         node.model.train()
 
         loss = 0.0
@@ -115,7 +117,11 @@ class Client:
             loss_local.backward()
             loss = loss + loss_local.item()
             node.optimizer.step()
-
+            del data
+            del target
+            del loss_local
+        torch.cuda.empty_cache()
+        # node.model.cpu()# it will be after validation
         return loss / len(train_loader), len(train_loader) * node.args.batchsize
 
     def _set_aggregated_model(self, ft_args, node, agr_model):
@@ -137,6 +143,7 @@ class Client:
                 epoch_losses.append(loss)
             mean_loss = sum(epoch_losses) / len(epoch_losses)
             end_time = datetime.now()
+            gc.collect()
             return mean_loss, data_len, start_time, end_time
         else:
             raise NotImplemented('Still only local_train =(')
@@ -147,6 +154,7 @@ class Client:
         torch.cuda.set_device('cuda:' + self.user_args.device)
 
     def set_aggregated_model(self, ft_id, round_num, agr_model):
+        # TODO add redundant agr_model.cpu() ?
         local_model = copy.deepcopy(self.agr_model_by_ft_id_round[(ft_id, -1)])
         if 'fedlaw' in self.user_args.server_method:
             local_model.load_param(copy.deepcopy(agr_model.get_param(clone=True)))
@@ -202,6 +210,7 @@ class Client:
                 mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
                 self.data_lens_by_ft_id[ft_id].append(data_len)
                 acc = validate(ft_args, node)
+                node.model.cpu()
                 node.iterations_performed += 1  # TODO not to mess with r
                 deadline = node.deadline_by_round[r]  # deadline to perform round r
                 data_lens = self.data_lens_by_ft_id[ft_id]

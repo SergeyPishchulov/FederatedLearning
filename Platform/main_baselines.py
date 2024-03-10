@@ -145,6 +145,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
                                 size_weights=ft.size_weights)
             print(f"=== 2nd part (AgS works) {round(time.time() - ag_start_time, 1)}s")
             # print_dates([p.start,p.end], "Period from updater")
+            ft.central_node.model.cpu()
             total_aggregations += 1
             hub.journal.mark_as_aggregated(ft.id)
             hub.stat.set_round_done_ts(ft.id, ag_round_num)
