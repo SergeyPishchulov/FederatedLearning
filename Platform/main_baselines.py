@@ -171,7 +171,6 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
             print(f"=== 3rd part (save the stuff) {round(time.time() - third_part_start_time, 1)}s")
         forth_aprt_start_time = time.time()
         hub.stat.to_csv()
-        hub.stat.plot_accuracy()
         hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
         hub.stat.plot_jobs_cnt_in_ags()
         hub.stat.print_jobs_cnt_in_ags_statistics()
@@ -185,6 +184,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
     hub.stat.print_sum_round_duration()
     hub.stat.print_mean_result_acc()
     hub.stat.print_time_target_acc()
+    hub.stat.plot_accuracy()
     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
     end = datetime.now()
     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
