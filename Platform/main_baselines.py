@@ -94,6 +94,14 @@ def handle_messages(hub):
 
 
 @timing
+def send_to_validator(val_write_q, ft, ag_round_num):
+    val_write_q.put(MessageToValidator(
+        ft.id, ag_round_num,
+        copy.deepcopy(ft.central_node)  # TODO check if ot will work
+    ))
+
+
+@timing
 def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
     for c in clients:
         try:
@@ -116,6 +124,22 @@ def get_updater(user_args):
 
 def get_params_cnt(model):
     return sum(p.numel() for p in model.parameters())
+
+
+def finish(hub, val_write_q):
+    val_write_q.put(ValidatorShouldFinish())
+    print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
+    hub.stat.print_delay()
+    hub.stat.print_sum_round_duration()
+    hub.stat.print_mean_result_acc()
+    hub.stat.print_time_target_acc()
+    hub.stat.plot_accuracy()
+    hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
+    end = datetime.now()
+    hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
+                              plotting_period=Period(end - timedelta(minutes=5), end))
+    hub.stat.plot_jobs_cnt_in_ags()
+    hub.stat.print_jobs_cnt_in_ags_statistics()
 
 
 def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
@@ -160,12 +184,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
             else:
                 print(f'HUB: Performed {ag_round_num + 1}/{user_args.T} rounds in task {ft.id}')
 
-            # acc = validate(ft.args, ft.central_node, which_dataset='local')
-            val_write_q.put(MessageToValidator(
-                ft.id, ag_round_num,
-                copy.deepcopy(ft.central_node)  # TODO check if ot will work
-            ))
-
+            send_to_validator(val_write_q, ft, ag_round_num)
             send_agr_model_to_clients(clients, hub, ag_round_num, ft,
                                       should_finish=all(ft.done for ft in tasks))
             print(f"=== 3rd part (save the stuff) {round(time.time() - third_part_start_time, 1)}s")
@@ -177,20 +196,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
         # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
         print(f"=== 4th part (save the stuff if no one is ready) {round(time.time() - forth_aprt_start_time, 1)}s")
 
-        # time.sleep(0.5)
-    val_write_q.put(ValidatorShouldFinish())
-    print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
-    hub.stat.print_delay()
-    hub.stat.print_sum_round_duration()
-    hub.stat.print_mean_result_acc()
-    hub.stat.print_time_target_acc()
-    hub.stat.plot_accuracy()
-    hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
-    end = datetime.now()
-    hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
-                              plotting_period=Period(end - timedelta(minutes=5), end))
-    hub.stat.plot_jobs_cnt_in_ags()
-    hub.stat.print_jobs_cnt_in_ags_statistics()
+    finish(hub, val_write_q)
 
 
 INTERDEADLINE_SIGMA = 3
