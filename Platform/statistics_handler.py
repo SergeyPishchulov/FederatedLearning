@@ -59,6 +59,7 @@ class Statistics:
     def upd_jobs_cnt_in_ags(self, x):
         self.jobs_cnt_in_ags.append(x)
 
+    @timing
     def print_jobs_cnt_in_ags_statistics(self):
         """
         Prints statistics showing measure of AgS flooding.
@@ -72,6 +73,7 @@ class Statistics:
             print(f"Flood measure mean={np.round(np.mean(d), 2)}, mode={np.median(d)}")
             print(f"Distribution: {normalize_cntr(collections.Counter(d))}")
 
+    @timing
     def plot_jobs_cnt_in_ags(self):
         if not self.jobs_cnt_in_ags:
             return
@@ -87,6 +89,7 @@ class Statistics:
         for ft_id in task_ids:
             self.round_done_ts_by_round_num[ft_id] = {-1: datetime.now()}
 
+    @timing
     def set_round_done_ts(self, ft_id, ag_round_num):
         """Save moment in time at which ag_round_num is done"""
         self.round_done_ts_by_round_num[ft_id][ag_round_num] = datetime.now()
@@ -113,6 +116,7 @@ class Statistics:
         entity = f'client_{client_id}'
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
 
+    @timing
     def save_ags_period(self, ft_id, period: Period):
         entity = 'agr'
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
@@ -177,8 +181,7 @@ class Statistics:
         )
         return fig
 
-    # @timing
-
+    @timing
     def plot_system_load(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
         """
         Plotting load-plot of clients and AgS
@@ -316,12 +319,14 @@ class Statistics:
         fig.savefig(f'{self.pngs_directory}/delay.png')
         plt.close()
 
+    @timing
     def to_csv(self):
         for ft_id, stat_df in self.acc_by_ft_id.items():
             stat_df.to_csv(self.directory + f'/{ft_id}.csv')
         for ft_id, df in self.delay_by_ft_id.items():
             df.to_csv(self.directory + f'/delay_{ft_id}.csv')
 
+    @timing
     def plot_accuracy(self):
         # colors = list(mcolors.BASE_COLORS.values())
         fig, axes = plt.subplots(len(self.acc_by_ft_id),

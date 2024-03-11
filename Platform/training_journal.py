@@ -35,6 +35,7 @@ class TrainingJournal:
         self.args = args
         self.first_time_ready_to_aggr: Dict[(FT_ID, ROUND), datetime] = {}
 
+    @timing
     def mark_as_aggregated(self, ft_id):
         self.latest_aggregated_round[ft_id] += 1
         # TODO bug if we skip some rounds

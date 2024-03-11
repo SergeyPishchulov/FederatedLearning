@@ -93,7 +93,7 @@ def handle_messages(hub):
             del r
 
 
-# @timing
+@timing
 def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
     for c in clients:
         try:
