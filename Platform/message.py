@@ -88,6 +88,11 @@ class ValidatorShouldFinish:
 
 
 @dataclass
+class ControlValidatorMessage:
+    start_time: datetime
+
+
+@dataclass
 class MessageValidatorToHub:
     ft_id: int
     ag_round_num: int
