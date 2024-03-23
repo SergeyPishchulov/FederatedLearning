@@ -219,6 +219,12 @@ def get_interdeadline_periods(tasks: List[FederatedMLTask], clients_cnt: int):
     return res
 
 
+def wait_while_procs_start(procs):
+    while not all(p.is_alive() for p in procs):
+        print(f"Hub is waiting while all processes start")
+        time.sleep(2)
+
+
 def main():
     # global_start = time.time()
     user_args = args_parser()
@@ -239,9 +245,7 @@ def main():
     for p in procs:
         p.start()
 
-    while not all(p.is_alive() for p in procs):
-        print(f"Hub is waiting while all processes start")
-        time.sleep(2)
+    wait_while_procs_start(procs)
 
     run(tasks, hub, clients, user_args, val_read_q, val_write_q)
 

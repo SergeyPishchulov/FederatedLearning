@@ -199,6 +199,8 @@ class Client:
     def idle_until_run_cmd(self, read_q, write_q):
         while self.start_time is None:
             self.handle_messages(read_q, write_q)
+            # print(f"Client {self.id} waiting run_cmd")
+            time.sleep(1)
 
     def idle_until_start_time(self):
         if datetime.now() < self.start_time:
