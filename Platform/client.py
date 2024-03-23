@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from pprint import pprint
 
 import torch
-from typing import Dict, List
+from typing import Dict, List, Optional
 
-from message import MessageToHub, MessageToClient, ResponseToHub, Period
+from message import MessageToHub, MessageToClient, ControlMessageToClient, ResponseToHub, Period
 from utils import validate, setup_seed, combine_lists
 from utils import *
 from server_funct import *
@@ -78,18 +78,18 @@ class CyclicalScheduler(LocalScheduler):
 
 class Client:
     def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args,
-                 inter_ddl_periods_by_ft_id, wakeup_time):
+                 inter_ddl_periods_by_ft_id):
         self.id = id
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
         self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
         self.user_args = user_args
-        self.should_finish = False
+        self.should_run = False
         self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
         self.trained_ft_id_round = set()
         self.scheduler = self.get_scheduler(user_args)
         self.inter_ddl_periods_by_ft_id = inter_ddl_periods_by_ft_id
-        self.wakeup_time = wakeup_time
+        self.start_time: Optional[datetime] = None
 
     def get_scheduler(self, user_args):
         if user_args.local_scheduler == "CyclicalScheduler":
@@ -165,13 +165,20 @@ class Client:
 
     def handle_messages(self, read_q, write_q):
         while not read_q.empty():
-            mes: MessageToClient = read_q.get()
-            # print(f'    Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
-            self.should_finish = mes.should_finish
-            self.set_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model)
-            required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
-            delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
-            write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=mes.should_finish))
+            mes = read_q.get()
+            if isinstance(mes, MessageToClient):
+                # print(f'    Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
+                if not self.should_run:
+                    raise Exception(f"Client {self.id} got MessageToClient when it shouldn't be running")
+                self.should_run = mes.should_run
+                self.set_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model)
+                required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
+                delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
+                write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=mes.should_finish))
+            elif isinstance(mes, ControlMessageToClient):
+                self.start_time = mes.start_time
+            else:
+                raise ValueError(f"Unknown message type {type(mes)}")
             del mes
 
     def set_deadlines(self):
@@ -189,16 +196,23 @@ class Client:
             # print(f"client {self.id} task {ft_id} data sizes: for train {len(n.local_data.dataset)} for val {len(n.validate_set.dataset)}")
         # exit()
 
-    def run(self, read_q, write_q):
-        if datetime.now() < self.wakeup_time:
-            delta = (self.wakeup_time - datetime.now()).total_seconds()
+    def idle_until_run_cmd(self, read_q, write_q):
+        while self.start_time is None:
+            self.handle_messages(read_q, write_q)
+
+    def idle_until_start_time(self):
+        if datetime.now() < self.start_time:
+            delta = (self.start_time - datetime.now()).total_seconds()
             print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
             time.sleep(delta)
-        client_start_time = time.time()
+
+    def run(self, read_q, write_q):
+        self.idle_until_run_cmd(read_q, write_q)
+        self.idle_until_start_time()
         print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
         self.setup()
         self.set_deadlines()
-        while not self.should_finish:
+        while self.should_run:
             self.handle_messages(read_q, write_q)
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)

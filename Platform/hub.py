@@ -11,16 +11,16 @@ from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
 
 class Hub:
-    def __init__(self, tasks: List[FederatedMLTask], clients, args, start_time):
+    def __init__(self, tasks: List[FederatedMLTask], clients, args):
         self.tasks = tasks
         self.clients = clients
-        self.stat = Statistics(tasks, clients, args, start_time)
+        self.stat = Statistics(tasks, clients, args)
         self.journal = TrainingJournal([ft.id for ft in tasks], {ft.id: ft.args.required_quality
                                                                  for ft in tasks}, args)
         self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
         self._init_scheduler(args)
         self.finished_by_client = {cl.id: False for cl in clients}
-        self.start_time: datetime.datetime = start_time
+        # self.start_time: datetime.datetime = start_time
 
     def _init_scheduler(self, args):
         if args.aggregation_scheduler == 'random':

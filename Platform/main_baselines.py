@@ -27,7 +27,7 @@ except RuntimeError:
 
 
 # @timing
-def create_clients(tasks, user_args, wakeup_time):
+def create_clients(tasks, user_args) -> List[Client]:
     clients = []
     inter_ddl_prds = get_interdeadline_periods(tasks, clients_cnt=user_args.node_num)
 
@@ -42,8 +42,8 @@ def create_clients(tasks, user_args, wakeup_time):
                         args_by_ft_id={ft.id: ft.args for ft in tasks},
                         agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks},
                         user_args=user_args,
-                        inter_ddl_periods_by_ft_id=inter_ddl_prds[client_id],
-                        wakeup_time=wakeup_time)
+                        inter_ddl_periods_by_ft_id=inter_ddl_prds[client_id]
+                        )
         clients.append(client)
     return clients
 
@@ -102,13 +102,13 @@ def send_to_validator(val_write_q, ft, ag_round_num):
 
 
 @timing
-def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish):
+def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish: bool):
     for c in clients:
         try:
             hub.write_q_by_cl_id[c.id].put(
                 MessageToClient(ag_round, ft.id,
                                 copy.deepcopy(ft.central_node.model),
-                                should_finish=should_finish
+                                should_run=not should_finish  # TODO check if bug
                                 ))
         except Exception:
             print(traceback.format_exc())
@@ -156,7 +156,7 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
                     for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
             while jobs:
                 best_job = hub.aggregation_scheduler.plan_next(jobs)
-                print(f"$$$ {len(jobs)} in AgS")
+                print(f"$$$ {len(jobs)} jobs in AgS")
                 hub.stat.upd_jobs_cnt_in_ags(len(jobs))
                 next_ft_id = best_job.ft_id
                 _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
@@ -228,9 +228,9 @@ def main():
 
     federated_tasks_configs = get_configs(user_args)
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(federated_tasks_configs)]
-    wakeup_time = datetime.now() + timedelta(seconds=15 * user_args.node_num)
-    clients = create_clients(tasks, user_args, wakeup_time)
-    hub = Hub(tasks, clients, user_args, start_time=wakeup_time)  # TODO check all start time
+    # wakeup_time = datetime.now() + timedelta(seconds=15 * user_args.node_num)
+    clients = create_clients(tasks, user_args)
+    hub = Hub(tasks, clients, user_args)  # TODO check all start time
 
     val_read_q, val_write_q = Queue(), Queue()
     validator = Validator(user_args)
@@ -244,9 +244,9 @@ def main():
     for proc in procs:
         proc.join()
 
-    seconds = round((datetime.now() - wakeup_time).total_seconds())
-    # NOTE we can not trust this time because it includes 1 minute untill all clients will wake up
-    print(f"TOTAL FL TIME IS {seconds} s == {round(seconds / 60., 1)} min")
+    # seconds = round((datetime.now() - wakeup_time).total_seconds())
+    # # NOTE we can not trust this time because it includes 1 minute untill all clients will wake up
+    # print(f"TOTAL FL TIME IS {seconds} s == {round(seconds / 60., 1)} min")
 
 
 if __name__ == '__main__':

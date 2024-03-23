@@ -28,7 +28,7 @@ def get_plotly_colors():
 
 
 class Statistics:
-    def __init__(self, tasks, clients, args, start_time):
+    def __init__(self, tasks, clients, args):
         self.experiment_name = 'exp'  # f'{args.aggregation_on}|{args.server_method}|partially_available={args.partially_available}'
         self.client_cols = [f'client_{c.id}' for c in clients]
         self.acc_by_ft_id = {
@@ -50,11 +50,11 @@ class Statistics:
         #                                        columns=self.client_cols)
 
         self.time_to_target_acc_by_ft_id = [np.nan] * len(tasks)
-        self.start_time = start_time
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
             os.makedirs(self.pngs_directory)
+        # TODO set start_time
 
     def upd_jobs_cnt_in_ags(self, x):
         self.jobs_cnt_in_ags.append(x)
@@ -227,52 +227,6 @@ class Statistics:
             fname = f'{self.pngs_directory}/load_part'
             plotly.offline.plot(fig, filename=fname + ".html")
             fig.write_image(fname + ".png")
-
-    # def plot_system_load_obsolete(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
-    #     """
-    #     Plotting load-plot of clients and AgS
-    #
-    #     :param plotting_period: Period of time that will be represented on the plot
-    #     """
-    #     fig, axes = plt.subplots(1, figsize=(16, 5))
-    #
-    #     ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
-    #     colors_by_ft_id = list(mcolors.BASE_COLORS.values())[:len(ft_ids)]
-    #     entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
-    #     # clients and AgS
-    #     for i, e in enumerate(entities):
-    #         total_aggregations = 0
-    #         agr_periods = []
-    #         for (ent, ft_id), periods in self.periods_by_entity_ft_id.items():
-    #             if ent != e:
-    #                 continue
-    #             for p in periods:
-    #                 if ent == 'agr':
-    #                     total_aggregations += 1
-    #                     agr_periods.append(p)
-    #                 p: Period
-    #                 p = p.norm(self.start_time)
-    #                 normed_plot_period = None if plotting_period is None else plotting_period.norm(self.start_time)
-    #                 if ((normed_plot_period is None) or (normed_plot_period.start < p.start < normed_plot_period.end)
-    #                         or (normed_plot_period.start < p.end < normed_plot_period.end)):
-    #                     axes.plot([p.start, p.end], [i] * 2, color=colors_by_ft_id[ft_id],
-    #                               linewidth=10
-    #                               )
-    #
-    #     plt.yticks(list(range(len(entities))))
-    #     axes.set_yticklabels(entities, fontsize=20)
-    #     plt.xlabel('time', fontsize=20)
-    #     self._plot_first_time_ready_to_aggr(first_time_ready_to_aggr,
-    #                                         axes,
-    #                                         height=(len(entities)),
-    #                                         colors_by_ft_id=colors_by_ft_id,
-    #                                         plotting_period=plotting_period)
-    #     # plt.legend([f"Task {ft_id}" for ft_id in ft_ids])#BUG
-    #     if plotting_period is None:
-    #         fig.savefig(f'{self.pngs_directory}/periods.png')
-    #     else:
-    #         fig.savefig(f'{self.pngs_directory}/periods_part.png')
-    #     plt.close()
 
     def save_client_delay(self, client_id, ft_id, round, delay):
         self.delay_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = delay
