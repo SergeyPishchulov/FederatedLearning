@@ -239,6 +239,10 @@ def main():
     for p in procs:
         p.start()
 
+    while not all(p.is_alive() for p in procs):
+        print(f"Hub is waiting while all processes start")
+        time.sleep(2)
+
     run(tasks, hub, clients, user_args, val_read_q, val_write_q)
 
     for proc in procs:
