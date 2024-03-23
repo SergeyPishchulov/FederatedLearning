@@ -48,7 +48,7 @@ class Validator:
 
     def run(self, read_q, write_q):
         while self.start_time is None:
-            print(f"Validator is waiting")
+            # print(f"Validator is waiting")
             self.handle_messages(read_q, write_q)
             time.sleep(1)
         if datetime.now() < self.start_time:

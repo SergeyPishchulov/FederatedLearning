@@ -177,6 +177,7 @@ class Client:
                 write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=mes.should_finish))
             elif isinstance(mes, ControlMessageToClient):
                 self.start_time = mes.start_time
+                self.should_run = True
             else:
                 raise ValueError(f"Unknown message type {type(mes)}")
             del mes
@@ -216,6 +217,7 @@ class Client:
         self.setup()
         self.set_deadlines()
         while self.should_run:
+            print("Client really running")
             self.handle_messages(read_q, write_q)
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)
