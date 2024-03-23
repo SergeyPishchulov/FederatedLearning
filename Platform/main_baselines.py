@@ -245,8 +245,9 @@ def main():
     for p in procs:
         p.start()
 
+    print("Hub will wait")
     wait_while_procs_start(procs)
-
+    print("Hub waited")
     run(tasks, hub, clients, user_args, val_read_q, val_write_q)
 
     for proc in procs:

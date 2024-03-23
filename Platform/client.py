@@ -209,6 +209,7 @@ class Client:
             time.sleep(delta)
 
     def run(self, read_q, write_q):
+        print(f"Client {self.id} run")
         self.idle_until_run_cmd(read_q, write_q)
         self.idle_until_start_time()
         print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
