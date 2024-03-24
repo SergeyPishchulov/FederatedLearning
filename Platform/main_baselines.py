@@ -7,6 +7,7 @@ from torch.multiprocessing import Process, set_start_method, Queue
 from typing import List
 
 from validator import Validator
+from ags import AGS
 from aggregation_station import Job
 from client import Client
 from federated_ml_task import FederatedMLTask
@@ -48,13 +49,18 @@ def create_clients(tasks, user_args) -> List[Client]:
     return clients
 
 
-def get_client_procs(clients, hub):
+def get_ags_qs_by_cl_id(clients):
+    return {cl.id: Queue() for cl in clients}
+
+
+def get_client_procs(clients, hub, ags_q_by_cli_id):
     procs = []
     for client in clients:
         client: Client
         p = Process(target=client.run,
                     args=(hub.write_q_by_cl_id[client.id],
-                          hub.read_q_by_cl_id[client.id]))
+                          hub.read_q_by_cl_id[client.id],
+                          ags_q_by_cli_id[client.id]))
         procs.append(p)
     return procs
 
@@ -62,6 +68,11 @@ def get_client_procs(clients, hub):
 def get_validator_proc(validator: Validator, read_q, write_q):
     return Process(target=validator.run,
                    args=(write_q, read_q))
+
+
+def get_ags_proc(ags: AGS, read_q, write_q, ags_q_by_cli_id):
+    return Process(target=ags.run,
+                   args=(write_q, read_q, ags_q_by_cli_id))
 
 
 # @timing
@@ -249,19 +260,21 @@ def main():
     hub = Hub(tasks, clients, user_args)  # TODO check all start time
 
     val_read_q, val_write_q = Queue(), Queue()
+    ags_read_q, ags_write_q = Queue(), Queue()
+    ags_q_by_cli_id = get_ags_qs_by_cl_id(clients)
+    ags = AGS(user_args)
     validator = Validator(user_args)
     val_proc = get_validator_proc(validator, val_read_q, val_write_q)
-    procs = [val_proc] + get_client_procs(clients, hub)
+    ags_proc = get_ags_proc(ags, ags_read_q, ags_write_q, ags_q_by_cli_id)
+    procs = [val_proc, ags_proc] + get_client_procs(clients, hub, ags_q_by_cli_id)
     for p in procs:
         p.start()
 
-    print("Hub will wait")
     wait_while_procs_start(procs)
 
     fl_start_time = datetime.now() + timedelta(seconds=5)
     hub.stat.set_start_time(fl_start_time)
     set_start_time(hub.write_q_by_cl_id.values(), val_write_q, fl_start_time)
-    print("Hub waited")
     run(tasks, hub, clients, user_args, val_read_q, val_write_q)
 
     for proc in procs:
