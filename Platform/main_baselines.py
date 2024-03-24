@@ -13,7 +13,7 @@ from client import Client
 from federated_ml_task import FederatedMLTask
 from hub import Hub
 from message import MessageToClient, MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub, \
-    ValidatorShouldFinish, ControlMessageToClient, ControlValidatorMessage
+    ValidatorShouldFinish, ControlMessageToClient, ControlValidatorMessage, MessageHubToAGS
 from config.experiment_config import get_configs
 from config.args import args_parser
 from utils import *
@@ -133,10 +133,6 @@ def get_updater(user_args):
     raise argparse.ArgumentError(user_args.server_method, "Unknown argument value")
 
 
-def get_params_cnt(model):
-    return sum(p.numel() for p in model.parameters())
-
-
 def finish(hub, val_write_q):
     val_write_q.put(ValidatorShouldFinish())
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
@@ -153,7 +149,7 @@ def finish(hub, val_write_q):
     hub.stat.print_jobs_cnt_in_ags_statistics()
 
 
-def run(tasks, hub: Hub, clients, user_args, val_read_q, val_write_q):
+def run(tasks, hub: Hub, clients, user_args, val_read_q, val_write_q, ags_write_q):
     total_aggregations = 0
     # hub_start_dt = datetime.now()
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
@@ -163,9 +159,11 @@ def run(tasks, hub: Hub, clients, user_args, val_read_q, val_write_q):
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
         if ready_tasks_dict:
-            jobs = [Job(ft_id, deadline, round_num, processing_time_coef=get_params_cnt(models[0]))
-                    for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
-            aggregating_all_jobs_start = time.time() if jobs else None
+            ags_write_q.put(MessageHubToAGS(ready_tasks_dict))
+            # jobs = [Job(ft_id, deadline, round_num, processing_time_coef=get_params_cnt(models[0]))
+            #         for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
+            aggregating_all_jobs_start = time.time()
+            # TODO принять статистику от AGS
             while jobs:
                 best_job = hub.aggregation_scheduler.plan_next(jobs)
                 print(f"$$$ {len(jobs)} jobs in AgS")
@@ -275,7 +273,7 @@ def main():
     fl_start_time = datetime.now() + timedelta(seconds=5)
     hub.stat.set_start_time(fl_start_time)
     set_start_time(hub.write_q_by_cl_id.values(), val_write_q, fl_start_time)
-    run(tasks, hub, clients, user_args, val_read_q, val_write_q)
+    run(tasks, hub, clients, user_args, val_read_q, val_write_q, ags_write_q)
 
     for proc in procs:
         proc.join()

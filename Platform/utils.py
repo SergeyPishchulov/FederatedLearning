@@ -23,6 +23,10 @@ def print_dates(dts, message):
     print(f"==========================")
 
 
+def get_params_cnt(model):
+    return sum(p.numel() for p in model.parameters())
+
+
 def normalize_cntr(x: Counter):
     c = x.copy()
     total = sum(c.values(), 0.0)

@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import torch
-from typing import Optional
+from typing import Optional, Dict
 
+from aggregation_station import Job
 from nodes import Node
 from utils import norm
 
@@ -97,3 +98,16 @@ class MessageValidatorToHub:
     ft_id: int
     ag_round_num: int
     acc: float
+
+
+FT_ID = int
+
+
+@dataclass
+class MessageHubToAGS:
+    jobs_by_ft_id: Dict[FT_ID, Job]
+
+
+@dataclass
+class ControlMessageHubToAGS:
+    start_time: datetime

@@ -1,13 +1,13 @@
 import argparse
 from dataclasses import dataclass, astuple
-
+from aggregation_station import Job
 import numpy as np
 import torch
 from datetime import datetime, date
 
-from typing import Dict
+from typing import Dict, List
 
-from utils import timing, print_dates
+from utils import timing, print_dates, get_params_cnt
 
 
 @dataclass
@@ -63,7 +63,6 @@ class TrainingJournal:
                     dt = self.first_time_ready_to_aggr[(ft_id, latest_round + 1)]
                     # print_dates([dt], f"Datetime when ready to aggregate. ft_id={ft_id}, latest_round+1={latest_round+1}")
 
-
         return res
 
     def all_clients_performed_round(self, ft_id, round_num, client_ids):
@@ -86,7 +85,7 @@ class TrainingJournal:
         return False or self.all_clients_performed_round(ft_id, round_num, client_ids)
 
     # @timing
-    def get_ft_to_aggregate(self, client_ids):
+    def get_ft_to_aggregate(self, client_ids) -> Dict[FT_ID, Job]:
         ready = self._get_ft_ready_to_agr(client_ids)
         if not ready:
             return {}
@@ -95,14 +94,15 @@ class TrainingJournal:
         for ft_id, round_num in ready:
             # TODO think what will happen dith updates that was sent after aggreagation
             # NOTE: minimal deadline of task is computed only by clients who have sent an update
-            # Fair enough: clients who havent sent can not vote for aggregation of the task
+            # Fair enough: clients who havent sent it can not vote for aggregation of the task
             records = []
             for cl_id in client_ids:
                 if (ft_id, cl_id, round_num) in self.d:
                     records.append(self.d[(ft_id, cl_id, round_num)])
             models = [r.model for r in records]
             min_d = min([r.deadline for r in records])  # feature of the task
-            res_tasks[ft_id] = ((min_d, round_num, models))
+            # res_tasks[ft_id] = ((min_d, round_num, models))
+            res_tasks[ft_id] = Job(ft_id, min_d, round_num, get_params_cnt(models[0]), models)
             if min_d < total_min_deadline:
                 total_min_deadline = min_d
         # print(f'Task {res[1]} with min deadline {res[0]}')
