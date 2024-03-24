@@ -58,3 +58,4 @@ class Validator:
         print("Validator started")
         while not self.should_finish:
             self.handle_messages(read_q, write_q)
+        print("Validator stopped")

@@ -174,7 +174,7 @@ class Client:
                 self.set_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model)
                 required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
                 delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
-                write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=mes.should_finish))
+                write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=not mes.should_run))
             elif isinstance(mes, ControlMessageToClient):
                 self.start_time = mes.start_time
                 self.should_run = True
