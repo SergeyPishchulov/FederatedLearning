@@ -154,6 +154,7 @@ def run(tasks, hub: Hub, clients, user_args, val_read_q, val_write_q):
         if ready_tasks_dict:
             jobs = [Job(ft_id, deadline, round_num, processing_time_coef=get_params_cnt(models[0]))
                     for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
+            aggregating_all_jobs_start = time.time() if jobs else None
             while jobs:
                 best_job = hub.aggregation_scheduler.plan_next(jobs)
                 print(f"$$$ {len(jobs)} jobs in AgS")
@@ -191,6 +192,8 @@ def run(tasks, hub: Hub, clients, user_args, val_read_q, val_write_q):
                                           should_finish=all(ft.done for ft in tasks))
                 jobs.remove(best_job)
                 print(f"=== 3rd part (save the stuff) {round(time.time() - third_part_start_time, 1)}s")
+            if aggregating_all_jobs_start:
+                print(f"&&& aggreagting all jobs {round(time.time() - aggregating_all_jobs_start, 1)}s")
         # forth_aprt_start_time = time.time()
         # hub.stat.to_csv()
         # hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)

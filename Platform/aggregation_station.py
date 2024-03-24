@@ -21,11 +21,11 @@ class SFAggregationStationScheduler:
         if not jobs:
             raise ValueError("No jobs provided")
         for j in jobs:
-            j.reserve_coef = (j.deadline - datetime.now()) / (j.processing_time_coef)
+            j.reserve_coef = (j.deadline - datetime.now()) / (
+                j.processing_time_coef)  # TODO check how it is calculated. Is it mock?
         min_reserve_coef = min(j.reserve_coef for j in jobs)
         best_candidates = [j for j in jobs if j.reserve_coef == min_reserve_coef]
         if len(best_candidates) == 1:
-            print('AGS_PLAN: Only one task is ready for aggregation')
             return best_candidates[0]
         return random.choice(best_candidates)
         # TODO if best_candidates is short enough then
