@@ -256,6 +256,7 @@ def main():
     wait_while_procs_start(procs)
 
     fl_start_time = datetime.now() + timedelta(seconds=5)
+    hub.stat.set_start_time(fl_start_time)
     set_start_time(hub.write_q_by_cl_id.values(), val_write_q, fl_start_time)
     print("Hub waited")
     run(tasks, hub, clients, user_args, val_read_q, val_write_q)

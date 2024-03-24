@@ -6,7 +6,7 @@ import plotly.express as px
 import os
 from datetime import timedelta, datetime
 from pprint import pprint
-from typing import List, Set
+from typing import List, Set, Optional
 from utils import timing, norm, normalize_cntr
 import numpy as np
 import pandas as pd
@@ -54,7 +54,10 @@ class Statistics:
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
             os.makedirs(self.pngs_directory)
-        # TODO set start_time
+        self.start_time: Optional[datetime] = None
+
+    def set_start_time(self, start_time):
+        self.start_time = start_time
 
     def upd_jobs_cnt_in_ags(self, x):
         self.jobs_cnt_in_ags.append(x)
