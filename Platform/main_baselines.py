@@ -142,7 +142,7 @@ def finish(hub, val_write_q):
     hub.stat.print_jobs_cnt_in_ags_statistics()
 
 
-def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
+def run(tasks, hub: Hub, clients, user_args, val_read_q, val_write_q):
     total_aggregations = 0
     # hub_start_dt = datetime.now()
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
@@ -191,13 +191,13 @@ def run(tasks, hub, clients, user_args, val_read_q, val_write_q):
                                           should_finish=all(ft.done for ft in tasks))
                 jobs.remove(best_job)
                 print(f"=== 3rd part (save the stuff) {round(time.time() - third_part_start_time, 1)}s")
-        forth_aprt_start_time = time.time()
-        hub.stat.to_csv()
-        hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
-        hub.stat.plot_jobs_cnt_in_ags()
-        hub.stat.print_jobs_cnt_in_ags_statistics()
-        # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
-        print(f"=== 4th part (save the stuff if no one is ready) {round(time.time() - forth_aprt_start_time, 1)}s")
+        # forth_aprt_start_time = time.time()
+        # hub.stat.to_csv()
+        # hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
+        # hub.stat.plot_jobs_cnt_in_ags()
+        # hub.stat.print_jobs_cnt_in_ags_statistics()
+        # # hub.stat.plot_periods(plotting_period=Period(hub_start_dt, hub_start_dt + timedelta(minutes=1)))
+        # print(f"=== 4th part (save the stuff if no one is ready) {round(time.time() - forth_aprt_start_time, 1)}s")
 
     finish(hub, val_write_q)
 

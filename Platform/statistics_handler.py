@@ -62,7 +62,7 @@ class Statistics:
     def upd_jobs_cnt_in_ags(self, x):
         self.jobs_cnt_in_ags.append(x)
 
-    @timing
+    # @timing
     def print_jobs_cnt_in_ags_statistics(self):
         """
         Prints statistics showing measure of AgS flooding.
@@ -76,7 +76,7 @@ class Statistics:
             print(f"Flood measure mean={np.round(np.mean(d), 2)}, mode={np.median(d)}")
             print(f"Distribution: {normalize_cntr(collections.Counter(d))}")
 
-    @timing
+    # @timing
     def plot_jobs_cnt_in_ags(self):
         if not self.jobs_cnt_in_ags:
             return
@@ -184,7 +184,7 @@ class Statistics:
         )
         return fig
 
-    @timing
+    # @timing
     def plot_system_load(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
         """
         Plotting load-plot of clients and AgS
@@ -276,7 +276,7 @@ class Statistics:
         fig.savefig(f'{self.pngs_directory}/delay.png')
         plt.close()
 
-    @timing
+    # @timing
     def to_csv(self):
         for ft_id, stat_df in self.acc_by_ft_id.items():
             stat_df.to_csv(self.directory + f'/{ft_id}.csv')
