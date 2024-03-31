@@ -162,6 +162,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub, clients, user_args, val_read_q, 
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients], central_nodes_by_ft_id, tasks)
         if ready_tasks_dict:
+            print(f"HUB sent to AGS {len(ready_tasks_dict)} jobs")
             ags_write_q.put(MessageHubToAGS(ready_tasks_dict))
             # TODO принять статистику от AGS
             # while jobs:

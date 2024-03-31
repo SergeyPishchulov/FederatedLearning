@@ -39,6 +39,7 @@ class AGS:
         self.scheduler = _get_scheduler(user_args)
         self.updater = _get_updater(user_args)
         self.central_node_by_ft_id = central_node_by_ft_id
+        self.aggregated_jobs = 0
 
     def idle_until_run_cmd(self, hub_read_q):
         while self.start_time is None:
@@ -56,6 +57,7 @@ class AGS:
         while not hub_read_q.empty():  # 🍒
             mes = hub_read_q.get()
             if isinstance(mes, MessageHubToAGS):
+                print(f"AGS got {len(mes.jobs_by_ft_id)} jobs")
                 self.jobs.extend(mes.jobs_by_ft_id.values())
             elif isinstance(mes, ControlMessageHubToAGS):
                 self.start_time = mes.start_time
@@ -65,9 +67,11 @@ class AGS:
     def run(self, hub_read_q, hub_write_q, q_by_cl_id: Dict[int, Queue]):
         self.idle_until_run_cmd(hub_read_q)
         self.idle_until_run_cmd(hub_read_q)
+        print(f"AGS woke up")
         while not self.should_finish:
             self.handle_messages(hub_read_q)
             if self.jobs:
+                print(f"AGS scheduling jobs")
                 best_job: Job = self.scheduler.plan_next(self.jobs)
                 central_node = self.central_node_by_ft_id[best_job.ft_id]
                 period = self.updater(self.user_args,
@@ -75,8 +79,9 @@ class AGS:
                                       best_job.model_states,
                                       best_job.size_weights)
                 print(f"AGS Success for task {best_job.ft_id} round {best_job.round_num}")
+                self.aggregated_jobs += 1
                 self._send_to_clients(central_node.model, q_by_cl_id)
-            self.should_finish = True
+            # self.should_finish = True
         self.finish()
 
     def _send_to_clients(self, model, q_by_cl_id: Dict[int, Queue]):
