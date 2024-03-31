@@ -83,8 +83,8 @@ def handle_messages(hub):
         while not q.empty():
             r = q.get()
             if isinstance(r, MessageToHub):
-                # print(
-                #     f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
+                print(
+                    f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
                 hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
                                        model_state=r.model_state,
                                        deadline=r.deadline,

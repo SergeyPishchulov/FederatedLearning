@@ -52,6 +52,7 @@ class TrainingJournal:
     def save_local(self, ft_id, client_id, round_num, model_state: ModelTypedState, deadline, update_quality):
         if (ft_id, client_id, round_num) not in self.d:
             self.d[(ft_id, client_id, round_num)] = JournalRecord(model_state, deadline, update_quality)
+            print(f"HUB saved {(ft_id, client_id, round_num)}")
         else:
             raise KeyError("Key already exists")
 
