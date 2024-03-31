@@ -1,6 +1,6 @@
 import argparse
 import datetime
-from typing import List
+from typing import List, Set
 
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
 from federated_ml_task import FederatedMLTask
@@ -20,6 +20,7 @@ class Hub:
         self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
         # self._init_scheduler(args)
         self.finished_by_client = {cl.id: False for cl in clients}
+        self.sent_jobs_ids: Set = {}
         # self.start_time: datetime.datetime = start_time
 
     # def _init_scheduler(self, args):

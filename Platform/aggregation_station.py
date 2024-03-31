@@ -20,6 +20,10 @@ class Job:
     model_states: List[ModelTypedState]
     size_weights: List[float]
 
+    @property
+    def id(self):
+        return self.ft_id * 10 ** 6 + self.round_num
+
 
 class SFAggregationStationScheduler:
     # @timing

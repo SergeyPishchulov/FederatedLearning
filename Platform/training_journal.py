@@ -96,10 +96,11 @@ class TrainingJournal:
         return False or self.all_clients_performed_round(ft_id, round_num, client_ids)
 
     # @timing
-    def get_ft_to_aggregate(self, client_ids, central_nodes_by_ft_id, tasks: List[FederatedMLTask]) -> Dict[FT_ID, Job]:
+    def get_ft_to_aggregate(self, client_ids, central_nodes_by_ft_id, tasks: List[FederatedMLTask],
+                            sent_jobs_ids) -> Dict[FT_ID, Job]:
         ready = self.get_ft_ready_to_agr(client_ids)
         if not ready:
-            return {}
+            return {}  # TODO optimize: delete already aggregated from ready>
         total_min_deadline = datetime.max
         res_jobs = {}
         for ft_id, round_num in ready:
@@ -114,10 +115,13 @@ class TrainingJournal:
             min_d = min([r.deadline for r in records])  # feature of the task
             c_node = central_nodes_by_ft_id[ft_id]
             ft = tasks[ft_id]
-            res_jobs[ft_id] = Job(ft_id, min_d, round_num,
-                                  processing_time_coef=1,  # MEGA TODO set distinct coefs!!!
-                                  model_states=model_states,
-                                  size_weights=ft.size_weights)
+            job = Job(ft_id, min_d, round_num,
+                      processing_time_coef=1,  # MEGA TODO set distinct coefs!!!
+                      model_states=model_states,
+                      size_weights=ft.size_weights)
+            if job.id in sent_jobs_ids:
+                continue
+            res_jobs[ft_id] = job
             if min_d < total_min_deadline:
                 total_min_deadline = min_d
         # print(f'Task {res[1]} with min deadline {res[0]}')

@@ -160,17 +160,20 @@ def run(tasks: List[FederatedMLTask], hub: Hub, clients, user_args, val_read_q, 
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
         start_time = time.time()
         handle_messages(hub)
-        ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients], central_nodes_by_ft_id, tasks)
-        if ready_tasks_dict:
-            print(f"HUB sent to AGS {len(ready_tasks_dict)} jobs")
-            ags_write_q.put(MessageHubToAGS(ready_tasks_dict))
+        ready_jobs_dict = hub.journal.get_ft_to_aggregate(
+            [c.id for c in clients], central_nodes_by_ft_id, tasks, hub.sent_jobs_ids)
+        if ready_jobs_dict:
+            print(f"HUB sent to AGS {len(ready_jobs_dict)} jobs")
+            ags_write_q.put(MessageHubToAGS(ready_jobs_dict))
+            for j in ready_jobs_dict.values():
+                hub.sent_jobs_ids.add(j.id)
             # TODO принять статистику от AGS
             # while jobs:
             #     best_job = hub.aggregation_scheduler.plan_next(jobs)
             #     print(f"$$$ {len(jobs)} jobs in AgS")
             #     hub.stat.upd_jobs_cnt_in_ags(len(jobs))
             #     next_ft_id = best_job.ft_id
-            #     _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
+            #     _, ag_round_num, client_models = ready_jobs_dict[next_ft_id]
             #     ft = tasks[next_ft_id]
             #     print(f"=== 1st part {round(time.time() - start_time, 1)}s")
             #     ag_start_time = time.time()
