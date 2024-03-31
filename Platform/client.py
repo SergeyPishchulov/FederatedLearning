@@ -78,13 +78,13 @@ class CyclicalScheduler(LocalScheduler):
 
 class Client:
     def __init__(self, id, node_by_ft_id, args_by_ft_id,
-                 agr_model_state_by_ft_id_round: Dict[Tuple[int, int]:ModelTypedState],
+                 agr_model_state_by_ft_id_round: Dict[Tuple:ModelTypedState],
                  user_args,
                  inter_ddl_periods_by_ft_id):
         self.id = id
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
-        self.agr_model_by_ft_id_round: Dict[Tuple[int, int]:ModelTypedState] = agr_model_state_by_ft_id_round
+        self.agr_model_by_ft_id_round: Dict[Tuple:ModelTypedState] = agr_model_state_by_ft_id_round
         self.user_args = user_args
         self.should_run = False
         self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
@@ -227,6 +227,7 @@ class Client:
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]
                 self._set_aggregated_model(ft_args, node, agr_model_state)
+                print(f"Client {self.id} set aggregated model for task {ft_id}, round {r}")
                 mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
                 self.data_lens_by_ft_id[ft_id].append(data_len)
                 acc = validate(ft_args, node)
