@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import torch
 from typing import Optional, Dict
 
+from FederatedLearning.Platform.model_cast import ModelTypedState
 from aggregation_station import Job
 from nodes import Node
 from utils import norm
@@ -51,6 +52,11 @@ class MessageToClient:
     ft_id: int
     agr_model: torch.nn.Module
     should_run: bool
+
+
+@dataclass
+class MessageAgsToClient:
+    model_state: ModelTypedState
 
 
 @dataclass

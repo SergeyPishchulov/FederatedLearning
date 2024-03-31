@@ -125,12 +125,12 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish: bool):
             print(traceback.format_exc())
 
 
-def get_updater(user_args):
-    if user_args.server_method == 'fedlaw':
-        return Server_update_fedlaw
-    if user_args.server_method == 'fedavg':
-        return Server_update
-    raise argparse.ArgumentError(user_args.server_method, "Unknown argument value")
+# def get_updater(user_args):
+#     if user_args.server_method == 'fedlaw':
+#         return Server_update_fedlaw
+#     if user_args.server_method == 'fedavg':
+#         return Server_update
+#     raise argparse.ArgumentError(user_args.server_method, "Unknown argument value")
 
 
 def finish(hub, val_write_q):
@@ -152,58 +152,53 @@ def finish(hub, val_write_q):
 def run(tasks: List[FederatedMLTask], hub: Hub, clients, user_args, val_read_q, val_write_q, ags_write_q):
     central_nodes_by_ft_id = {t.id: t.central_node for t in tasks}
     total_aggregations = 0
-    # hub_start_dt = datetime.now()
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
-    updater = get_updater(user_args)
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
         start_time = time.time()
         handle_messages(hub)
         ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients], central_nodes_by_ft_id, tasks)
         if ready_tasks_dict:
             ags_write_q.put(MessageHubToAGS(ready_tasks_dict))
-            # jobs = [Job(ft_id, deadline, round_num, processing_time_coef=get_params_cnt(models[0]))
-            #         for ft_id, (deadline, round_num, models) in ready_tasks_dict.items()]
-            aggregating_all_jobs_start = time.time()
             # TODO принять статистику от AGS
-            while jobs:
-                best_job = hub.aggregation_scheduler.plan_next(jobs)
-                print(f"$$$ {len(jobs)} jobs in AgS")
-                hub.stat.upd_jobs_cnt_in_ags(len(jobs))
-                next_ft_id = best_job.ft_id
-                _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
-                ft = tasks[next_ft_id]
-                print(f"=== 1st part {round(time.time() - start_time, 1)}s")
-                ag_start_time = time.time()
-                print(f"****** ags runs at {datetime.now().isoformat()}")
-                p: Period = updater(ft.args, ft.central_node, client_models,
-                                    select_list=list(range(len(client_models))),
-                                    # NOTE: all ready clients will be aggregated
-                                    # hub.get_select_list(ft, [c.id for c in clients]),
-                                    size_weights=ft.size_weights)
-                print(f"=== 2nd part (AgS works) {round(time.time() - ag_start_time, 1)}s")
-                third_part_start_time = time.time()
-                # print_dates([p.start,p.end], "Period from updater")
-                ft.central_node.model.cpu()
-                total_aggregations += 1
-                hub.journal.mark_as_aggregated(ft.id)
-                hub.stat.set_round_done_ts(ft.id, ag_round_num)
-                hub.stat.save_ags_period(ft.id, p)
-                hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
-                print(f'AGS Success. Task {ft.id}, round {ag_round_num}. {format_time(datetime.now())}')
-                all_aggregation_done = (ag_round_num == user_args.T - 1)
-                if all_aggregation_done:
-                    ft.done = True
-                    print(f'HUB: Task {ft.id} is done')
-                else:
-                    print(f'HUB: Performed {ag_round_num + 1}/{user_args.T} rounds in task {ft.id}')
-
-                send_to_validator(val_write_q, ft, ag_round_num)
-                send_agr_model_to_clients(clients, hub, ag_round_num, ft,
-                                          should_finish=all(ft.done for ft in tasks))
-                jobs.remove(best_job)
-                print(f"=== 3rd part (save the stuff) {round(time.time() - third_part_start_time, 1)}s")
-            if aggregating_all_jobs_start:
-                print(f"&&& aggreagting all jobs {round(time.time() - aggregating_all_jobs_start, 1)}s")
+            # while jobs:
+            #     best_job = hub.aggregation_scheduler.plan_next(jobs)
+            #     print(f"$$$ {len(jobs)} jobs in AgS")
+            #     hub.stat.upd_jobs_cnt_in_ags(len(jobs))
+            #     next_ft_id = best_job.ft_id
+            #     _, ag_round_num, client_models = ready_tasks_dict[next_ft_id]
+            #     ft = tasks[next_ft_id]
+            #     print(f"=== 1st part {round(time.time() - start_time, 1)}s")
+            #     ag_start_time = time.time()
+            #     print(f"****** ags runs at {datetime.now().isoformat()}")
+            #     p: Period = updater(ft.args, ft.central_node, client_models,
+            #                         select_list=list(range(len(client_models))),
+            #                         # NOTE: all ready clients will be aggregated
+            #                         # hub.get_select_list(ft, [c.id for c in clients]),
+            #                         size_weights=ft.size_weights)
+            #     print(f"=== 2nd part (AgS works) {round(time.time() - ag_start_time, 1)}s")
+            #     third_part_start_time = time.time()
+            #     # print_dates([p.start,p.end], "Period from updater")
+            #     ft.central_node.model.cpu()
+            #     total_aggregations += 1
+            #     hub.journal.mark_as_aggregated(ft.id)
+            #     hub.stat.set_round_done_ts(ft.id, ag_round_num)
+            #     hub.stat.save_ags_period(ft.id, p)
+            #     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
+            #     print(f'AGS Success. Task {ft.id}, round {ag_round_num}. {format_time(datetime.now())}')
+            #     all_aggregation_done = (ag_round_num == user_args.T - 1)
+            #     if all_aggregation_done:
+            #         ft.done = True
+            #         print(f'HUB: Task {ft.id} is done')
+            #     else:
+            #         print(f'HUB: Performed {ag_round_num + 1}/{user_args.T} rounds in task {ft.id}')
+            #
+            #     send_to_validator(val_write_q, ft, ag_round_num)
+            #     send_agr_model_to_clients(clients, hub, ag_round_num, ft,
+            #                               should_finish=all(ft.done for ft in tasks))
+            #     jobs.remove(best_job)
+            #     print(f"=== 3rd part (save the stuff) {round(time.time() - third_part_start_time, 1)}s")
+            # if aggregating_all_jobs_start:
+            #     print(f"&&& aggreagting all jobs {round(time.time() - aggregating_all_jobs_start, 1)}s")
         # forth_aprt_start_time = time.time()
         # hub.stat.to_csv()
         # hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
@@ -261,7 +256,8 @@ def main():
     val_read_q, val_write_q = Queue(), Queue()
     ags_read_q, ags_write_q = Queue(), Queue()
     ags_q_by_cli_id = get_ags_qs_by_cl_id(clients)
-    ags = AGS(user_args)
+    central_node_by_ft_id = {t.id: copy.deepcopy(t.central_node) for t in tasks}
+    ags = AGS(user_args, central_node_by_ft_id)
     validator = Validator(user_args)
     val_proc = get_validator_proc(validator, val_read_q, val_write_q)
     ags_proc = get_ags_proc(ags, ags_read_q, ags_write_q, ags_q_by_cli_id)

@@ -1,7 +1,8 @@
 import time
 from datetime import datetime
+from typing import List
 
-from FederatedLearning.Platform.model_cast import ModelCast
+from model_cast import ModelCast, ModelTypedState, typed_states_to_states
 from models_dict.reparam_function import ReparamModule
 from utils import timing
 import numpy as np
@@ -27,11 +28,17 @@ from torch.optim.lr_scheduler import _LRScheduler
 # General server function
 ##############################################################################
 
-def receive_client_models(args, client_models, select_list, size_weights):
+def normalize_weights(size_weights):
+    res = np.array(size_weights)
+    res /= sum(res)
+    return res
+
+
+def receive_client_models(client_models, select_list, size_weights):
     client_params = []
     for idx in select_list:
         cl_model = client_models[idx]
-        client_params.append(ModelCast.to_state(cl_model))
+        client_params.append(ModelCast.to_state(cl_model))  # TODO do it on hub
         # TODO эта функция должна зваться не там, где она сейчас зовется
         # if 'fedlaw' in args.server_method:
         #     cl_model: ReparamModule = client_models[idx]
@@ -303,32 +310,33 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
 # Baselines function (FedAvg, FedDF, FedBE, FedDyn, FedAdam, Finetune, etc.)
 ##############################################################################
 
-def Server_update_fedlaw(args, central_node, client_models, select_list, size_weights):
+def Server_update_fedlaw(args, central_node, client_states: List[ModelTypedState], size_weights):
     start_time = datetime.now()
     central_node.model.cuda()
-    agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
-    gamma, optmized_weights = fedlaw_optimization(args, agg_weights, client_params, central_node)
-    fedlaw_generate_global_model(gamma, optmized_weights, client_params, central_node)
+    parameters = typed_states_to_states(client_states)
+
+    # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
+    agg_weights = normalize_weights(size_weights)
+    gamma, optmized_weights = fedlaw_optimization(args, agg_weights, parameters, central_node)
+    fedlaw_generate_global_model(gamma, optmized_weights, parameters, central_node)
     end_time = datetime.now()
     return Period(start_time, end_time)
 
 
 # @timing
-def Server_update(args, central_node, client_models, select_list, size_weights):
+def Server_update(args, central_node, client_states: List[ModelTypedState], size_weights):
     start_time = datetime.now()
     central_node.model.cpu()
     agr_model = central_node.model
-    agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
+    # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
+    agg_weights = normalize_weights(size_weights)
 
     # update the global model
-    if args.server_method == 'fedavg':
-        avg_global_param = fedavg(client_params, agg_weights)
-        agr_model.load_state_dict(avg_global_param)
-    else:
-        raise NotImplemented('Undefined server method...')
+    parameters = typed_states_to_states(client_states)
+    avg_global_param = fedavg(parameters, agg_weights)
+    agr_model.load_state_dict(avg_global_param)
     end_time = datetime.now()
     return Period(start_time, end_time)
-    # return central_node
 
 
 # FedAvg

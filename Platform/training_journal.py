@@ -2,6 +2,7 @@ import argparse
 import copy
 from dataclasses import dataclass, astuple
 
+from FederatedLearning.Platform.model_cast import ModelCast
 from federated_ml_task import FederatedMLTask
 from aggregation_station import Job
 import numpy as np
@@ -109,12 +110,13 @@ class TrainingJournal:
             for cl_id in client_ids:
                 if (ft_id, cl_id, round_num) in self.d:
                     records.append(self.d[(ft_id, cl_id, round_num)])
-            models = [r.model for r in records]
+            model_states = [ModelCast.to_state(r.model) for r in records]
             min_d = min([r.deadline for r in records])  # feature of the task
-            # res_jobs[ft_id] = ((min_d, round_num, models))
             c_node = central_nodes_by_ft_id[ft_id]
             ft = tasks[ft_id]
-            res_jobs[ft_id] = Job(ft_id, min_d, round_num, get_params_cnt(models[0]), models, c_node,
+            res_jobs[ft_id] = Job(ft_id, min_d, round_num,
+                                  get_params_cnt(records[0].model),
+                                  model_states,
                                   ft.size_weights)
             if min_d < total_min_deadline:
                 total_min_deadline = min_d

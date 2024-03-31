@@ -1,4 +1,5 @@
 import copy
+from typing import List, Optional, Dict
 
 from reparam_function import ReparamModule
 import torch.nn as nn
@@ -15,12 +16,18 @@ class ModelTypedState:
         self.state = state
 
 
+def typed_states_to_states(states: List[ModelTypedState]):
+    return [x.state for x in states]
+
+
 class ModelCast:
     @staticmethod
     def to_state(model):
         if isinstance(model, ReparamModule):
             return ModelTypedState(ModelType.FEDLAW,
-                                   state=model.get_param(clone=True))
+                                   state=copy.deepcopy(
+                                       model.get_param(clone=True))
+                                   )
         elif isinstance(model, nn.Module):
             return ModelTypedState(ModelType.ORDIANRY, copy.deepcopy(model.state_dict()))
 

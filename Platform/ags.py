@@ -1,12 +1,14 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from torch.multiprocessing import Queue
 from datetime import datetime
 import time
 
+from FederatedLearning.Platform.model_cast import ModelCast
+from nodes import Node
 from server_funct import Server_update_fedlaw, Server_update
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler, Job
-from message import MessageHubToAGS, ControlMessageHubToAGS
+from message import MessageHubToAGS, ControlMessageHubToAGS, MessageAgsToClient
 
 
 def _get_scheduler(args):
@@ -29,13 +31,14 @@ def _get_updater(args):
 
 
 class AGS:
-    def __init__(self, user_args):
+    def __init__(self, user_args, central_node_by_ft_id: Dict[int, Node]):
         self.user_args = user_args
         self.start_time: Optional[datetime] = None
         self.should_finish = False
         self.jobs: List[Job] = []
         self.scheduler = _get_scheduler(user_args)
         self.updater = _get_updater(user_args)
+        self.central_node_by_ft_id = central_node_by_ft_id
 
     def idle_until_run_cmd(self, hub_read_q):
         while self.start_time is None:
@@ -59,15 +62,22 @@ class AGS:
             else:
                 raise ValueError(f"Unknown message {mes}")
 
-    def run(self, hub_read_q, hub_write_q, q_by_cl_id):
+    def run(self, hub_read_q, hub_write_q, q_by_cl_id: Dict[int, Queue]):
         self.idle_until_run_cmd(hub_read_q)
         self.idle_until_run_cmd(hub_read_q)
         while not self.should_finish:
             self.handle_messages(hub_read_q)
             if self.jobs:
                 best_job: Job = self.scheduler.plan_next(self.jobs)
-                period = self.updater(self.user_args, best_job.central_node, best_job.models,
-                             list(range(len(best_job.models))),
-                             best_job.size_weights)
+                central_node = self.central_node_by_ft_id[best_job.ft_id]
+                period = self.updater(self.user_args,
+                                      central_node,
+                                      best_job.model_states,
+                                      best_job.size_weights)
+                self._send_to_clients(central_node.model, q_by_cl_id)
 
-    def run_aggregation_job(self, job: Job):
+    def _send_to_clients(self, model, q_by_cl_id: Dict[int, Queue]):
+        for q in q_by_cl_id.values():
+            q.put(MessageAgsToClient(
+                ModelCast.to_state(model)
+            ))

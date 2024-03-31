@@ -6,6 +6,7 @@ from typing import List
 
 import torch
 
+from model_cast import ModelTypedState
 from nodes import Node
 from utils import timing
 
@@ -16,8 +17,7 @@ class Job:
     deadline: datetime
     round_num: int
     processing_time_coef: float  # coefficient proportional to time required for aggregation
-    models: List[torch.Module]
-    central_node: Node
+    model_states: List[ModelTypedState]
     size_weights: List[float]
 
 
