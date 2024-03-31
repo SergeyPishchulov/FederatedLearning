@@ -74,10 +74,17 @@ class AGS:
                                       central_node,
                                       best_job.model_states,
                                       best_job.size_weights)
+                print(f"AGS Success for task {best_job.ft_id} round {best_job.round_num}")
                 self._send_to_clients(central_node.model, q_by_cl_id)
+            self.should_finish = True
+        self.finish()
 
     def _send_to_clients(self, model, q_by_cl_id: Dict[int, Queue]):
         for q in q_by_cl_id.values():
             q.put(MessageAgsToClient(
                 ModelCast.to_state(model)
             ))
+        print(f"AGS sent model to clients")
+
+    def finish(self):
+        print(f"AGS finished")

@@ -9,7 +9,7 @@ from pprint import pprint
 import torch
 from typing import Dict, List, Optional
 
-from message import MessageToHub, MessageToClient, ControlMessageToClient, ResponseToHub, Period
+from message import MessageToHub, MessageToClient, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient
 from utils import validate, setup_seed, combine_lists
 from utils import *
 from server_funct import *
@@ -175,6 +175,8 @@ class Client:
                 required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
                 delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
                 write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=not mes.should_run))
+            elif isinstance(mes, MessageAgsToClient):
+                print(f"Client {self.id} got MessageAgsToClient")
             elif isinstance(mes, ControlMessageToClient):
                 self.start_time = mes.start_time
                 self.should_run = True
