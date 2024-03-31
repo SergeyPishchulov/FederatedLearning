@@ -43,7 +43,7 @@ def create_clients(tasks, user_args) -> List[Client]:
                         args_by_ft_id={ft.id: ft.args for ft in tasks},
                         agr_model_state_by_ft_id_round={(ft.id, -1): ModelCast.to_state(
                             ft.central_node.model)
-                                                  for ft in tasks},
+                            for ft in tasks},
                         user_args=user_args,
                         inter_ddl_periods_by_ft_id=inter_ddl_prds[client_id]
                         )
@@ -85,8 +85,10 @@ def handle_messages(hub):
             if isinstance(r, MessageToHub):
                 # print(
                 #     f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
-                hub.journal.save_local(r.ft_id, r.client_id, r.round_num, copy.deepcopy(r.model), r.deadline,
-                                       r.update_quality)
+                hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
+                                       model_state=r.model_state,
+                                       deadline=r.deadline,
+                                       update_quality=r.update_quality)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc, r.time_to_target_acc_sec)
                 hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
                 # hub.stat.print_time_target_acc()
