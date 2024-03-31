@@ -162,6 +162,8 @@ def init_model(model_type, args):
             model = cnn.MLP()
         elif model_type == 'LeNet5':
             model = cnn.LeNet5()
+        else:
+            raise ValueError(f"Unknown model_type = {model_type}")
     # print(f'PRINTING MODEL {model_type}')
     # print(model)
     return model

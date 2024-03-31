@@ -66,7 +66,7 @@ class AGS:
             self.handle_messages(hub_read_q)
             if self.jobs:
                 best_job: Job = self.scheduler.plan_next(self.jobs)
-                self.updater(self.user_args, best_job.central_node, best_job.models,
+                period = self.updater(self.user_args, best_job.central_node, best_job.models,
                              list(range(len(best_job.models))),
                              best_job.size_weights)
 

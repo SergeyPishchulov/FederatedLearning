@@ -1,4 +1,3 @@
-
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -13,6 +12,7 @@ from six import add_metaclass
 from torch.nn import init
 import copy
 import math
+
 
 ### basic functions for models
 # def init_weights(net, state):
@@ -60,6 +60,7 @@ def init_weights(net):
     net.apply(init_func)
     return net
 
+
 def print_network(net, verbose=False):
     num_params = 0
     for i, param in enumerate(net.parameters()):
@@ -73,6 +74,7 @@ def clone_tuple(tensors, requires_grad=None):
     return tuple(
         t.detach().clone().requires_grad_(t.requires_grad if requires_grad is None else requires_grad) for t in tensors)
 
+
 ##############################################################################
 # ReparamModule for FedLAW
 ##############################################################################
@@ -82,7 +84,7 @@ class PatchModules(type):
     def __call__(cls, *args, **kwargs):
         r"""Called when you call ReparamModule(...) """
         # net = type.__call__(cls, state, *args, **kwargs)
-        net = type.__call__(cls,  *args, **kwargs)
+        net = type.__call__(cls, *args, **kwargs)
         # collect weight (module, name) pairs
         # flatten weights
         w_modules_names = []
@@ -125,6 +127,7 @@ class PatchModules(type):
 
         return net
 
+
 @add_metaclass(PatchModules)
 class ReparamModule(nn.Module):
     def _apply(self, *args, **kwargs):
@@ -140,7 +143,7 @@ class ReparamModule(nn.Module):
         if clone:
             return self.flat_w.grad.detach().clone().requires_grad_(self.flat_w.requires_grad)
         return self.flat_w.grad
-    
+
     @contextmanager
     def unflatten_weight(self, flat_w):
         ws = (t.view(s) for (t, s) in zip(flat_w.split(self._weights_numels), self._weights_shapes))
@@ -154,7 +157,7 @@ class ReparamModule(nn.Module):
         with self.unflatten_weight(new_w):
             return nn.Module.__call__(self, inp)
 
-    def load_param(self,  flat_w):
+    def load_param(self, flat_w):
         # flat_w = flat_w.detach().clone()
         # ws = (t.view(s) for (t, s) in zip(flat_w.split(self._weights_numels), self._weights_shapes))
         # for (m, n), w in zip(self._weights_module_names, ws):

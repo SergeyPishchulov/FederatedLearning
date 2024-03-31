@@ -32,7 +32,7 @@ ROUND = int
 
 def cpu_copy(jobs: Dict[FT_ID, Job]):
     res = copy.deepcopy(jobs)
-    for ft_id, j in jobs.items():
+    for ft_id, j in res.items():
         j.central_node.model.cpu()
     return res
 

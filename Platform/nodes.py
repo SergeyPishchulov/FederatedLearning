@@ -36,17 +36,6 @@ class Node(object):
         self.model = init_model(self.args.local_model, self.args).cuda()
         self.optimizer = init_optimizer(self.num_id, self.model, args)
 
-        # node init for feddyn
-        # if args.client_method == 'feddyn':
-        #     self.old_grad = None
-        #     self.old_grad = copy.deepcopy(self.model)
-        #     self.old_grad = model_parameter_vector(args, self.old_grad)
-        #     self.old_grad = torch.zeros_like(self.old_grad)
-        # if 'feddyn' in args.server_method:
-        #     self.server_state = copy.deepcopy(self.model)
-        #     for param in self.server_state.parameters():
-        #         param.data = torch.zeros_like(param.data)
-
         # node init for fedadam's server
         if args.server_method == 'fedadam' and num_id == -1:
             m = copy.deepcopy(self.model)

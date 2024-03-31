@@ -1,5 +1,8 @@
 import time
 from datetime import datetime
+
+from FederatedLearning.Platform.model_cast import ModelCast
+from models_dict.reparam_function import ReparamModule
 from utils import timing
 import numpy as np
 import torch
@@ -27,10 +30,14 @@ from torch.optim.lr_scheduler import _LRScheduler
 def receive_client_models(args, client_models, select_list, size_weights):
     client_params = []
     for idx in select_list:
-        if 'fedlaw' in args.server_method:
-            client_params.append(client_models[idx].get_param(clone=True))
-        else:
-            client_params.append(copy.deepcopy(client_models[idx].state_dict()))
+        cl_model = client_models[idx]
+        client_params.append(ModelCast.to_state(cl_model))
+        # TODO эта функция должна зваться не там, где она сейчас зовется
+        # if 'fedlaw' in args.server_method:
+        #     cl_model: ReparamModule = client_models[idx]
+        #     client_params.append(cl_model.get_param(clone=True))
+        # else:
+        #     client_params.append(copy.deepcopy(client_models[idx].state_dict()))
 
     agg_weights = [size_weights[idx] for idx in select_list]
     agg_weights = [w / sum(agg_weights) for w in agg_weights]
@@ -299,7 +306,6 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
 def Server_update_fedlaw(args, central_node, client_models, select_list, size_weights):
     start_time = datetime.now()
     central_node.model.cuda()
-    # print(f'Server_update_fedlaw')
     agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
     gamma, optmized_weights = fedlaw_optimization(args, agg_weights, client_params, central_node)
     fedlaw_generate_global_model(gamma, optmized_weights, client_params, central_node)
@@ -309,11 +315,6 @@ def Server_update_fedlaw(args, central_node, client_models, select_list, size_we
 
 # @timing
 def Server_update(args, central_node, client_models, select_list, size_weights):
-    '''
-    server update functions for baselines
-    '''
-
-    # receive the local models from clients
     start_time = datetime.now()
     central_node.model.cpu()
     agr_model = central_node.model
@@ -323,30 +324,6 @@ def Server_update(args, central_node, client_models, select_list, size_weights):
     if args.server_method == 'fedavg':
         avg_global_param = fedavg(client_params, agg_weights)
         agr_model.load_state_dict(avg_global_param)
-
-    # elif args.server_method == 'feddf':
-    #     avg_global_param = fedavg(client_params, agg_weights)
-    #     central_node.model.load_state_dict(avg_global_param)
-    #     central_node = feddf(args, central_node, client_nodes, select_list)
-    #
-    # elif args.server_method == 'fedbe':
-    #     prev_global_param = copy.deepcopy(central_node.model.state_dict())
-    #     avg_global_param = fedavg(client_params, agg_weights)
-    #     central_node.model.load_state_dict(avg_global_param)
-    #     central_node = fedbe(args, prev_global_param, central_node, client_nodes, select_list)
-    #
-    # elif args.server_method == 'finetune':
-    #     avg_global_param = fedavg(client_params, agg_weights)
-    #     central_node.model.load_state_dict(avg_global_param)
-    #     central_node = server_finetune(args, central_node)
-    #
-    # elif args.server_method == 'feddyn':
-    #     central_node = feddyn(args, central_node, agg_weights, client_nodes, select_list)
-    #
-    # elif args.server_method == 'fedadam':
-    #     avg_global_param = fedavg(client_params, agg_weights)
-    #     central_node = fedadam(args, central_node, avg_global_param)
-
     else:
         raise NotImplemented('Undefined server method...')
     end_time = datetime.now()
@@ -796,84 +773,84 @@ class SWAG_server(torch.nn.Module):
             return mean_grad
 
 
-def fedbe(args, prev_global_param, central_node, client_nodes, select_list):
-    # generate teachers
-    nets = []
-    base_teachers = []
-
-    fedavg_model = init_model(args.local_model, args).cuda()
-    swag_model = init_model(args.local_model, args).cuda()
-    fedavg_model.load_state_dict(copy.deepcopy(central_node.model.state_dict()))
-    nets.append(copy.deepcopy(fedavg_model))
-
-    for client_idx in select_list:
-        client_nodes[client_idx].model.cuda().eval()
-        nets.append(copy.deepcopy(client_nodes[client_idx].model))
-        base_teachers.append(copy.deepcopy(client_nodes[client_idx].model.state_dict()))
-
-    # generate swag model
-    swag_server = SWAG_server(prev_global_param, avg_model=copy.deepcopy(central_node.model.state_dict()),
-                              concentrate_num=1)
-    w_swag = swag_server.construct_models(base_teachers, mode='gaussian')
-    swag_model.load_state_dict(w_swag)
-    nets.append(copy.deepcopy(swag_model))
-
-    # train and update
-    central_node.model.cuda().train()
-    for _ in range(args.server_epochs):
-        train_loader = central_node.validate_set
-
-        for _, (data, target) in enumerate(train_loader):
-            central_node.optimizer.zero_grad()
-            # train model
-            data, target = data.cuda(), target.cuda()
-
-            output = central_node.model(data)
-            teacher_logits = sum([net(data).detach() for net in nets]) / len(nets)
-
-            loss = divergence(output, teacher_logits)
-            loss.backward()
-            central_node.optimizer.step()
-
-    return central_node
+# def fedbe(args, prev_global_param, central_node, client_nodes, select_list):
+#     # generate teachers
+#     nets = []
+#     base_teachers = []
+#
+#     fedavg_model = init_model(args.local_model, args).cuda()
+#     swag_model = init_model(args.local_model, args).cuda()
+#     fedavg_model.load_state_dict(copy.deepcopy(central_node.model.state_dict()))
+#     nets.append(copy.deepcopy(fedavg_model))
+#
+#     for client_idx in select_list:
+#         client_nodes[client_idx].model.cuda().eval()
+#         nets.append(copy.deepcopy(client_nodes[client_idx].model))
+#         base_teachers.append(copy.deepcopy(client_nodes[client_idx].model.state_dict()))
+#
+#     # generate swag model
+#     swag_server = SWAG_server(prev_global_param, avg_model=copy.deepcopy(central_node.model.state_dict()),
+#                               concentrate_num=1)
+#     w_swag = swag_server.construct_models(base_teachers, mode='gaussian')
+#     swag_model.load_state_dict(w_swag)
+#     nets.append(copy.deepcopy(swag_model))
+#
+#     # train and update
+#     central_node.model.cuda().train()
+#     for _ in range(args.server_epochs):
+#         train_loader = central_node.validate_set
+#
+#         for _, (data, target) in enumerate(train_loader):
+#             central_node.optimizer.zero_grad()
+#             # train model
+#             data, target = data.cuda(), target.cuda()
+#
+#             output = central_node.model(data)
+#             teacher_logits = sum([net(data).detach() for net in nets]) / len(nets)
+#
+#             loss = divergence(output, teacher_logits)
+#             loss.backward()
+#             central_node.optimizer.step()
+#
+#     return central_node
 
 
 # FedDyn
-def feddyn(args, central_node, agg_weights, client_nodes, select_list):
-    '''
-    server function for feddyn
-    '''
-
-    # update server's state
-    uploaded_models = []
-    for i in select_list:
-        uploaded_models.append(copy.deepcopy(client_nodes[i].model))
-
-    model_delta = copy.deepcopy(uploaded_models[0])
-    for param in model_delta.parameters():
-        param.data = torch.zeros_like(param.data)
-
-    for idx, client_model in enumerate(uploaded_models):
-        for server_param, client_param, delta_param in zip(central_node.model.parameters(), client_model.parameters(),
-                                                           model_delta.parameters()):
-            delta_param.data += (client_param - server_param) * agg_weights[idx]
-
-    for state_param, delta_param in zip(central_node.server_state.parameters(), model_delta.parameters()):
-        state_param.data -= args.mu * delta_param
-
-    # aggregation
-    central_node.model = copy.deepcopy(uploaded_models[0])
-    for param in central_node.model.parameters():
-        param.data = torch.zeros_like(param.data)
-
-    for idx, client_model in enumerate(uploaded_models):
-        for server_param, client_param in zip(central_node.model.parameters(), client_model.parameters()):
-            server_param.data += client_param.data.clone() * agg_weights[idx]
-
-    for server_param, state_param in zip(central_node.model.parameters(), central_node.server_state.parameters()):
-        server_param.data -= (1 / args.mu) * state_param
-
-    return central_node
+# def feddyn(args, central_node, agg_weights, client_nodes, select_list):
+#     '''
+#     server function for feddyn
+#     '''
+#
+#     # update server's state
+#     uploaded_models = []
+#     for i in select_list:
+#         uploaded_models.append(copy.deepcopy(client_nodes[i].model))
+#
+#     model_delta = copy.deepcopy(uploaded_models[0])
+#     for param in model_delta.parameters():
+#         param.data = torch.zeros_like(param.data)
+#
+#     for idx, client_model in enumerate(uploaded_models):
+#         for server_param, client_param, delta_param in zip(central_node.model.parameters(), client_model.parameters(),
+#                                                            model_delta.parameters()):
+#             delta_param.data += (client_param - server_param) * agg_weights[idx]
+#
+#     for state_param, delta_param in zip(central_node.server_state.parameters(), model_delta.parameters()):
+#         state_param.data -= args.mu * delta_param
+#
+#     # aggregation
+#     central_node.model = copy.deepcopy(uploaded_models[0])
+#     for param in central_node.model.parameters():
+#         param.data = torch.zeros_like(param.data)
+#
+#     for idx, client_model in enumerate(uploaded_models):
+#         for server_param, client_param in zip(central_node.model.parameters(), client_model.parameters()):
+#             server_param.data += client_param.data.clone() * agg_weights[idx]
+#
+#     for server_param, state_param in zip(central_node.model.parameters(), central_node.server_state.parameters()):
+#         server_param.data -= (1 / args.mu) * state_param
+#
+#     return central_node
 
 
 # FedAdam
