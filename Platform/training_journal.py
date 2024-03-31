@@ -2,7 +2,7 @@ import argparse
 import copy
 from dataclasses import dataclass, astuple
 
-from FederatedLearning.Platform.model_cast import ModelCast
+from model_cast import ModelCast
 from federated_ml_task import FederatedMLTask
 from aggregation_station import Job
 import numpy as np

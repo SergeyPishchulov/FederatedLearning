@@ -4,7 +4,7 @@ from torch.multiprocessing import Queue
 from datetime import datetime
 import time
 
-from FederatedLearning.Platform.model_cast import ModelCast
+from model_cast import ModelCast
 from nodes import Node
 from server_funct import Server_update_fedlaw, Server_update
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler, Job
