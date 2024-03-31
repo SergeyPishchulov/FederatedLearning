@@ -22,7 +22,7 @@ def typed_states_to_states(states: List[ModelTypedState]):
 
 class ModelCast:
     @staticmethod
-    def to_state(model):
+    def to_state(model: nn.Module) -> ModelTypedState:
         if isinstance(model, ReparamModule):
             return ModelTypedState(ModelType.FEDLAW,
                                    state=copy.deepcopy(
@@ -30,6 +30,8 @@ class ModelCast:
                                    )
         elif isinstance(model, nn.Module):
             return ModelTypedState(ModelType.ORDIANRY, copy.deepcopy(model.state_dict()))
+        else:
+            raise ValueError(f"Unknown model type {type(model)}")
 
     @staticmethod
     def to_model(typed_state: ModelTypedState, model_to_write: nn.Module):

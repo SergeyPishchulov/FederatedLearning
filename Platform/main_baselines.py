@@ -41,7 +41,9 @@ def create_clients(tasks, user_args) -> List[Client]:
         client = Client(client_id,
                         node_by_ft_id,
                         args_by_ft_id={ft.id: ft.args for ft in tasks},
-                        agr_model_by_ft_id_round={(ft.id, -1): ft.central_node.model for ft in tasks},
+                        agr_model_state_by_ft_id_round={(ft.id, -1): ModelCast.to_state(
+                            ft.central_node.model)
+                                                  for ft in tasks},
                         user_args=user_args,
                         inter_ddl_periods_by_ft_id=inter_ddl_prds[client_id]
                         )

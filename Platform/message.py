@@ -36,7 +36,7 @@ class MessageToHub:
     ft_id: int
     acc: float
     loss: float
-    model: torch.nn.Module
+    model_state: ModelTypedState
     client_id: int
     deadline: datetime
     update_quality: float

@@ -77,12 +77,14 @@ class CyclicalScheduler(LocalScheduler):
 
 
 class Client:
-    def __init__(self, id, node_by_ft_id, args_by_ft_id, agr_model_by_ft_id_round, user_args,
+    def __init__(self, id, node_by_ft_id, args_by_ft_id,
+                 agr_model_state_by_ft_id_round: Dict[(int, int):ModelTypedState],
+                 user_args,
                  inter_ddl_periods_by_ft_id):
         self.id = id
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
-        self.agr_model_by_ft_id_round = agr_model_by_ft_id_round
+        self.agr_model_by_ft_id_round: Dict[(int, int):ModelTypedState] = agr_model_state_by_ft_id_round
         self.user_args = user_args
         self.should_run = False
         self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
@@ -124,13 +126,8 @@ class Client:
         # node.model.cpu()# it will be after validation
         return loss / len(train_loader), len(train_loader) * node.args.batchsize
 
-    def _set_aggregated_model(self, ft_args, node, agr_model):
-        if 'fedlaw' in ft_args.server_method:
-            node.model.load_param(copy.deepcopy(
-                agr_model.get_param(clone=True)))
-        else:
-            node.model.load_state_dict(copy.deepcopy(
-                agr_model.state_dict()))
+    def _set_aggregated_model(self, ft_args, node, agr_model: ModelTypedState):
+        ModelCast.to_model(agr_model, node.model)
 
     def _train_one_round(self, ft_args, node):
         start_time = datetime.now()
@@ -216,18 +213,20 @@ class Client:
         self.idle_until_run_cmd(read_q, write_q)
         self.idle_until_start_time()
         print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
+        client_start_time = time.time()
         self.setup()
         self.set_deadlines()
         while self.should_run:
-            # print("Client really running")
+            print("Client really running")
             self.handle_messages(read_q, write_q)
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)
+            print(f"Client {self.id} scheduled task {ft_id} with round {r}")
             if ft_id is not None:
-                agr_model = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
+                agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]
-                self._set_aggregated_model(ft_args, node, agr_model)
+                self._set_aggregated_model(ft_args, node, agr_model_state)
                 mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
                 self.data_lens_by_ft_id[ft_id].append(data_len)
                 acc = validate(ft_args, node)
@@ -241,15 +240,15 @@ class Client:
                 target_acc = self.args_by_ft_id[ft_id].target_acc
                 time_to_target_acc = -1 if (acc < target_acc) else (time.time() - client_start_time)
                 # print(f"    Client {self.id} acc is {acc} target_acc is {target_acc} time_to_target_acc is {time_to_target_acc}")
-                response = MessageToHub(-1, ft_id,  # TODO delete -1
-                                        acc, mean_loss,
-                                        copy.deepcopy(node.model),
-                                        self.id,
-                                        deadline,
-                                        update_quality,
-                                        r,
-                                        Period(start_time, end_time),
-                                        time_to_target_acc)
+                response = MessageToHub(-1, ft_id=ft_id,  # TODO delete -1
+                                        acc=acc, loss=mean_loss,
+                                        model_state=ModelCast.to_state(node.model),
+                                        client_id=self.id,
+                                        deadline=deadline,
+                                        update_quality=update_quality,
+                                        round_num=r,
+                                        period=Period(start_time, end_time),
+                                        time_to_target_acc_sec=time_to_target_acc)
                 try:
                     write_q.put(response)
                     self.scheduler.delete_from_plan(ft_id, r)
