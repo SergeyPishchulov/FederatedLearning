@@ -2,7 +2,7 @@ import argparse
 import copy
 from dataclasses import dataclass, astuple
 
-from model_cast import ModelCast
+from model_cast import ModelCast, ModelTypedState
 from federated_ml_task import FederatedMLTask
 from aggregation_station import Job
 import numpy as np
@@ -22,7 +22,7 @@ class JournalRecord:
     model - locally trained model
     deadline - max time the aggregation should have been done to
     """
-    model: torch.nn.Module
+    model_state: ModelTypedState
     deadline: datetime
     update_quality: float
 
@@ -49,9 +49,9 @@ class TrainingJournal:
         self.latest_aggregated_round[ft_id] += 1
         # TODO bug if we skip some rounds
 
-    def save_local(self, ft_id, client_id, round_num, model, deadline, update_quality):
+    def save_local(self, ft_id, client_id, round_num, model_state: ModelTypedState, deadline, update_quality):
         if (ft_id, client_id, round_num) not in self.d:
-            self.d[(ft_id, client_id, round_num)] = JournalRecord(model, deadline, update_quality)
+            self.d[(ft_id, client_id, round_num)] = JournalRecord(model_state, deadline, update_quality)
         else:
             raise KeyError("Key already exists")
 
@@ -108,14 +108,14 @@ class TrainingJournal:
             for cl_id in client_ids:
                 if (ft_id, cl_id, round_num) in self.d:
                     records.append(self.d[(ft_id, cl_id, round_num)])
-            model_states = [ModelCast.to_state(r.model) for r in records]
+            model_states = [r.model_state for r in records]
             min_d = min([r.deadline for r in records])  # feature of the task
             c_node = central_nodes_by_ft_id[ft_id]
             ft = tasks[ft_id]
             res_jobs[ft_id] = Job(ft_id, min_d, round_num,
-                                  get_params_cnt(records[0].model),
-                                  model_states,
-                                  ft.size_weights)
+                                  processing_time_coef=1,  # MEGA TODO set distinct coefs!!!
+                                  model_states=model_states,
+                                  size_weights=ft.size_weights)
             if min_d < total_min_deadline:
                 total_min_deadline = min_d
         # print(f'Task {res[1]} with min deadline {res[0]}')
