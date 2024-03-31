@@ -216,13 +216,13 @@ class Client:
         client_start_time = time.time()
         self.setup()
         self.set_deadlines()
+        print("Client really running")
         while self.should_run:
-            print("Client really running")
             self.handle_messages(read_q, write_q)
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)
-            print(f"Client {self.id} scheduled task {ft_id} with round {r}")
             if ft_id is not None:
+                print(f"Client {self.id} scheduled task {ft_id} with round {r}")
                 agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]

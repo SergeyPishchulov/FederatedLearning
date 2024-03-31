@@ -55,7 +55,7 @@ class TrainingJournal:
         else:
             raise KeyError("Key already exists")
 
-    def _get_ft_ready_to_agr(self, client_ids):
+    def get_ft_ready_to_agr(self, client_ids):
         res = []
         if self.args.aggregation_on == 'all_received':
             decision_func = self.all_clients_performed_round
@@ -87,7 +87,8 @@ class TrainingJournal:
                 participants_cnt += 1
         # print(
         # f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}. SUM is{sum_quality}")
-        if sum_quality >= self.required_quality_by_ft_id[ft_id] and participants_cnt >= 2:
+        if (sum_quality >= 2000  # self.required_quality_by_ft_id[ft_id]
+                and participants_cnt >= 2):
             # print(f"JOURNAL: Quality reached.")
             return True
         # print(f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}")
@@ -95,7 +96,7 @@ class TrainingJournal:
 
     # @timing
     def get_ft_to_aggregate(self, client_ids, central_nodes_by_ft_id, tasks: List[FederatedMLTask]) -> Dict[FT_ID, Job]:
-        ready = self._get_ft_ready_to_agr(client_ids)
+        ready = self.get_ft_ready_to_agr(client_ids)
         if not ready:
             return {}
         total_min_deadline = datetime.max
