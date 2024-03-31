@@ -13,7 +13,7 @@ from client import Client
 from federated_ml_task import FederatedMLTask
 from hub import Hub
 from message import MessageToClient, MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub, \
-    ValidatorShouldFinish, ControlMessageToClient, ControlValidatorMessage, MessageHubToAGS
+    ValidatorShouldFinish, ControlMessageToClient, ControlValidatorMessage, MessageHubToAGS, ControlMessageHubToAGS
 from config.experiment_config import get_configs
 from config.args import args_parser
 from utils import *
@@ -241,10 +241,11 @@ def wait_while_procs_start(procs):
         time.sleep(2)
 
 
-def set_start_time(client_pipes, val_write_q, fl_start_time):
+def set_start_time(client_pipes, val_write_q, ags_write_q, fl_start_time):
     for q in client_pipes:
         q.put(ControlMessageToClient(should_run=True, start_time=fl_start_time))
 
+    ags_write_q.put(ControlMessageHubToAGS(start_time=fl_start_time))
     val_write_q.put(ControlValidatorMessage(fl_start_time))
 
 
@@ -277,7 +278,7 @@ def main():
 
     fl_start_time = datetime.now() + timedelta(seconds=5)
     hub.stat.set_start_time(fl_start_time)
-    set_start_time(hub.write_q_by_cl_id.values(), val_write_q, fl_start_time)
+    set_start_time(hub.write_q_by_cl_id.values(), val_write_q, ags_write_q, fl_start_time)
     run(tasks, hub, clients, user_args, val_read_q, val_write_q, ags_write_q)
 
     for proc in procs:
