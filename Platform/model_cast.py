@@ -1,7 +1,7 @@
 import copy
 from typing import List, Optional, Dict
 
-from reparam_function import ReparamModule
+from models_dict.reparam_function import ReparamModule
 import torch.nn as nn
 
 
