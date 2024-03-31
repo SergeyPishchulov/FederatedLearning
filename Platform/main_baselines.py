@@ -149,7 +149,8 @@ def finish(hub, val_write_q):
     hub.stat.print_jobs_cnt_in_ags_statistics()
 
 
-def run(tasks, hub: Hub, clients, user_args, val_read_q, val_write_q, ags_write_q):
+def run(tasks: List[FederatedMLTask], hub: Hub, clients, user_args, val_read_q, val_write_q, ags_write_q):
+    central_nodes_by_ft_id = {t.id: t.central_node for t in tasks}
     total_aggregations = 0
     # hub_start_dt = datetime.now()
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
@@ -157,7 +158,7 @@ def run(tasks, hub: Hub, clients, user_args, val_read_q, val_write_q, ags_write_
     while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
         start_time = time.time()
         handle_messages(hub)
-        ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients])
+        ready_tasks_dict = hub.journal.get_ft_to_aggregate([c.id for c in clients], central_nodes_by_ft_id, tasks)
         if ready_tasks_dict:
             ags_write_q.put(MessageHubToAGS(ready_tasks_dict))
             # jobs = [Job(ft_id, deadline, round_num, processing_time_coef=get_params_cnt(models[0]))

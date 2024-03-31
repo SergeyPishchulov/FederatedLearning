@@ -6,6 +6,7 @@ from typing import List
 
 import torch
 
+from nodes import Node
 from utils import timing
 
 
@@ -16,6 +17,8 @@ class Job:
     round_num: int
     processing_time_coef: float  # coefficient proportional to time required for aggregation
     models: List[torch.Module]
+    central_node: Node
+    size_weights: List[float]
 
 
 class SFAggregationStationScheduler:

@@ -1,5 +1,8 @@
 import argparse
+import copy
 from dataclasses import dataclass, astuple
+
+from federated_ml_task import FederatedMLTask
 from aggregation_station import Job
 import numpy as np
 import torch
@@ -25,6 +28,13 @@ class JournalRecord:
 
 FT_ID = int
 ROUND = int
+
+
+def cpu_copy(jobs: Dict[FT_ID, Job]):
+    res = copy.deepcopy(jobs)
+    for ft_id, j in jobs.items():
+        j.central_node.model.cpu()
+    return res
 
 
 class TrainingJournal:
@@ -85,12 +95,12 @@ class TrainingJournal:
         return False or self.all_clients_performed_round(ft_id, round_num, client_ids)
 
     # @timing
-    def get_ft_to_aggregate(self, client_ids) -> Dict[FT_ID, Job]:
+    def get_ft_to_aggregate(self, client_ids, central_nodes_by_ft_id, tasks: List[FederatedMLTask]) -> Dict[FT_ID, Job]:
         ready = self._get_ft_ready_to_agr(client_ids)
         if not ready:
             return {}
         total_min_deadline = datetime.max
-        res_tasks = {}
+        res_jobs = {}
         for ft_id, round_num in ready:
             # TODO think what will happen dith updates that was sent after aggreagation
             # NOTE: minimal deadline of task is computed only by clients who have sent an update
@@ -101,12 +111,15 @@ class TrainingJournal:
                     records.append(self.d[(ft_id, cl_id, round_num)])
             models = [r.model for r in records]
             min_d = min([r.deadline for r in records])  # feature of the task
-            # res_tasks[ft_id] = ((min_d, round_num, models))
-            res_tasks[ft_id] = Job(ft_id, min_d, round_num, get_params_cnt(models[0]), models)
+            # res_jobs[ft_id] = ((min_d, round_num, models))
+            c_node = central_nodes_by_ft_id[ft_id]
+            ft = tasks[ft_id]
+            res_jobs[ft_id] = Job(ft_id, min_d, round_num, get_params_cnt(models[0]), models, c_node,
+                                  ft.size_weights)
             if min_d < total_min_deadline:
                 total_min_deadline = min_d
         # print(f'Task {res[1]} with min deadline {res[0]}')
         # return res
-        return res_tasks
+        return cpu_copy(res_jobs)
 
     # print(f"No task to aggregate. d keys: {self.d.keys()}")
