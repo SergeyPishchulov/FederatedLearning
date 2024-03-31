@@ -58,7 +58,7 @@ class AGS:
             mes = hub_read_q.get()
             if isinstance(mes, MessageHubToAGS):
                 print(f"AGS got {len(mes.jobs_by_ft_id)} jobs")
-                self.jobs.extend(mes.jobs_by_ft_id.values())
+                self.jobs.update(mes.jobs_by_ft_id.values())
             elif isinstance(mes, ControlMessageHubToAGS):
                 self.start_time = mes.start_time
             else:
