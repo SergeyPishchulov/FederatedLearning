@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Set
 
 from torch.multiprocessing import Queue
 from datetime import datetime
@@ -35,7 +35,7 @@ class AGS:
         self.user_args = user_args
         self.start_time: Optional[datetime] = None
         self.should_finish = False
-        self.jobs: List[Job] = []
+        self.jobs: Set[Job] = set()
         self.scheduler = _get_scheduler(user_args)
         self.updater = _get_updater(user_args)
         self.central_node_by_ft_id = central_node_by_ft_id
@@ -79,6 +79,7 @@ class AGS:
                                       best_job.model_states,
                                       best_job.size_weights)
                 print(f"AGS Success for task {best_job.ft_id} round {best_job.round_num}")
+                self.jobs.remove(best_job)
                 self.aggregated_jobs += 1
                 self._send_to_clients(central_node.model, q_by_cl_id)
             # self.should_finish = True

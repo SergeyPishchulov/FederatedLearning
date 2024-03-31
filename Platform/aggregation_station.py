@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import random
 
-from typing import List
+from typing import List, Set
 
 import torch
 
@@ -28,7 +28,7 @@ class Job:
 class SFAggregationStationScheduler:
     # @timing
     @staticmethod
-    def plan_next(jobs: List[Job]):
+    def plan_next(jobs: Set[Job]):
         if not jobs:
             raise ValueError("No jobs provided")
         for j in jobs:
@@ -45,7 +45,7 @@ class SFAggregationStationScheduler:
 
 class RandomAggregationStationScheduler:
     @staticmethod
-    def plan_next(jobs: List[Job]):
+    def plan_next(jobs: Set[Job]):
         if not jobs:
             raise ValueError("No jobs provided")
-        return random.choice(jobs)
+        return random.choice(list(jobs))
