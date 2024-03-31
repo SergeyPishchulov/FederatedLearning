@@ -24,6 +24,9 @@ class Job:
     def id(self):
         return self.ft_id * 10 ** 6 + self.round_num
 
+    def __hash__(self):
+        return self.id
+
 
 class SFAggregationStationScheduler:
     # @timing
