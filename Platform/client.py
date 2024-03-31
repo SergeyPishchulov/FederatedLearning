@@ -160,26 +160,31 @@ class Client:
         self.agr_model_by_ft_id_round[(ft_id, round_num)] = local_model
         # self.agr_model_by_ft_id_round[(ft_id, round_num)] = copy.deepcopy(agr_model)#My version.BUG?
 
-    def handle_messages(self, read_q, write_q):
+    def handle_messages(self, read_q, write_q, ags_q=None):
         while not read_q.empty():
             mes = read_q.get()
             if isinstance(mes, MessageToClient):
+                #  TODO get all of it from ags_q 20 lines below
                 # print(f'    Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
-                if not self.should_run:
-                    raise Exception(f"Client {self.id} got MessageToClient when it shouldn't be running")
-                self.should_run = mes.should_run
-                self.set_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model)
-                required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
-                delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
-                write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=not mes.should_run))
-            elif isinstance(mes, MessageAgsToClient):
-                print(f"Client {self.id} got MessageAgsToClient")
+                # if not self.should_run:
+                #     raise Exception(f"Client {self.id} got MessageToClient when it shouldn't be running")
+                # self.should_run = mes.should_run
+                # self.set_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model)
+                # required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
+                # delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
+                # write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=not mes.should_run))
             elif isinstance(mes, ControlMessageToClient):
                 self.start_time = mes.start_time
                 self.should_run = True
             else:
                 raise ValueError(f"Unknown message type {type(mes)}")
             del mes
+        if ags_q is None:
+            return
+        while not ags_q.empty():
+            mes = read_q.get()
+            if isinstance(mes, MessageAgsToClient):
+                print(f"Client {self.id} got MessageAgsToClient")
 
     def set_deadlines(self):
         for ft_id, n in self.node_by_ft_id.items():
@@ -218,7 +223,7 @@ class Client:
         self.set_deadlines()
         print("Client really running")
         while self.should_run:
-            self.handle_messages(read_q, write_q)
+            self.handle_messages(read_q, write_q, ags_q)
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)
             if ft_id is not None:
