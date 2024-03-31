@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from pprint import pprint
 
 import torch
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from message import MessageToHub, MessageToClient, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient
 from utils import validate, setup_seed, combine_lists
@@ -78,13 +78,13 @@ class CyclicalScheduler(LocalScheduler):
 
 class Client:
     def __init__(self, id, node_by_ft_id, args_by_ft_id,
-                 agr_model_state_by_ft_id_round: Dict[(int, int):ModelTypedState],
+                 agr_model_state_by_ft_id_round: Dict[Tuple[int, int]:ModelTypedState],
                  user_args,
                  inter_ddl_periods_by_ft_id):
         self.id = id
         self.node_by_ft_id = node_by_ft_id
         self.args_by_ft_id = args_by_ft_id
-        self.agr_model_by_ft_id_round: Dict[(int, int):ModelTypedState] = agr_model_state_by_ft_id_round
+        self.agr_model_by_ft_id_round: Dict[Tuple[int, int]:ModelTypedState] = agr_model_state_by_ft_id_round
         self.user_args = user_args
         self.should_run = False
         self.data_lens_by_ft_id: Dict[int, List] = {ft_id: [0] for ft_id in node_by_ft_id}
