@@ -8,7 +8,7 @@ from model_cast import ModelCast
 from nodes import Node
 from server_funct import Server_update_fedlaw, Server_update
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler, Job
-from message import MessageHubToAGS, ControlMessageHubToAGS, MessageAgsToClient
+from message import MessageHubToAGS, ControlMessageHubToAGS, MessageAgsToClient, MessageAgsToHub, Period
 
 
 def _get_scheduler(args):
@@ -83,6 +83,10 @@ class AGS:
                 self.aggregated_jobs += 1
                 self._send_to_clients(ft_id=best_job.ft_id, round_num=best_job.round_num,
                                       model=central_node.model, q_by_cl_id=q_by_cl_id)
+                self._notify_hub(ft_id=best_job.ft_id,
+                                 round_num=best_job.round_num,
+                                 hub_write_q=hub_write_q,
+                                 period=period)
             # self.should_finish = True
         self.finish()
 
@@ -94,6 +98,12 @@ class AGS:
                 agr_model_state=ModelCast.to_state(model)
             ))
         print(f"AGS sent model to clients")
+
+    def _notify_hub(self, ft_id, round_num, hub_write_q, period: Period, model):
+        hub_write_q.put(MessageAgsToHub(ft_id=ft_id,
+                                        round_num=round_num,
+                                        agr_model_state=ModelCast.to_state(model),
+                                        period=period))
 
     def finish(self):
         print(f"AGS finished")

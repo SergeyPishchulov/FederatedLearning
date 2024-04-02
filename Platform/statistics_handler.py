@@ -45,7 +45,7 @@ class Statistics:
         self.pngs_directory = os.path.join(self.directory, 'pngs')  # os.path.join(current_directory, r'stat/pngs')
         entities = [f'client_{cl.id}' for cl in clients] + ['agr']
         self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
-        self.jobs_cnt_in_ags = []
+        # self.jobs_cnt_in_ags = []
         # self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
         #                                        columns=self.client_cols)
 
@@ -59,34 +59,34 @@ class Statistics:
     def set_start_time(self, start_time):
         self.start_time = start_time
 
-    def upd_jobs_cnt_in_ags(self, x):
-        self.jobs_cnt_in_ags.append(x)
+    # def upd_jobs_cnt_in_ags(self, x):
+    #     self.jobs_cnt_in_ags.append(x)
 
     # @timing
-    def print_jobs_cnt_in_ags_statistics(self):
-        """
-        Prints statistics showing measure of AgS flooding.
-        It means how much tasks does AgS have for aggregation each time it is ready to aggregate.
-
-        Also prints distribution of cnt of ready tasks in AgS.
-        """
-
-        d = self.jobs_cnt_in_ags
-        if d:
-            print(f"Flood measure mean={np.round(np.mean(d), 2)}, mode={np.median(d)}")
-            print(f"Distribution: {normalize_cntr(collections.Counter(d))}")
+    # def print_jobs_cnt_in_ags_statistics(self):
+    #     """
+    #     Prints statistics showing measure of AgS flooding.
+    #     It means how much tasks does AgS have for aggregation each time it is ready to aggregate.
+    #
+    #     Also prints distribution of cnt of ready tasks in AgS.
+    #     """
+    #
+    #     d = self.jobs_cnt_in_ags
+    #     if d:
+    #         print(f"Flood measure mean={np.round(np.mean(d), 2)}, mode={np.median(d)}")
+    #         print(f"Distribution: {normalize_cntr(collections.Counter(d))}")
 
     # @timing
-    def plot_jobs_cnt_in_ags(self):
-        if not self.jobs_cnt_in_ags:
-            return
-        ax = sns.histplot(self.jobs_cnt_in_ags, discrete=True, shrink=0.8, color='royalblue')
-        plt.xlabel('Number of jobs ready for aggregation')
-        plt.ylabel('Frequency')
-        # plt.xticks(list(range(max(data)+1)))
-        plt.title('Distribution of the number of jobs in AgS')
-        fig = ax.get_figure()
-        fig.savefig(f'{self.pngs_directory}/job_cnt_dist.png')
+    # def plot_jobs_cnt_in_ags(self):
+    #     if not self.jobs_cnt_in_ags:
+    #         return
+    #     ax = sns.histplot(self.jobs_cnt_in_ags, discrete=True, shrink=0.8, color='royalblue')
+    #     plt.xlabel('Number of jobs ready for aggregation')
+    #     plt.ylabel('Frequency')
+    #     # plt.xticks(list(range(max(data)+1)))
+    #     plt.title('Distribution of the number of jobs in AgS')
+    #     fig = ax.get_figure()
+    #     fig.savefig(f'{self.pngs_directory}/job_cnt_dist.png')
 
     def set_init_round_beginning(self, task_ids):
         for ft_id in task_ids:
@@ -190,6 +190,8 @@ class Statistics:
         Plotting load-plot of clients and AgS
 
         :param plotting_period: Period of time that will be represented on the plot
+
+        use:     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
         """
 
         ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))

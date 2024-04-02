@@ -62,6 +62,14 @@ class MessageAgsToClient:
 
 
 @dataclass
+class MessageAgsToHub:
+    ft_id: int
+    round_num: int
+    agr_model_state: ModelTypedState
+    period: Period
+
+
+@dataclass
 class ControlMessageToClient:
     should_run: bool
     start_time: datetime
@@ -87,7 +95,7 @@ class ResponseToHub:
 class MessageToValidator:
     ft_id: int
     ag_round_num: int
-    node: Optional[Node]
+    model_state: Optional[ModelTypedState]
     should_finish: bool = False
 
 

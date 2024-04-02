@@ -1,5 +1,6 @@
 import time
 
+from model_cast import ModelCast
 from utils import validate
 from message import MessageToValidator, MessageValidatorToHub, ValidatorShouldFinish, ControlValidatorMessage
 import torch
@@ -10,12 +11,13 @@ from typing import Optional
 
 
 class Validator:
-    def __init__(self, user_args):
+    def __init__(self, user_args, node_by_ft_id):
         self.user_args = user_args
+        self.node_by_ft_id = node_by_ft_id
         self.should_finish = False
         self.start_time: Optional[datetime] = None
 
-    def handle_messages(self, read_q, write_q):
+    def handle_messages(self, read_q, write_q, ):
         while not read_q.empty():
             mes = read_q.get()
             if isinstance(mes, MessageToValidator):
@@ -23,9 +25,10 @@ class Validator:
                     raise ValueError("Got MessageToValidator when validator is not started")
                 if self.should_finish:
                     return
-
+                node = self.node_by_ft_id[mes.ft_id]
+                ModelCast.to_model(mes.model_state, node.model)
                 acc = validate(args=None,
-                               node=mes.node,
+                               node=node,
                                which_dataset='local')
                 response = MessageValidatorToHub(mes.ft_id,
                                                  mes.ag_round_num,
