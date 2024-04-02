@@ -56,7 +56,9 @@ class MessageToClient:
 
 @dataclass
 class MessageAgsToClient:
-    model_state: ModelTypedState
+    ft_id: int
+    round_num: int
+    agr_model_state: ModelTypedState
 
 
 @dataclass
@@ -78,7 +80,7 @@ class ResponseToHub:
     ft_id: int
     round_num: int
     delay: timedelta
-    final_message: bool = False
+    # final_message: bool = False
 
 
 @dataclass

@@ -81,14 +81,17 @@ class AGS:
                 print(f"AGS Success for task {best_job.ft_id} round {best_job.round_num}")
                 self.jobs.remove(best_job)
                 self.aggregated_jobs += 1
-                self._send_to_clients(central_node.model, q_by_cl_id)
+                self._send_to_clients(ft_id=best_job.ft_id, round_num=best_job.round_num,
+                                      model=central_node.model, q_by_cl_id=q_by_cl_id)
             # self.should_finish = True
         self.finish()
 
-    def _send_to_clients(self, model, q_by_cl_id: Dict[int, Queue]):
+    def _send_to_clients(self, ft_id, round_num, model, q_by_cl_id: Dict[int, Queue]):
         for q in q_by_cl_id.values():
             q.put(MessageAgsToClient(
-                ModelCast.to_state(model)
+                ft_id=ft_id,
+                round_num=round_num,
+                agr_model_state=ModelCast.to_state(model)
             ))
         print(f"AGS sent model to clients")
 

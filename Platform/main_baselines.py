@@ -93,10 +93,11 @@ def handle_messages(hub):
                 hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
                 # hub.stat.print_time_target_acc()
             elif isinstance(r, ResponseToHub):
-                # print(f'Received ResponseToHub: {r}')
+                print(f'Received ResponseToHub: {r}')
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
-                if r.final_message:
-                    hub.finished_by_client[r.client_id] = True
+                # TODO if got all delay from all clients then finish
+                # if r.final_message:
+                #     hub.finished_by_client[r.client_id] = True
             elif isinstance(r, MessageValidatorToHub):
                 hub.stat.save_agr_ac(r.ft_id,
                                      round_num=r.ag_round_num,
@@ -127,14 +128,6 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish: bool):
                                 ))
         except Exception:
             print(traceback.format_exc())
-
-
-# def get_updater(user_args):
-#     if user_args.server_method == 'fedlaw':
-#         return Server_update_fedlaw
-#     if user_args.server_method == 'fedavg':
-#         return Server_update
-#     raise argparse.ArgumentError(user_args.server_method, "Unknown argument value")
 
 
 def finish(hub, val_write_q):
@@ -188,7 +181,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub, clients, user_args, val_read_q, 
             #     # print_dates([p.start,p.end], "Period from updater")
             #     ft.central_node.model.cpu()
             #     total_aggregations += 1
-            #     hub.journal.mark_as_aggregated(ft.id)
+                hub.journal.mark_as_aggregated(ft.id)
             #     hub.stat.set_round_done_ts(ft.id, ag_round_num)
             #     hub.stat.save_ags_period(ft.id, p)
             #     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)

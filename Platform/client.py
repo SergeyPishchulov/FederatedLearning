@@ -126,7 +126,7 @@ class Client:
         # node.model.cpu()# it will be after validation
         return loss / len(train_loader), len(train_loader) * node.args.batchsize
 
-    def _set_aggregated_model(self, ft_args, node, agr_model: ModelTypedState):
+    def _load_state_to_model(self, ft_args, node, agr_model: ModelTypedState):
         ModelCast.to_model(agr_model, node.model)
 
     def _train_one_round(self, ft_args, node):
@@ -150,32 +150,15 @@ class Client:
         os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
         torch.cuda.set_device('cuda:' + self.user_args.device)
 
-    def set_aggregated_model(self, ft_id, round_num, agr_model):
-        # TODO add redundant agr_model.cpu() ?
-        local_model = copy.deepcopy(self.agr_model_by_ft_id_round[(ft_id, -1)])
-        if 'fedlaw' in self.user_args.server_method:
-            local_model.load_param(copy.deepcopy(agr_model.get_param(clone=True)))
-        else:
-            local_model.load_state_dict(copy.deepcopy(agr_model.state_dict()))
-        self.agr_model_by_ft_id_round[(ft_id, round_num)] = local_model
-        # self.agr_model_by_ft_id_round[(ft_id, round_num)] = copy.deepcopy(agr_model)#My version.BUG?
+    def save_aggregated_model(self, ft_id: int, round_num: int, agr_model_state: ModelTypedState):
+        self.agr_model_by_ft_id_round[(ft_id, round_num)] = agr_model_state
 
     def handle_messages(self, read_q, write_q, ags_q=None):
         while not read_q.empty():
             mes = read_q.get()
-            if isinstance(mes, MessageToClient):
-                #  TODO get all of it from ags_q 20 lines below
-                # print(f'    Client {self.id}: Got update form AGS for round {mes.round_num}, task {mes.ft_id}')
-                # if not self.should_run:
-                #     raise Exception(f"Client {self.id} got MessageToClient when it shouldn't be running")
-                # self.should_run = mes.should_run
-                # self.set_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model)
-                # required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
-                # delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
-                # write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay, final_message=not mes.should_run))
-            elif isinstance(mes, ControlMessageToClient):
+            if isinstance(mes, ControlMessageToClient):
                 self.start_time = mes.start_time
-                self.should_run = True
+                self.should_run = mes.should_run
             else:
                 raise ValueError(f"Unknown message type {type(mes)}")
             del mes
@@ -185,6 +168,11 @@ class Client:
             mes = read_q.get()
             if isinstance(mes, MessageAgsToClient):
                 print(f"Client {self.id} got MessageAgsToClient")
+                self.save_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model_state)
+                required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
+                delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
+                write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay))
+            del mes
 
     def set_deadlines(self):
         for ft_id, n in self.node_by_ft_id.items():
@@ -231,7 +219,7 @@ class Client:
                 agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]
-                self._set_aggregated_model(ft_args, node, agr_model_state)
+                self._load_state_to_model(ft_args, node, agr_model_state)
                 print(f"Client {self.id} set aggregated model for task {ft_id}, round {r}")
                 mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
                 self.data_lens_by_ft_id[ft_id].append(data_len)
