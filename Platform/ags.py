@@ -86,7 +86,8 @@ class AGS:
                 self._notify_hub(ft_id=best_job.ft_id,
                                  round_num=best_job.round_num,
                                  hub_write_q=hub_write_q,
-                                 period=period)
+                                 period=period,
+                                 model=central_node.model)
             # self.should_finish = True
         self.finish()
 
