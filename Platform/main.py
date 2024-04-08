@@ -14,7 +14,7 @@ from federated_ml_task import FederatedMLTask
 from hub import Hub
 from message import MessageToClient, MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub, \
     ValidatorShouldFinish, ControlMessageToClient, ControlValidatorMessage, MessageHubToAGS, ControlMessageHubToAGS, \
-    MessageAgsToHub
+    MessageAgsToHub, FinishMessageToAGS
 from config.experiment_config import get_configs
 from config.args import args_parser
 from utils import *
@@ -95,6 +95,9 @@ def handle_messages(hub: Hub, ags_read_q):
                 # hub.stat.print_time_target_acc()
             elif isinstance(r, ResponseToHub):
                 print(f'Received ResponseToHub: {r}')
+                hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
+                                                                       hub.latest_round_with_response_by_ft_id[r.ft_id])
+                print(hub.latest_round_with_response_by_ft_id)
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
                 # TODO if got all delay from all clients then finish
                 # if r.final_message:
@@ -134,7 +137,6 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish: bool):
 
 
 def finish(hub, val_write_q):
-    val_write_q.put(ValidatorShouldFinish())
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
@@ -153,7 +155,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
         clients, user_args, val_read_q, val_write_q, ags_write_q, ags_read_q):
     central_nodes_by_ft_id = {t.id: t.central_node for t in tasks}
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
-    while not (all(ft.done for ft in tasks) and all(hub.finished_by_client.values())):
+    while not hub.should_finish:
         start_time = time.time()
         handle_messages(hub, ags_read_q)
         ready_jobs_dict = hub.journal.get_ft_to_aggregate(
@@ -164,6 +166,12 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
             for j in ready_jobs_dict.values():
                 hub.sent_jobs_ids.add(j.id)
                 # TODO когда отправлять клиентам should finish
+        if hub.all_done():
+            for cl_id, q in hub.write_q_by_cl_id.items():
+                q.put(ControlMessageToClient(should_run=False, start_time=None))
+            ags_write_q.put(FinishMessageToAGS())
+            val_write_q.put(ValidatorShouldFinish())
+            hub.should_finish = True
         hub.plot_stat()
 
     finish(hub, val_write_q)

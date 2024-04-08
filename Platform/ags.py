@@ -8,7 +8,8 @@ from model_cast import ModelCast
 from nodes import Node
 from server_funct import Server_update_fedlaw, Server_update
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler, Job
-from message import MessageHubToAGS, ControlMessageHubToAGS, MessageAgsToClient, MessageAgsToHub, Period
+from message import MessageHubToAGS, ControlMessageHubToAGS, MessageAgsToClient, MessageAgsToHub, Period, \
+    FinishMessageToAGS
 
 
 def _get_scheduler(args):
@@ -61,6 +62,8 @@ class AGS:
                 self.jobs.update(mes.jobs_by_ft_id.values())
             elif isinstance(mes, ControlMessageHubToAGS):
                 self.start_time = mes.start_time
+            elif isinstance(mes, FinishMessageToAGS):
+                self.should_finish = True
             else:
                 raise ValueError(f"Unknown message {mes}")
 

@@ -30,7 +30,7 @@ def args_parser():
                         help="device: {0 = cuda, -1 = cpu}")
     parser.add_argument('--node_num', type=int, default=2,
                         help="Number of nodes")
-    parser.add_argument('--T', type=int, default=2,  # 30
+    parser.add_argument('--T', type=int, default=1,  # 30
                         help="Number of communication rounds")
     parser.add_argument('--E', type=int, default=1,  # 3
                         help="Number of local epochs: E")

@@ -72,7 +72,7 @@ class MessageAgsToHub:
 @dataclass
 class ControlMessageToClient:
     should_run: bool
-    start_time: datetime
+    start_time: Optional[datetime]
 
 
 @dataclass
@@ -127,3 +127,8 @@ class MessageHubToAGS:
 @dataclass
 class ControlMessageHubToAGS:
     start_time: datetime
+
+
+@dataclass
+class FinishMessageToAGS:
+    pass

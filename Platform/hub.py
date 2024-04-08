@@ -16,6 +16,7 @@ class Hub:
     def __init__(self, tasks: List[FederatedMLTask], clients, args, val_write_q):
         self.tasks = tasks
         self.args = args
+        self.should_finish = False
         self.val_write_q = val_write_q
         self.clients = clients
         self.stat: Statistics = Statistics(tasks, clients, args)
@@ -23,29 +24,27 @@ class Hub:
                                                                  for ft in tasks}, args)
         self.write_q_by_cl_id, self.read_q_by_cl_id = self.init_qs()
         # self._init_scheduler(args)
-        self.finished_by_client = {cl.id: False for cl in clients}
+        # self.finished_by_client = {cl.id: False for cl in clients}
+        self.latest_round_with_response_by_ft_id = {t.id: -1 for t in tasks}
         self.sent_jobs_ids: Set = set()
         self.last_plot = datetime.now()
         # self.start_time: datetime.datetime = start_time
 
-    # def _init_scheduler(self, args):
-    #     if args.aggregation_scheduler == 'random':
-    #         self.aggregation_scheduler = RandomAggregationStationScheduler
-    #         print(f'RandomAggregationStationScheduler is set')
-    #     elif args.aggregation_scheduler == 'SF':
-    #         self.aggregation_scheduler = SFAggregationStationScheduler
-    #         print(f'SFAggregationStationScheduler is set')
-    #     else:
-    #         raise argparse.ArgumentError(args.aggregation_scheduler,
-    #                                      'Incorrect value for aggregation_scheduler')
+    def all_done(self) -> bool:
+        return all(ft.done for ft in self.tasks)
 
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
 
+    def some_client_got_aggregated_model(self, ft, round_num):
+        return self.latest_round_with_response_by_ft_id[ft.id] == round_num
+
     def mark_ft_if_done(self, ft_id, ag_round_num):
         ft = self.tasks[ft_id]
-        all_aggregation_done = (ag_round_num == self.args.T - 1)
-        if all_aggregation_done:
+        last_round_num = self.args.T - 1
+        all_aggregation_done = (ag_round_num == last_round_num)
+        print(f"FINAL? ft_id={ft_id}, r={ag_round_num} {self.some_client_got_aggregated_model(ft,last_round_num)}")
+        if all_aggregation_done and self.some_client_got_aggregated_model(ft, last_round_num):
             ft.done = True
             print(f'HUB: Task {ft.id} is done')
         else:
