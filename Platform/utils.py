@@ -63,6 +63,20 @@ def timing(f):
     return wrapper
 
 
+def call_5_sec(f):
+    setattr(f, "last_call", 0)
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if int(time()) - f.last_call < 5:
+            return
+        f.last_call = time()
+        result = f(*args, **kwargs)
+        return result
+
+    return wrapper
+
+
 class RunningAverage():
     """A simple class that maintains the running average of a quantity
 

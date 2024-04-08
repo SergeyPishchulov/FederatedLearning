@@ -193,7 +193,7 @@ class Statistics:
 
         use:     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
         """
-
+        return
         ft_ids = sorted(list(set(ft_id for _, ft_id in self.periods_by_entity_ft_id.keys())))
         colors_by_ft_id = get_plotly_colors()[:len(ft_ids)]
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))

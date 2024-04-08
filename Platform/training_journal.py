@@ -13,6 +13,8 @@ from typing import Dict, List
 
 from utils import timing, print_dates, get_params_cnt
 
+last_print = 0
+
 
 @dataclass
 class JournalRecord:
@@ -56,6 +58,7 @@ class TrainingJournal:
         else:
             raise KeyError("Key already exists")
 
+    # @timing
     def get_ft_ready_to_agr(self, client_ids):
         res = []
         if self.args.aggregation_on == 'all_received':
@@ -72,9 +75,11 @@ class TrainingJournal:
                     self.first_time_ready_to_aggr[(ft_id, latest_round + 1)] = datetime.now()
                     dt = self.first_time_ready_to_aggr[(ft_id, latest_round + 1)]
                     # print_dates([dt], f"Datetime when ready to aggregate. ft_id={ft_id}, latest_round+1={latest_round+1}")
-                else:
-                    if time.time() % 5 == 0:
-                        print(f"HUB SCHEDULER {self.latest_aggregated_round}")
+            else:
+                global last_print
+                if int(time.time()) - last_print > 5:
+                    last_print = int(time.time())
+                    print(f"HUB SCHEDULER {self.latest_aggregated_round}")
 
         return res
 

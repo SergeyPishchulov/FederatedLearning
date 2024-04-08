@@ -116,6 +116,7 @@ def handle_messages(hub: Hub, ags_read_q):
                 hub.stat.save_ags_period(m.ft_id, m.period)
                 hub.mark_ft_if_done(m.ft_id, m.round_num)
                 hub.send_to_validator(m.ft_id, m.round_num, m.agr_model_state)
+            del m
 
 
 @timing
@@ -216,13 +217,13 @@ def main():
     hub = Hub(tasks, clients, user_args, val_write_q)  # TODO check all start time
 
     ags_read_q, ags_write_q = Queue(), Queue()
-    ags_q_by_cli_id = get_ags_qs_by_cl_id(clients)
+    ags_q_by_cl_id = get_ags_qs_by_cl_id(clients)
     central_node_by_ft_id = {t.id: copy.deepcopy(t.central_node) for t in tasks}
     ags = AGS(user_args, central_node_by_ft_id)
     validator = Validator(user_args, node_by_ft_id=copy.deepcopy(central_node_by_ft_id))
     val_proc = get_validator_proc(validator, val_read_q, val_write_q)
-    ags_proc = get_ags_proc(ags, ags_read_q, ags_write_q, ags_q_by_cli_id)
-    procs = [val_proc, ags_proc] + get_client_procs(clients, hub, ags_q_by_cli_id)
+    ags_proc = get_ags_proc(ags, ags_read_q, ags_write_q, ags_q_by_cl_id)
+    procs = [val_proc, ags_proc] + get_client_procs(clients, hub, ags_q_by_cl_id)
     for p in procs:
         p.start()
 

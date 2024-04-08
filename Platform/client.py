@@ -16,6 +16,7 @@ from server_funct import *
 from client_funct import *
 
 
+
 class LocalScheduler:
     def __init__(self, trained_ft_id_round):
         self.trained_ft_id_round: set = trained_ft_id_round
@@ -153,12 +154,16 @@ class Client:
         if not self.user_args.debug:
             torch.cuda.set_device('cuda:' + self.user_args.device)
 
+    @call_5_sec
+    def print_hash(self, ags_q):
+        print(f"Client hash {self.id} hash {hash(ags_q)}")
+
     def save_aggregated_model(self, ft_id: int, round_num: int, agr_model_state: ModelTypedState):
         self.agr_model_by_ft_id_round[(ft_id, round_num)] = agr_model_state
 
-    def handle_messages(self, read_q, write_q, ags_q=None):
-        while not read_q.empty():
-            mes = read_q.get()
+    def handle_messages(self, hub_read_q, hub_write_q, ags_q=None):
+        while not hub_read_q.empty():
+            mes = hub_read_q.get()
             if isinstance(mes, ControlMessageToClient):
                 self.start_time = mes.start_time
                 self.should_run = mes.should_run
@@ -168,13 +173,17 @@ class Client:
         if ags_q is None:
             return
         while not ags_q.empty():
-            mes = read_q.get()
+            mes = ags_q.get()
             if isinstance(mes, MessageAgsToClient):
                 print(f"Client {self.id} got MessageAgsToClient")
                 self.save_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model_state)
                 required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
                 delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
-                write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay))
+                hub_write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay))
+            elif isinstance(mes, str):
+                print(f"Client {self.id} got from AGS: {mes}")
+            else:
+                raise ValueError(mes)
             del mes
 
     def set_deadlines(self):

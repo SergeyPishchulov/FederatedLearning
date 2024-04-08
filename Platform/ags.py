@@ -92,7 +92,7 @@ class AGS:
         self.finish()
 
     def _send_to_clients(self, ft_id, round_num, model, q_by_cl_id: Dict[int, Queue]):
-        for q in q_by_cl_id.values():
+        for cl_id, q in q_by_cl_id.items():
             q.put(MessageAgsToClient(
                 ft_id=ft_id,
                 round_num=round_num,

@@ -28,9 +28,9 @@ def args_parser():
     # System
     parser.add_argument('--device', type=str, default='0',
                         help="device: {0 = cuda, -1 = cpu}")
-    parser.add_argument('--node_num', type=int, default=6,  # 200
+    parser.add_argument('--node_num', type=int, default=2,
                         help="Number of nodes")
-    parser.add_argument('--T', type=int, default=5,  # 30
+    parser.add_argument('--T', type=int, default=2,  # 30
                         help="Number of communication rounds")
     parser.add_argument('--E', type=int, default=1,  # 3
                         help="Number of local epochs: E")
@@ -51,7 +51,7 @@ def args_parser():
                         Options:
                         all_received - All clients have performed the round
                         required_quality - Required quality of updates is reached. You should specify required_quality in an experiment configs""")
-    parser.add_argument('--local_scheduler', type=str, default='CyclicalScheduler',
+    parser.add_argument('--local_scheduler', type=str, default='MinDeadlineScheduler',
                         help="""Strategy for scheduling tasks during local training.
                         Options:
                         CyclicalScheduler. e.g. 3 tasks and 2 rounds. Schedule will be [t1, t2, t3, t1, t2, t3]
