@@ -1,7 +1,7 @@
 import argparse
 import copy
 from dataclasses import dataclass, astuple
-
+import time
 from model_cast import ModelCast, ModelTypedState
 from federated_ml_task import FederatedMLTask
 from aggregation_station import Job
@@ -72,6 +72,9 @@ class TrainingJournal:
                     self.first_time_ready_to_aggr[(ft_id, latest_round + 1)] = datetime.now()
                     dt = self.first_time_ready_to_aggr[(ft_id, latest_round + 1)]
                     # print_dates([dt], f"Datetime when ready to aggregate. ft_id={ft_id}, latest_round+1={latest_round+1}")
+                else:
+                    if time.time() % 5 == 0:
+                        print(f"HUB SCHEDULER {self.latest_aggregated_round}")
 
         return res
 
