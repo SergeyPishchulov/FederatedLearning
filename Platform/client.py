@@ -131,6 +131,8 @@ class Client:
 
     def _train_one_round(self, ft_args, node):
         start_time = datetime.now()
+        if self.user_args.debug:
+            return 0, 0, start_time, start_time
         epoch_losses = []
         data_len = -1
         if ft_args.client_method == 'local_train':
@@ -148,7 +150,8 @@ class Client:
     def setup(self):
         setup_seed(self.user_args.random_seed)
         os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
-        torch.cuda.set_device('cuda:' + self.user_args.device)
+        if not self.user_args.debug:
+            torch.cuda.set_device('cuda:' + self.user_args.device)
 
     def save_aggregated_model(self, ft_id: int, round_num: int, agr_model_state: ModelTypedState):
         self.agr_model_by_ft_id_round[(ft_id, round_num)] = agr_model_state

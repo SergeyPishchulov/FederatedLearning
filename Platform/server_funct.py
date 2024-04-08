@@ -326,6 +326,8 @@ def Server_update_fedlaw(args, central_node, client_states: List[ModelTypedState
 # @timing
 def Server_update(args, central_node, client_states: List[ModelTypedState], size_weights):
     start_time = datetime.now()
+    if args.debug:
+        return Period(start_time, start_time)
     central_node.model.cpu()
     agr_model = central_node.model
     # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)

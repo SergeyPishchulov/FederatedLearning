@@ -33,7 +33,9 @@ class Node(object):
             pass
             # self.local_data, self.validate_set = self.train_val_split(local_data, train_set, self.valid_ratio)
 
-        self.model = init_model(self.args.local_model, self.args).cuda()
+        self.model = init_model(self.args.local_model, self.args)
+        if not self.args.debug:
+            self.model = self.model.cuda()
         self.optimizer = init_optimizer(self.num_id, self.model, args)
 
         # node init for fedadam's server

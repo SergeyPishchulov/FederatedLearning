@@ -23,8 +23,8 @@ def _get_scheduler(args):
 
 
 def _get_updater(args):
-    if args.server_method == 'fedlaw':
-        return Server_update_fedlaw
+    # if args.server_method == 'fedlaw':
+    #     return Server_update_fedlaw
     if args.server_method == 'fedavg':
         return Server_update
     raise ValueError(f"Unknown server_method: {args.server_method}")

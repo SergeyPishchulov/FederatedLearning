@@ -204,7 +204,8 @@ def main():
     user_args = args_parser()
     setup_seed(user_args.random_seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
-    torch.cuda.set_device('cuda:' + user_args.device)
+    if not user_args.debug:
+        torch.cuda.set_device('cuda:' + user_args.device)
 
     federated_tasks_configs = get_configs(user_args)
     tasks = [FederatedMLTask(id, c) for id, c in enumerate(federated_tasks_configs)]

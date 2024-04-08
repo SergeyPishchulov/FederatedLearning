@@ -89,6 +89,8 @@ def args_parser():
                         help='clients SGD momentum')
     parser.add_argument('--mu', type=float, default=0.001,
                         help="clients proximal term mu for FedProx")
+    parser.add_argument('--debug', type=bool, default=True,
+                        help="Debug")
 
     args = parser.parse_args()
 

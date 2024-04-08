@@ -236,6 +236,8 @@ class PerturbedGradientDescent(Optimizer):
 
 @timing
 def validate(args, node, which_dataset='validate'):
+    if args.debug:
+        return 0
     node.model.cuda().eval()
     if which_dataset == 'validate':
         test_loader = node.validate_set

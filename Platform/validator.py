@@ -27,7 +27,7 @@ class Validator:
                     return
                 node = self.node_by_ft_id[mes.ft_id]
                 ModelCast.to_model(mes.model_state, node.model)
-                acc = validate(args=None,
+                acc = validate(args=self.user_args,
                                node=node,
                                which_dataset='local')
                 response = MessageValidatorToHub(mes.ft_id,
@@ -47,7 +47,8 @@ class Validator:
     def setup(self):
         setup_seed(self.user_args.random_seed)
         os.environ['CUDA_VISIBLE_DEVICES'] = self.user_args.device
-        torch.cuda.set_device('cuda:' + self.user_args.device)
+        if not self.user_args.debug:
+            torch.cuda.set_device('cuda:' + self.user_args.device)
 
     def run(self, read_q, write_q):
         while self.start_time is None:
