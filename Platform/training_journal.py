@@ -79,7 +79,7 @@ class TrainingJournal:
                 global last_print
                 if int(time.time()) - last_print > 5:
                     last_print = int(time.time())
-                    # print(f"HUB SCHEDULER {self.latest_aggregated_round}")
+                    print(f"HUB SCHEDULER {self.latest_aggregated_round}")
 
         return res
 
