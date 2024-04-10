@@ -28,6 +28,7 @@ class Hub:
         self.latest_round_with_response_by_ft_id = {t.id: -1 for t in tasks}
         self.sent_jobs_ids: Set = set()
         self.last_plot = datetime.now()
+        self._printed = set()
         # self.start_time: datetime.datetime = start_time
 
     @call_5_sec
@@ -35,7 +36,7 @@ class Hub:
         print(f"DONE {[ft.done for ft in self.tasks]}")
 
     def all_done(self) -> bool:
-        self.print_all_done()
+        # self.print_all_done()
         return all(ft.done for ft in self.tasks)
 
     @call_5_sec
@@ -50,7 +51,10 @@ class Hub:
                 ft.done = True
                 print(f'HUB: Task {ft.id} is done')
             else:
-                print(f'HUB: Performed {ft.latest_agg_round + 1}/{self.args.T} rounds in task {ft.id}')
+                mes = f'HUB: Performed {ft.latest_agg_round + 1}/{self.args.T} rounds in task {ft.id}'
+                if mes not in self._printed:
+                    print(mes)
+                    self._printed.add(mes)
 
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
