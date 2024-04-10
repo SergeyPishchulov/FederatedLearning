@@ -10,6 +10,7 @@ class FederatedMLTask:
         self.node_cnt = args.node_num
         self.id = id
         self.name = f'Task {id} {args.dataset} {args.local_model}'
+        self.latest_agg_round = -1
         self.done = False
         # Data-size-based aggregation weights
         sample_size = []

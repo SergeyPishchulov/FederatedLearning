@@ -136,7 +136,7 @@ def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish: bool):
             print(traceback.format_exc())
 
 
-def finish(hub, val_write_q):
+def finish(hub: Hub, val_write_q):
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
@@ -147,8 +147,8 @@ def finish(hub, val_write_q):
     end = datetime.now()
     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
                               plotting_period=Period(end - timedelta(minutes=5), end))
-    hub.stat.plot_jobs_cnt_in_ags()
-    hub.stat.print_jobs_cnt_in_ags_statistics()
+    # hub.stat.plot_jobs_cnt_in_ags()
+    # hub.stat.print_jobs_cnt_in_ags_statistics()
 
 
 def run(tasks: List[FederatedMLTask], hub: Hub,
@@ -166,6 +166,8 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
             for j in ready_jobs_dict.values():
                 hub.sent_jobs_ids.add(j.id)
                 # TODO когда отправлять клиентам should finish
+
+        hub.mark_tasks()
         if hub.all_done():
             for cl_id, q in hub.write_q_by_cl_id.items():
                 q.put(ControlMessageToClient(should_run=False, start_time=None))

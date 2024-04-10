@@ -6,7 +6,7 @@ from message import MessageToValidator, Period
 from model_cast import ModelTypedState
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
 from federated_ml_task import FederatedMLTask
-from utils import generate_selectlist
+from utils import generate_selectlist, call_5_sec
 from training_journal import TrainingJournal
 from statistics_handler import Statistics
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
@@ -30,8 +30,27 @@ class Hub:
         self.last_plot = datetime.now()
         # self.start_time: datetime.datetime = start_time
 
+    @call_5_sec
+    def print_all_done(self):
+        print(f"DONE {[ft.done for ft in self.tasks]}")
+
     def all_done(self) -> bool:
+        self.print_all_done()
         return all(ft.done for ft in self.tasks)
+
+    @call_5_sec
+    def mark_tasks(self):
+        for ft in self.tasks:
+            last_round_num = self.args.T - 1
+            all_aggregation_done = (ft.latest_agg_round == last_round_num)
+            print(f"FINAL? ft_id={ft.id}, r={ft.latest_agg_round} {self.some_client_got_aggregated_model(ft, last_round_num)}")
+            somebody_received = self.some_client_got_aggregated_model(ft, last_round_num)
+            self.debug_print(all_aggregation_done, somebody_received)
+            if all_aggregation_done and somebody_received:
+                ft.done = True
+                print(f'HUB: Task {ft.id} is done')
+            else:
+                print(f'HUB: Performed {ft.latest_agg_round + 1}/{self.args.T} rounds in task {ft.id}')
 
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
@@ -39,16 +58,14 @@ class Hub:
     def some_client_got_aggregated_model(self, ft, round_num):
         return self.latest_round_with_response_by_ft_id[ft.id] == round_num
 
+    @call_5_sec
+    def debug_print(self, all_aggregation_done, somebody_received):
+        print(f"all_aggregation_done={all_aggregation_done}; somebody_received={somebody_received}")
+
     def mark_ft_if_done(self, ft_id, ag_round_num):
         ft = self.tasks[ft_id]
-        last_round_num = self.args.T - 1
-        all_aggregation_done = (ag_round_num == last_round_num)
-        print(f"FINAL? ft_id={ft_id}, r={ag_round_num} {self.some_client_got_aggregated_model(ft,last_round_num)}")
-        if all_aggregation_done and self.some_client_got_aggregated_model(ft, last_round_num):
-            ft.done = True
-            print(f'HUB: Task {ft.id} is done')
-        else:
-            print(f'HUB: Performed {ag_round_num + 1}/{self.args.T} rounds in task {ft.id}')
+        ft.latest_agg_round = max(ft.latest_agg_round, ag_round_num)
+
 
     def send_to_validator(self, ft_id, ag_round_num, model_state: ModelTypedState):
         self.val_write_q.put(MessageToValidator(
