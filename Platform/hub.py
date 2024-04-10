@@ -49,12 +49,12 @@ class Hub:
             self.debug_print(all_aggregation_done, somebody_received)
             if all_aggregation_done and somebody_received:
                 ft.done = True
-                print(f'HUB: Task {ft.id} is done')
+                mes = f'HUB: Task {ft.id} is done'
             else:
                 mes = f'HUB: Performed {ft.latest_agg_round + 1}/{self.args.T} rounds in task {ft.id}'
-                if mes not in self._printed:
-                    print(mes)
-                    self._printed.add(mes)
+            if mes not in self._printed:
+                print(mes)
+                self._printed.add(mes)
 
     def receive_server_model(self, ft_id):
         return self.tasks[ft_id].central_node
