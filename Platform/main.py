@@ -94,14 +94,11 @@ def handle_messages(hub: Hub, ags_read_q):
                 hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
                 # hub.stat.print_time_target_acc()
             elif isinstance(r, ResponseToHub):
-                print(f'Received ResponseToHub: {r}')
+                # print(f'Received ResponseToHub: {r}')
                 hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
                                                                        hub.latest_round_with_response_by_ft_id[r.ft_id])
-                print(hub.latest_round_with_response_by_ft_id)
+                # print(hub.latest_round_with_response_by_ft_id)
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
-                # TODO if got all delay from all clients then finish
-                # if r.final_message:
-                #     hub.finished_by_client[r.client_id] = True
             elif isinstance(r, MessageValidatorToHub):
                 hub.stat.save_agr_ac(r.ft_id,
                                      round_num=r.ag_round_num,
