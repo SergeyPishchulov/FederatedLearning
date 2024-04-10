@@ -257,7 +257,7 @@ class Client:
                                         time_to_target_acc_sec=time_to_target_acc)
                 try:
                     write_q.put(response)
-                    print(f"Client {self.id} sent model for task {ft_id}, round {r}")
+                    # print(f"Client {self.id} sent model for task {ft_id}, round {r}")
                     self.scheduler.delete_from_plan(ft_id, r)
                 except Exception:
                     print(traceback.format_exc())

@@ -46,7 +46,7 @@ class Hub:
             all_aggregation_done = (ft.latest_agg_round == last_round_num)
             # print(f"FINAL? ft_id={ft.id}, r={ft.latest_agg_round} {self.some_client_got_aggregated_model(ft, last_round_num)}")
             somebody_received = self.some_client_got_aggregated_model(ft, last_round_num)
-            self.debug_print(all_aggregation_done, somebody_received)
+            # self.debug_print(all_aggregation_done, somebody_received)
             if all_aggregation_done and somebody_received:
                 ft.done = True
                 mes = f'HUB: Task {ft.id} is done'
