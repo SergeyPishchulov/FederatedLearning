@@ -63,6 +63,16 @@ def timing(f):
     return wrapper
 
 
+def interpolate(jobs_cnt_in_time):
+    res = []
+    for i, (cur_t, cur_v) in enumerate(jobs_cnt_in_time):
+        if i != 0:
+            _, last_v = res[-1]
+            res.append((cur_t - timedelta(seconds=0.00001), last_v))
+        res.append((cur_t, cur_v))
+    return res
+
+
 def call_5_sec(f):
     setattr(f, "last_call", 0)
 

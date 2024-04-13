@@ -8,7 +8,7 @@ import os
 from datetime import timedelta, datetime
 from pprint import pprint
 from typing import List, Set, Optional
-from utils import timing, norm, normalize_cntr
+from utils import timing, norm, normalize_cntr, interpolate
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -140,7 +140,11 @@ class Statistics:
         return dt
 
     def _plot_jobs_cnt(self, fig):
-        dts, cnts = list(zip(*self.jobs_cnt_in_time))
+        if self.jobs_cnt_in_time is None:
+            return
+        # interpolated = interpolate(self.jobs_cnt_in_time)
+        interpolated = self.jobs_cnt_in_time
+        dts, cnts = list(zip(*interpolated))
         fig.add_trace(go.Scatter(
             x=dts, y=cnts, mode='lines',
             line=dict(color='black',
@@ -148,6 +152,21 @@ class Statistics:
                       ),
             legendgroup="jobcnt", name="Job cnt"),
             row=2, col=1)
+        # fig.update_xaxes(showticklabels=False, row=2, col=1)
+
+        # fig.update_layout(
+        #     yaxis=dict(
+        #         tickfont=dict(size=5),
+        #         tickmode='array',
+        #         # tickvals=list(range(len(y_ticks_texts))),
+        #         # ticktext=y_ticks_texts
+        #     ),
+        #     xaxis=dict(
+        #         tickfont=dict(size=20),
+        #         title="time",
+        #     ),
+        #     row=2, col=1 # doesnt work
+        # )
 
     def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, fig, height, colors_by_ft_id,
                                        plotting_period):
@@ -177,16 +196,16 @@ class Statistics:
                 # axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
 
     def _set_plotly_layout(self, fig, y_ticks_texts):
-        fig.update_layout(font=dict(size=40))
+        # fig.update_layout(font=dict(size=40))
         fig.update_layout(
             yaxis=dict(
-                tickfont=dict(size=40),
+                # tickfont=dict(size=40),
                 tickmode='array',
                 tickvals=list(range(len(y_ticks_texts))),
                 ticktext=y_ticks_texts
             ),
             xaxis=dict(
-                tickfont=dict(size=20),
+                # tickfont=dict(size=20),
                 title="time",
             )
         )
@@ -210,7 +229,7 @@ class Statistics:
         colors_by_ft_id = get_plotly_colors()[:len(ft_ids)]
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
         # clients and AgS
-        fig = make_subplots(rows=2, cols=1, row_heights=[0.7, 0.3])
+        fig = make_subplots(rows=2, cols=1, row_heights=[0.7, 0.3], shared_xaxes=True)
         for ft_id in ft_ids:
             color = colors_by_ft_id[ft_id]
             legendgroup = f"Task {ft_id}"

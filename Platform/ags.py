@@ -96,7 +96,6 @@ class AGS:
                                       central_node,
                                       best_job.model_states,
                                       best_job.size_weights)
-                self.register_jobs_cnt()
                 print(f"AGS Success for task {best_job.ft_id} round {best_job.round_num}")
                 self.jobs.remove(best_job)
                 self.aggregated_jobs += 1
