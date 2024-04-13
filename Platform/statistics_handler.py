@@ -1,5 +1,6 @@
 import collections
 import plotly
+from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
 
@@ -45,6 +46,7 @@ class Statistics:
         self.pngs_directory = os.path.join(self.directory, 'pngs')  # os.path.join(current_directory, r'stat/pngs')
         entities = [f'client_{cl.id}' for cl in clients] + ['agr']
         self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
+        self.jobs_cnt_in_time: Optional[List] = None
         # self.jobs_cnt_in_ags = []
         # self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
         #                                        columns=self.client_cols)
@@ -137,6 +139,16 @@ class Statistics:
         uniq_times.add(dt)
         return dt
 
+    def _plot_jobs_cnt(self, fig):
+        dts, cnts = list(zip(*self.jobs_cnt_in_time))
+        fig.add_trace(go.Scatter(
+            x=dts, y=cnts, mode='lines',
+            line=dict(color='black',
+                      # width=10
+                      ),
+            legendgroup="jobcnt", name="Job cnt"),
+            row=2, col=1)
+
     def _plot_first_time_ready_to_aggr(self, first_time_ready_to_aggr, fig, height, colors_by_ft_id,
                                        plotting_period):
         """
@@ -158,7 +170,8 @@ class Statistics:
                               # width=10
                               ),
                     legendgroup="decision", showlegend=first_time,
-                    name="Ready for aggr"))
+                    name="Ready for aggr"),
+                    row=1, col=1)
                 if first_time:
                     first_time = False
                 # axes.plot([dt, dt], [0, height], color=colors_by_ft_id[ft_id])
@@ -197,7 +210,7 @@ class Statistics:
         colors_by_ft_id = get_plotly_colors()[:len(ft_ids)]
         entities = sorted(list(set(e for e, _ in self.periods_by_entity_ft_id.keys())))
         # clients and AgS
-        fig = go.Figure()
+        fig = make_subplots(rows=2, cols=1, row_heights=[0.7, 0.3])
         for ft_id in ft_ids:
             color = colors_by_ft_id[ft_id]
             legendgroup = f"Task {ft_id}"
@@ -207,13 +220,13 @@ class Statistics:
                     if ent != e or ft_id != ft_id_2:
                         continue
                     for p in periods:
-                        p = p.norm(self.start_time)
+                        p = p.norm(self.start_time)  # TODO check if p in plotting period
                         p: Period
                         fig.add_trace(go.Scatter(
                             x=[p.start, p.end], y=[i] * 2, mode='lines',
                             line=dict(color=color, width=10),
                             legendgroup=legendgroup, showlegend=first_scatter_in_group,
-                            name=legendgroup))
+                            name=legendgroup), row=1, col=1)
                         if first_scatter_in_group:
                             first_scatter_in_group = False
 
@@ -223,6 +236,7 @@ class Statistics:
                                             height=(len(entities)),
                                             colors_by_ft_id=colors_by_ft_id,
                                             plotting_period=plotting_period)
+        self._plot_jobs_cnt(fig)
         if plotting_period is None:
             fname = f'{self.pngs_directory}/load'
             plotly.offline.plot(fig, filename=fname + ".html")

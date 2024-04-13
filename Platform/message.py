@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import torch
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Tuple
 
 from model_cast import ModelTypedState
 from aggregation_station import Job
@@ -67,6 +67,7 @@ class MessageAgsToHub:
     round_num: int
     agr_model_state: ModelTypedState
     period: Period
+    jobs_cnt_in_time: List[Tuple[datetime, int]]
 
 
 @dataclass

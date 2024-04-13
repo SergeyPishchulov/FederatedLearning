@@ -1,9 +1,10 @@
-from typing import Optional, List, Dict, Set
+from typing import Optional, List, Dict, Set, Tuple
 
 from torch.multiprocessing import Queue
 from datetime import datetime
 import time
 
+from utils import timing
 from model_cast import ModelCast
 from nodes import Node
 from server_funct import Server_update_fedlaw, Server_update
@@ -41,6 +42,7 @@ class AGS:
         self.updater = _get_updater(user_args)
         self.central_node_by_ft_id = central_node_by_ft_id
         self.aggregated_jobs = 0
+        self.jobs_cnt_in_time: List[Tuple[datetime, int]] = []
 
     def idle_until_run_cmd(self, hub_read_q):
         while self.start_time is None:
@@ -67,25 +69,41 @@ class AGS:
             else:
                 raise ValueError(f"Unknown message {mes}")
 
+    def register_jobs_cnt(self):
+        new_cnt = len(self.jobs)
+        new_record = (datetime.now(), new_cnt)
+        if self.jobs_cnt_in_time:
+            last_record = self.jobs_cnt_in_time[-1]
+            t, cnt = last_record
+            if new_cnt == cnt:
+                self.jobs_cnt_in_time[-1] = new_record
+                return
+        self.jobs_cnt_in_time.append(new_record)
+
     def run(self, hub_read_q, hub_write_q, q_by_cl_id: Dict[int, Queue]):
         self.idle_until_run_cmd(hub_read_q)
         self.idle_until_run_cmd(hub_read_q)
         print(f"AGS woke up")
         while not self.should_finish:
+            self.register_jobs_cnt()
             self.handle_messages(hub_read_q)
             if self.jobs:
-                print(f"AGS scheduling jobs")
+                # print(f"AGS scheduling jobs")
                 best_job: Job = self.scheduler.plan_next(self.jobs)
                 central_node = self.central_node_by_ft_id[best_job.ft_id]
+                self.register_jobs_cnt()
                 period = self.updater(self.user_args,
                                       central_node,
                                       best_job.model_states,
                                       best_job.size_weights)
+                self.register_jobs_cnt()
                 print(f"AGS Success for task {best_job.ft_id} round {best_job.round_num}")
                 self.jobs.remove(best_job)
                 self.aggregated_jobs += 1
+                self.register_jobs_cnt()
                 self._send_to_clients(ft_id=best_job.ft_id, round_num=best_job.round_num,
                                       model=central_node.model, q_by_cl_id=q_by_cl_id)
+                self.register_jobs_cnt()
                 self._notify_hub(ft_id=best_job.ft_id,
                                  round_num=best_job.round_num,
                                  hub_write_q=hub_write_q,
@@ -103,11 +121,13 @@ class AGS:
             ))
         # print(f"AGS sent model to clients")
 
+    @timing
     def _notify_hub(self, ft_id, round_num, hub_write_q, period: Period, model):
         hub_write_q.put(MessageAgsToHub(ft_id=ft_id,
                                         round_num=round_num,
                                         agr_model_state=ModelCast.to_state(model),
-                                        period=period))
+                                        period=period,
+                                        jobs_cnt_in_time=self.jobs_cnt_in_time))
 
     def finish(self):
         print(f"AGS finished")

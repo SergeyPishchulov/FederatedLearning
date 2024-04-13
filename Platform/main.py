@@ -114,6 +114,7 @@ def handle_messages(hub: Hub, ags_read_q):
                 hub.journal.mark_as_aggregated(ft_id=m.ft_id)
                 hub.stat.set_round_done_ts(ft_id=m.ft_id, ag_round_num=m.round_num)
                 hub.stat.save_ags_period(m.ft_id, m.period)
+                hub.stat.jobs_cnt_in_time = m.jobs_cnt_in_time
                 hub.mark_ft_if_done(m.ft_id, m.round_num)
                 hub.send_to_validator(m.ft_id, m.round_num, m.agr_model_state)
             del m
