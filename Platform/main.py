@@ -114,7 +114,7 @@ def handle_messages(hub: Hub, ags_read_q):
                 hub.journal.mark_as_aggregated(ft_id=m.ft_id)
                 hub.stat.set_round_done_ts(ft_id=m.ft_id, ag_round_num=m.round_num)
                 hub.stat.save_ags_period(m.ft_id, m.period)
-                hub.stat.jobs_cnt_in_time = m.jobs_cnt_in_time
+                hub.stat.interpolated_jobs_cnt_in_time = interpolate(m.jobs_cnt_in_time)
                 hub.mark_ft_if_done(m.ft_id, m.round_num)
                 hub.send_to_validator(m.ft_id, m.round_num, m.agr_model_state)
             del m
@@ -145,6 +145,7 @@ def finish(hub: Hub, val_write_q):
     end = datetime.now()
     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
                               plotting_period=Period(end - timedelta(minutes=5), end))
+    hub.stat.print_flood_measure()
     # hub.stat.plot_jobs_cnt_in_ags()
     # hub.stat.print_jobs_cnt_in_ags_statistics()
 
@@ -172,8 +173,8 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
             ags_write_q.put(FinishMessageToAGS())
             val_write_q.put(ValidatorShouldFinish())
             hub.should_finish = True
-        hub.plot_stat()
 
+    hub.plot_stat()
     finish(hub, val_write_q)
 
 

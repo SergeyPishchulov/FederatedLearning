@@ -52,6 +52,7 @@ class AGS:
 
     def idle_until_start_time(self):
         if datetime.now() < self.start_time:
+            # self.jobs_cnt_in_time.append((self.start_time, 0))
             delta = (self.start_time - datetime.now()).total_seconds()
             print(f"AGS WILL WAKE UP in {int(delta)}s")
             time.sleep(delta)
@@ -82,7 +83,7 @@ class AGS:
 
     def run(self, hub_read_q, hub_write_q, q_by_cl_id: Dict[int, Queue]):
         self.idle_until_run_cmd(hub_read_q)
-        self.idle_until_run_cmd(hub_read_q)
+        self.idle_until_start_time()
         print(f"AGS woke up")
         while not self.should_finish:
             self.register_jobs_cnt()

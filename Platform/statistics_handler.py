@@ -46,7 +46,7 @@ class Statistics:
         self.pngs_directory = os.path.join(self.directory, 'pngs')  # os.path.join(current_directory, r'stat/pngs')
         entities = [f'client_{cl.id}' for cl in clients] + ['agr']
         self.periods_by_entity_ft_id = {(e, t.id): [] for e in entities for t in tasks}
-        self.jobs_cnt_in_time: Optional[List] = None
+        self.interpolated_jobs_cnt_in_time: Optional[List] = None
         # self.jobs_cnt_in_ags = []
         # self.time_to_target_acc = pd.DataFrame(None, index=[ft.id for ft in tasks],
         #                                        columns=self.client_cols)
@@ -57,26 +57,29 @@ class Statistics:
         if not os.path.exists(self.pngs_directory):
             os.makedirs(self.pngs_directory)
         self.start_time: Optional[datetime] = None
+        self.fm = None
 
     def set_start_time(self, start_time):
         self.start_time = start_time
 
-    # def upd_jobs_cnt_in_ags(self, x):
-    #     self.jobs_cnt_in_ags.append(x)
+    def get_flood_measure(self):
+        """
+        Area under plot of jobs cnt by time
+        """
+        res = 0
+        for i, (cur_t, cur_v) in enumerate(self.interpolated_jobs_cnt_in_time):
+            if i == 0:
+                assert cur_v == 0
+                continue
+            prev_t, prev_v = self.interpolated_jobs_cnt_in_time[i - 1]
+            if cur_v == prev_v:
+                res += (cur_t - prev_t).total_seconds() * cur_v
+        self.fm = res
+        return res
 
-    # @timing
-    # def print_jobs_cnt_in_ags_statistics(self):
-    #     """
-    #     Prints statistics showing measure of AgS flooding.
-    #     It means how much tasks does AgS have for aggregation each time it is ready to aggregate.
-    #
-    #     Also prints distribution of cnt of ready tasks in AgS.
-    #     """
-    #
-    #     d = self.jobs_cnt_in_ags
-    #     if d:
-    #         print(f"Flood measure mean={np.round(np.mean(d), 2)}, mode={np.median(d)}")
-    #         print(f"Distribution: {normalize_cntr(collections.Counter(d))}")
+    def print_flood_measure(self):
+        fm = self.get_flood_measure()
+        print(f"Flood measure: {round(fm, 3)}")
 
     # @timing
     # def plot_jobs_cnt_in_ags(self):
@@ -140,13 +143,14 @@ class Statistics:
         return dt
 
     def _plot_jobs_cnt(self, fig):
-        if self.jobs_cnt_in_time is None:
+        if self.interpolated_jobs_cnt_in_time is None:
             return
-        interpolated = interpolate(self.jobs_cnt_in_time)
+        interpolated = self.interpolated_jobs_cnt_in_time
         # interpolated = self.jobs_cnt_in_time
         dts, cnts = list(zip(*interpolated))
         fig.add_trace(go.Scatter(
-            x=dts, y=cnts, mode='lines',
+            x=[norm(dt, self.start_time) for dt in dts],
+            y=cnts, mode='lines',
             line=dict(color='black',
                       # width=10
                       ),
@@ -209,8 +213,9 @@ class Statistics:
                 title="time",
             )
         )
+        fm = self.get_flood_measure()
         fig.update_layout(
-            title=dict(text="System load",
+            title=dict(text=f"System load; fm = {round(fm, 3)}",
                        # font=dict(size=40)
                        )
         )

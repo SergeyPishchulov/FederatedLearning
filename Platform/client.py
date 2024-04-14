@@ -133,7 +133,8 @@ class Client:
     def _train_one_round(self, ft_args, node):
         start_time = datetime.now()
         if self.user_args.debug:
-            return 0, 0, start_time, start_time
+            time.sleep(0.2)
+            return 0, 0, start_time, datetime.now()
         epoch_losses = []
         data_len = -1
         if ft_args.client_method == 'local_train':
