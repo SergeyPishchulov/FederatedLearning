@@ -258,12 +258,10 @@ class Statistics:
         self._plot_jobs_cnt(fig)
         if plotting_period is None:
             fname = f'{self.pngs_directory}/load'
-            # plotly.offline.plot(fig, filename=fname + ".html")
-            fig.write_image(fname + ".png")
         else:
             fname = f'{self.pngs_directory}/load_part'
-            # plotly.offline.plot(fig, filename=fname + ".html")
-            fig.write_image(fname + ".png")
+        plotly.offline.plot(fig, filename=fname + ".html")
+        fig.write_image(fname + ".png")
 
     def save_client_delay(self, client_id, ft_id, round, delay):
         self.delay_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = delay
