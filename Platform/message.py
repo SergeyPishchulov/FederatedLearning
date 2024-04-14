@@ -68,6 +68,7 @@ class MessageAgsToHub:
     agr_model_state: ModelTypedState
     period: Period
     jobs_cnt_in_time: List[Tuple[datetime, int]]
+    aggregated_jobs: int
 
 
 @dataclass

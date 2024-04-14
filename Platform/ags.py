@@ -127,7 +127,8 @@ class AGS:
                                         round_num=round_num,
                                         agr_model_state=ModelCast.to_state(model),
                                         period=period,
-                                        jobs_cnt_in_time=self.jobs_cnt_in_time))
+                                        jobs_cnt_in_time=self.jobs_cnt_in_time,
+                                        aggregated_jobs=self.aggregated_jobs))
 
     def finish(self):
         print(f"AGS finished")

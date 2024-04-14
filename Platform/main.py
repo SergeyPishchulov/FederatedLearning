@@ -117,6 +117,7 @@ def handle_messages(hub: Hub, ags_read_q):
                 hub.stat.interpolated_jobs_cnt_in_time = interpolate(m.jobs_cnt_in_time)
                 hub.mark_ft_if_done(m.ft_id, m.round_num)
                 hub.send_to_validator(m.ft_id, m.round_num, m.agr_model_state)
+                hub.aggregated_jobs = m.aggregated_jobs
             del m
 
 
@@ -156,6 +157,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     while not hub.should_finish:
         start_time = time.time()
+        hub.print_progress()
         handle_messages(hub, ags_read_q)
         ready_jobs_dict = hub.journal.get_ft_to_aggregate(
             [c.id for c in clients], central_nodes_by_ft_id, tasks, hub.sent_jobs_ids)

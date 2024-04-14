@@ -29,11 +29,17 @@ class Hub:
         self.sent_jobs_ids: Set = set()
         self.last_plot = datetime.now()
         self._printed = set()
+        self.aggregated_jobs = 0
         # self.start_time: datetime.datetime = start_time
 
     @call_5_sec
     def print_all_done(self):
         print(f"DONE {[ft.done for ft in self.tasks]}")
+
+    @call_5_sec
+    def print_progress(self):
+        total_aggregations = len(self.tasks) * self.args.T
+        print(f"Progress: {self.aggregated_jobs}/{total_aggregations}")
 
     def all_done(self) -> bool:
         # self.print_all_done()
@@ -69,7 +75,6 @@ class Hub:
     def mark_ft_if_done(self, ft_id, ag_round_num):
         ft = self.tasks[ft_id]
         ft.latest_agg_round = max(ft.latest_agg_round, ag_round_num)
-
 
     def send_to_validator(self, ft_id, ag_round_num, model_state: ModelTypedState):
         self.val_write_q.put(MessageToValidator(
