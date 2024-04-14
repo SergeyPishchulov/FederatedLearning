@@ -142,8 +142,8 @@ class Statistics:
     def _plot_jobs_cnt(self, fig):
         if self.jobs_cnt_in_time is None:
             return
-        # interpolated = interpolate(self.jobs_cnt_in_time)
-        interpolated = self.jobs_cnt_in_time
+        interpolated = interpolate(self.jobs_cnt_in_time)
+        # interpolated = self.jobs_cnt_in_time
         dts, cnts = list(zip(*interpolated))
         fig.add_trace(go.Scatter(
             x=dts, y=cnts, mode='lines',
@@ -258,11 +258,11 @@ class Statistics:
         self._plot_jobs_cnt(fig)
         if plotting_period is None:
             fname = f'{self.pngs_directory}/load'
-            plotly.offline.plot(fig, filename=fname + ".html")
+            # plotly.offline.plot(fig, filename=fname + ".html")
             fig.write_image(fname + ".png")
         else:
             fname = f'{self.pngs_directory}/load_part'
-            plotly.offline.plot(fig, filename=fname + ".html")
+            # plotly.offline.plot(fig, filename=fname + ".html")
             fig.write_image(fname + ".png")
 
     def save_client_delay(self, client_id, ft_id, round, delay):
