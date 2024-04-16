@@ -26,7 +26,7 @@ class ModelCast:
         if isinstance(model, ReparamModule):
             return ModelTypedState(ModelType.FEDLAW,
                                    state=copy.deepcopy(
-                                       model.get_param(clone=True))
+                                       model.get_param(clone=True))  # TODO .cpu() ?
                                    )
         elif isinstance(model, nn.Module):
             return ModelTypedState(ModelType.ORDIANRY, copy.deepcopy(model.state_dict()))
