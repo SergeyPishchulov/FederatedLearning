@@ -5,7 +5,7 @@ from nodes import Node
 class FederatedMLTask:
     def __init__(self, id, args):
         self.args = args
-        self.data = Data(args)  # TODO dumb
+        self.data = Data(args)
         print(f'DATA SIZE for task {id} {len(self.data.train_set)}')
         self.node_cnt = args.node_num
         self.id = id

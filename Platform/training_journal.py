@@ -39,7 +39,7 @@ def cpu_copy(jobs: Dict[FT_ID, Job]):
 
 
 class TrainingJournal:
-    def __init__(self, task_ids, required_quality, args):  # TODO should not have args
+    def __init__(self, task_ids, required_quality, args):
         self.d: Dict[tuple, JournalRecord] = {}  # key is (ft_id, client_id, round); value is Record(model, deadline)
         self.latest_aggregated_round = {i: -1 for i in task_ids}
         self.required_quality_by_ft_id = required_quality

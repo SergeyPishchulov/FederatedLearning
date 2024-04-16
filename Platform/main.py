@@ -166,7 +166,6 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
             ags_write_q.put(MessageHubToAGS(ready_jobs_dict))
             for j in ready_jobs_dict.values():
                 hub.sent_jobs_ids.add(j.id)
-                # TODO когда отправлять клиентам should finish
 
         hub.mark_tasks()
         if hub.all_done():

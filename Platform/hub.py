@@ -79,7 +79,7 @@ class Hub:
     def send_to_validator(self, ft_id, ag_round_num, model_state: ModelTypedState):
         self.val_write_q.put(MessageToValidator(
             ft_id, ag_round_num,
-            model_state=model_state  # TODO check if ot will work
+            model_state=model_state
         ))
 
     def plot_stat(self):

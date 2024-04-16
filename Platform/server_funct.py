@@ -34,24 +34,6 @@ def normalize_weights(size_weights):
     return res
 
 
-def receive_client_models(client_models, select_list, size_weights):
-    client_params = []
-    for idx in select_list:
-        cl_model = client_models[idx]
-        client_params.append(ModelCast.to_state(cl_model))  # TODO do it on hub
-        # TODO эта функция должна зваться не там, где она сейчас зовется
-        # if 'fedlaw' in args.server_method:
-        #     cl_model: ReparamModule = client_models[idx]
-        #     client_params.append(cl_model.get_param(clone=True))
-        # else:
-        #     client_params.append(copy.deepcopy(client_models[idx].state_dict()))
-
-    agg_weights = [size_weights[idx] for idx in select_list]
-    agg_weights = [w / sum(agg_weights) for w in agg_weights]
-
-    return agg_weights, client_params
-
-
 def get_model_updates(client_params, prev_para):
     prev_param = copy.deepcopy(prev_para)
     client_updates = []

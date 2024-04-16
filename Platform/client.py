@@ -140,7 +140,7 @@ class Client:
         if ft_args.client_method == 'local_train':
             # print(f'Node {node.num_id} has available batches: {len(node.local_data)}')
             for epoch in range(ft_args.E):
-                loss, data_len = self.client_localTrain(ft_args, node)  # TODO check if not working
+                loss, data_len = self.client_localTrain(ft_args, node)
                 epoch_losses.append(loss)
             mean_loss = sum(epoch_losses) / len(epoch_losses)
             end_time = datetime.now()
