@@ -110,7 +110,7 @@ class Statistics:
             res += all_rounds_duration
         print(f"All rounds duration (sum by all tasks) {res.total_seconds()} s")
 
-    def save_client_ac(self, client_id, ft_id, round_num, acc, time_to_target_acc_sec):
+    def save_client_ac(self, client_id, ft_id, round_num, acc):
         self.acc_by_ft_id[ft_id].loc[round_num, f'client_{client_id}'] = acc
         # print(f"Saved acc for {f'client_{client_id}'} is {round(acc, 3)}")
         # if (time_to_target_acc_sec != -1):
@@ -274,9 +274,11 @@ class Statistics:
     def save_agr_ac(self, ft_id, round_num, acc):
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
-    def save_time_to_target_acc(self, ft_id, t):
-        if self.time_to_target_acc_by_ft_id[ft_id] is np.nan:
-            self.time_to_target_acc_by_ft_id[ft_id] = t
+    def save_time_to_target_acc_if_reached(self, ft, acc):
+        if acc > ft.args.target_acc:
+            seconds_spent = int((datetime.now() - self.start_time).total_seconds())
+            if self.time_to_target_acc_by_ft_id[ft.id] is np.nan:  # we are going do it for the first time
+                self.time_to_target_acc_by_ft_id[ft.id] = seconds_spent
 
     def print_mean_result_acc(self):
         mean_accs = [df.mean(axis=1).iloc[-1] for df in self.acc_by_ft_id.values()]

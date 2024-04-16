@@ -90,7 +90,7 @@ def handle_messages(hub: Hub, ags_read_q):
                                        model_state=r.model_state,
                                        deadline=r.deadline,
                                        update_quality=r.update_quality)
-                hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc, r.time_to_target_acc_sec)
+                hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
                 hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
                 # hub.stat.print_time_target_acc()
             elif isinstance(r, ResponseToHub):
@@ -104,9 +104,7 @@ def handle_messages(hub: Hub, ags_read_q):
                                      round_num=r.ag_round_num,
                                      acc=r.acc)
                 ft = hub.tasks[r.ft_id]
-                if r.acc > ft.args.target_acc:
-                    seconds_spent = int((datetime.datetime.now() - hub.start_time).total_seconds())
-                    hub.stat.save_time_to_target_acc(ft.id, seconds_spent)
+                hub.stat.save_time_to_target_acc_if_reached(ft, r.acc)
             del r
         while not ags_read_q.empty():
             m = ags_read_q.get()
