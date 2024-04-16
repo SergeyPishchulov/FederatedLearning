@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from model_cast import ModelCast, ModelTypedState, typed_states_to_states
 from models_dict.reparam_function import ReparamModule
@@ -76,6 +76,7 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
     else:
         server_lr = 0.005
     central_node.model.cuda()
+    for p in parameters:
 
     cohort_size = len(parameters)
 
@@ -296,7 +297,7 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
 def Server_update_fedlaw(args, central_node, client_states: List[ModelTypedState], size_weights):
     start_time = datetime.now()
     central_node.model.cuda()
-    parameters = typed_states_to_states(client_states)
+    parameters = [s.cuda() for s in typed_states_to_states(client_states)]
 
     # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
     agg_weights = normalize_weights(size_weights)
@@ -329,7 +330,7 @@ def debug_server_update(args, central_node, client_states: List[ModelTypedState]
 
 
 # FedAvg
-def fedavg(parameters, list_nums_local_data):
+def fedavg(parameters: List[Dict], list_nums_local_data):
     fedavg_global_params = copy.deepcopy(parameters[0])
     for name_param in parameters[0]:
         list_values_param = []
