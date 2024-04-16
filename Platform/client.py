@@ -9,7 +9,7 @@ from pprint import pprint
 import torch
 from typing import Dict, List, Optional, Tuple
 
-from message import MessageToHub, MessageToClient, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient
+from message import MessageToHub, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient
 from utils import validate, setup_seed, combine_lists
 from utils import *
 from server_funct import *
@@ -214,7 +214,7 @@ class Client:
             print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
             time.sleep(delta)
 
-    def run(self, read_q, write_q, ags_q):  # TODO read ags_q
+    def run(self, read_q, write_q, ags_q):
         print(f"Client {self.id} run")
         self.idle_until_run_cmd(read_q, write_q)
         self.idle_until_start_time()
@@ -238,7 +238,6 @@ class Client:
                 self.data_lens_by_ft_id[ft_id].append(data_len)
                 acc = validate(ft_args, node)
                 node.model.cpu()
-                node.iterations_performed += 1  # TODO not to mess with r
                 deadline = node.deadline_by_round[r]  # deadline to perform round r
                 data_lens = self.data_lens_by_ft_id[ft_id]
                 # update_quality = (data_lens[-1] - data_lens[-2])

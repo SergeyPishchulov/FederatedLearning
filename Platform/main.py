@@ -12,7 +12,7 @@ from aggregation_station import Job
 from client import Client
 from federated_ml_task import FederatedMLTask
 from hub import Hub
-from message import MessageToClient, MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub, \
+from message import MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub, \
     ValidatorShouldFinish, ControlMessageToClient, ControlValidatorMessage, MessageHubToAGS, ControlMessageHubToAGS, \
     MessageAgsToHub, FinishMessageToAGS
 from config.experiment_config import get_configs
@@ -121,20 +121,6 @@ def handle_messages(hub: Hub, ags_read_q):
             del m
 
 
-@timing
-@timing
-def send_agr_model_to_clients(clients, hub, ag_round, ft, should_finish: bool):
-    for c in clients:
-        try:
-            hub.write_q_by_cl_id[c.id].put(
-                MessageToClient(ag_round, ft.id,
-                                copy.deepcopy(ft.central_node.model),
-                                should_run=not should_finish  # TODO check if bug
-                                ))
-        except Exception:
-            print(traceback.format_exc())
-
-
 def finish(hub: Hub, val_write_q):
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
@@ -224,7 +210,7 @@ def main():
     clients = create_clients(tasks, user_args)
 
     val_read_q, val_write_q = Queue(), Queue()
-    hub = Hub(tasks, clients, user_args, val_write_q)  # TODO check all start time
+    hub = Hub(tasks, clients, user_args, val_write_q)
 
     ags_read_q, ags_write_q = Queue(), Queue()
     ags_q_by_cl_id = get_ags_qs_by_cl_id(clients)

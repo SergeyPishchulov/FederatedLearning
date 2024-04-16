@@ -49,7 +49,6 @@ class TrainingJournal:
     @timing
     def mark_as_aggregated(self, ft_id):
         self.latest_aggregated_round[ft_id] += 1
-        # TODO bug if we skip some rounds
 
     def save_local(self, ft_id, client_id, round_num, model_state: ModelTypedState, deadline, update_quality):
         if (ft_id, client_id, round_num) not in self.d:
@@ -108,7 +107,7 @@ class TrainingJournal:
                             sent_jobs_ids) -> Dict[FT_ID, Job]:
         ready = self.get_ft_ready_to_agr(client_ids)
         if not ready:
-            return {}  # TODO optimize: delete already aggregated from ready>
+            return {}
         total_min_deadline = datetime.max
         res_jobs = {}
         for ft_id, round_num in ready:

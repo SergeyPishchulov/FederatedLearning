@@ -47,14 +47,6 @@ class MessageToHub:
 
 
 @dataclass
-class MessageToClient:
-    round_num: int
-    ft_id: int
-    agr_model: torch.nn.Module
-    should_run: bool
-
-
-@dataclass
 class MessageAgsToClient:
     ft_id: int
     round_num: int

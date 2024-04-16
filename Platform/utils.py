@@ -32,7 +32,7 @@ def normalize_cntr(x: Counter):
     total = sum(c.values(), 0.0)
     for key in c:
         c[key] /= total
-        c[key] = np.round(c[key], 2)  # TODO it should not be here
+        c[key] = np.round(c[key], 2)  # it should not be here
     return c
 
 

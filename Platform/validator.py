@@ -36,8 +36,6 @@ class Validator:
                 write_q.put(response)
             elif isinstance(mes, ValidatorShouldFinish):
                 self.should_finish = True
-                # del mes# TODO do we need it here?
-                return
             elif isinstance(mes, ControlValidatorMessage):
                 self.start_time = mes.start_time
             else:

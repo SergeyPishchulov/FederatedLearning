@@ -13,7 +13,6 @@ class Node(object):
         self.args = args
         self._local_data = local_data
         self._train_set = train_set
-        self.iterations_performed = 0
         self.deadline_by_round = None  # max time to perform round №r
         if num_id == -1:
             self.valid_ratio = args.server_valid_ratio

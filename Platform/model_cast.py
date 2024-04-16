@@ -38,7 +38,6 @@ class ModelCast:
         if not isinstance(typed_state, ModelTypedState):
             raise TypeError('State must be a ModelState')
         if typed_state.model_type == ModelType.FEDLAW:
-            # TODO in case of memory sharing consider copy.deepcopy of model
             return model_to_write.load_param(copy.deepcopy(typed_state.state))
         if typed_state.model_type == ModelType.ORDIANRY:
             return model_to_write.load_state_dict(typed_state.state)
