@@ -7,7 +7,7 @@ import time
 from utils import timing
 from model_cast import ModelCast
 from nodes import Node
-from server_funct import Server_update_fedlaw, Server_update
+from server_funct import Server_update_fedlaw, Server_update, debug_server_update
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler, Job
 from message import MessageHubToAGS, ControlMessageHubToAGS, MessageAgsToClient, MessageAgsToHub, Period, \
     FinishMessageToAGS
@@ -25,8 +25,10 @@ def _get_scheduler(args):
 
 
 def _get_updater(args):
-    # if args.server_method == 'fedlaw':
-    #     return Server_update_fedlaw
+    if args.debug:
+        return debug_server_update
+    if args.server_method == 'fedlaw':
+        return Server_update_fedlaw
     if args.server_method == 'fedavg':
         return Server_update
     raise ValueError(f"Unknown server_method: {args.server_method}")

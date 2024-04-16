@@ -308,9 +308,6 @@ def Server_update_fedlaw(args, central_node, client_states: List[ModelTypedState
 # @timing
 def Server_update(args, central_node, client_states: List[ModelTypedState], size_weights):
     start_time = datetime.now()
-    if args.debug:
-        time.sleep(1)
-        return Period(start_time, datetime.now())
     central_node.model.cpu()
     agr_model = central_node.model
     # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
@@ -322,6 +319,12 @@ def Server_update(args, central_node, client_states: List[ModelTypedState], size
     agr_model.load_state_dict(avg_global_param)
     end_time = datetime.now()
     return Period(start_time, end_time)
+
+
+def debug_server_update(args, central_node, client_states: List[ModelTypedState], size_weights):
+    start_time = datetime.now()
+    time.sleep(1)
+    return Period(start_time, datetime.now())
 
 
 # FedAvg
