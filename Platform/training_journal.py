@@ -123,7 +123,7 @@ class TrainingJournal:
             c_node = central_nodes_by_ft_id[ft_id]
             ft = tasks[ft_id]
             job = Job(ft_id, min_d, round_num,
-                      processing_time_coef=1,  # MEGA TODO set distinct coefs!!!
+                      processing_time_coef=model_states[0].params_cnt,  # TODO is it good approximation?
                       model_states=model_states,
                       size_weights=ft.size_weights)
             if job.id in sent_jobs_ids:

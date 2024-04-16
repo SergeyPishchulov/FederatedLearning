@@ -1,6 +1,7 @@
 import copy
 from typing import List, Optional, Dict
 
+from utils import get_params_cnt
 from models_dict.reparam_function import ReparamModule
 import torch.nn as nn
 
@@ -11,9 +12,10 @@ class ModelType:
 
 
 class ModelTypedState:
-    def __init__(self, model_type, state):
+    def __init__(self, model_type, state, params_cnt):
         self.model_type = model_type
         self.state = state
+        self.params_cnt = params_cnt
 
 
 def typed_states_to_states(states: List[ModelTypedState]):
@@ -24,12 +26,15 @@ class ModelCast:
     @staticmethod
     def to_state(model: nn.Module) -> ModelTypedState:
         if isinstance(model, ReparamModule):
+            params_cnt = get_params_cnt(model)
             return ModelTypedState(ModelType.FEDLAW,
                                    state=copy.deepcopy(
-                                       model.get_param(clone=True))  # TODO .cpu() ?
-                                   )
+                                       model.get_param(clone=True)),  # TODO .cpu() ?
+                                   params_cnt=params_cnt)
         elif isinstance(model, nn.Module):
-            return ModelTypedState(ModelType.ORDIANRY, copy.deepcopy(model.state_dict()))
+            params_cnt = get_params_cnt(model)
+            return ModelTypedState(ModelType.ORDIANRY, copy.deepcopy(model.state_dict()),
+                                   params_cnt=params_cnt)
         else:
             raise ValueError(f"Unknown model type {type(model)}")
 
