@@ -29,7 +29,7 @@ class ModelCast:
             params_cnt = get_params_cnt(model)
             return ModelTypedState(ModelType.FEDLAW,
                                    state=copy.deepcopy(
-                                       model.get_param(clone=True).cpu()),  # TODO .cpu() ?
+                                       model.get_param(clone=True).cpu().detach()),  # TODO .cpu() ?
                                    params_cnt=params_cnt)
         elif isinstance(model, nn.Module):
             params_cnt = get_params_cnt(model)
