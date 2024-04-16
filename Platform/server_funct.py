@@ -76,7 +76,6 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
     else:
         server_lr = 0.005
     central_node.model.cuda()
-    for p in parameters:
 
     cohort_size = len(parameters)
 
