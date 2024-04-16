@@ -97,7 +97,7 @@ class Statistics:
         for ft_id in task_ids:
             self.round_done_ts_by_round_num[ft_id] = {-1: datetime.now()}
 
-    @timing
+    # @timing
     def set_round_done_ts(self, ft_id, ag_round_num):
         """Save moment in time at which ag_round_num is done"""
         self.round_done_ts_by_round_num[ft_id][ag_round_num] = datetime.now()
@@ -124,7 +124,7 @@ class Statistics:
         entity = f'client_{client_id}'
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)
 
-    @timing
+    # @timing
     def save_ags_period(self, ft_id, period: Period):
         entity = 'agr'
         self.periods_by_entity_ft_id[(entity, ft_id)].append(period)

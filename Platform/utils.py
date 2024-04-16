@@ -258,7 +258,7 @@ class PerturbedGradientDescent(Optimizer):
 # Validation function
 ##############################################################################
 
-@timing
+# @timing
 def validate(args, node, which_dataset='validate'):
     if args.debug:
         return 0
