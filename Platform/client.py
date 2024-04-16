@@ -16,7 +16,6 @@ from server_funct import *
 from client_funct import *
 
 
-
 class LocalScheduler:
     def __init__(self, trained_ft_id_round):
         self.trained_ft_id_round: set = trained_ft_id_round
@@ -246,7 +245,7 @@ class Client:
                 target_acc = self.args_by_ft_id[ft_id].target_acc
                 time_to_target_acc = -1 if (acc < target_acc) else (time.time() - client_start_time)
                 # print(f"    Client {self.id} acc is {acc} target_acc is {target_acc} time_to_target_acc is {time_to_target_acc}")
-                response = MessageToHub(-1, ft_id=ft_id,  # TODO delete -1
+                response = MessageToHub(ft_id=ft_id,
                                         acc=acc, loss=mean_loss,
                                         model_state=ModelCast.to_state(node.model),
                                         client_id=self.id,

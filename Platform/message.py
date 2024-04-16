@@ -32,7 +32,6 @@ class MessageToHub:
     iteration_num - the serial number of the message sent.
     It can differ from the round at hub
     """
-    iteration_num: int
     ft_id: int
     acc: float
     loss: float
@@ -40,8 +39,8 @@ class MessageToHub:
     client_id: int
     deadline: datetime
     update_quality: float
-    round_num: int  # In which round client want to participate.
-    # model is fine-tuned model from prev round. See MessageToClient
+    round_num: int  # In which round client want to participate in.
+    # model is fine-tuned model from prev round.
     period: Period
     time_to_target_acc_sec: int  # TODO delete
 
