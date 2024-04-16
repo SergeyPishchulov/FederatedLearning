@@ -176,7 +176,7 @@ class Client:
         while not ags_q.empty():
             mes = ags_q.get()
             if isinstance(mes, MessageAgsToClient):
-                print(f"Client {self.id} got MessageAgsToClient")
+                # print(f"Client {self.id} got MessageAgsToClient")
                 self.save_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model_state)
                 required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
                 delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
@@ -228,12 +228,12 @@ class Client:
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)
             if ft_id is not None:
-                print(f"Client {self.id} scheduled task {ft_id} with round {r}")
+                # print(f"Client {self.id} scheduled task {ft_id} with round {r}")
                 agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]
                 self._load_state_to_model(ft_args, node, agr_model_state)
-                print(f"Client {self.id} set aggregated model for task {ft_id}, round {r}")
+                # print(f"Client {self.id} set aggregated model for task {ft_id}, round {r}")
                 mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
                 self.data_lens_by_ft_id[ft_id].append(data_len)
                 acc = validate(ft_args, node)
