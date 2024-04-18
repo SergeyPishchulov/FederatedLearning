@@ -22,7 +22,7 @@ class ClientModelSelection:
         res = {}
         for ft_id, trained_round in latest_round_with_response_by_ft_id.items():
             if len(self.idle_cl_ids) < 2:
-                return res
+                break
             new_round = trained_round + 1
             if new_round == self.rounds_cnt:
                 continue
@@ -34,7 +34,8 @@ class ClientModelSelection:
             for cl in pair:
                 res[cl] = tr
                 self.idle_cl_ids.remove(cl)
-            print(f"HUB SCHEDULED {tr} for pair {pair}")
+        if res:
+            print(f"HUB SCHEDULED {res}")
         return res
 
 
