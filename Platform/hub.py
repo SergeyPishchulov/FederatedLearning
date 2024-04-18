@@ -1,8 +1,8 @@
 import argparse
 from datetime import timedelta, datetime
-from typing import List, Set
+from typing import List, Set, Optional
 
-from message import MessageToValidator, Period
+from message import MessageToValidator, Period, TaskRound
 from model_cast import ModelTypedState
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
 from federated_ml_task import FederatedMLTask
@@ -10,6 +10,32 @@ from utils import generate_selectlist, call_5_sec
 from training_journal import TrainingJournal
 from statistics_handler import Statistics
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
+
+
+class ClientModelSelection:
+    def __init__(self, cl_ids, rounds_cnt):
+        self.scheduled = set()
+        self.idle_cl_ids = set(cl_ids)
+        self.rounds_cnt = rounds_cnt
+
+    def get_cl_plans(self, latest_round_with_response_by_ft_id):
+        res = {}
+        for ft_id, trained_round in latest_round_with_response_by_ft_id.items():
+            if len(self.idle_cl_ids) < 2:
+                return res
+            new_round = trained_round + 1
+            if new_round == self.rounds_cnt:
+                continue
+            pair = sorted(list(self.idle_cl_ids))[:2]
+            tr = TaskRound(ft_id, new_round)
+            if tr in self.scheduled:
+                continue
+            self.scheduled.add(tr)
+            for cl in pair:
+                res[cl] = tr
+                self.idle_cl_ids.remove(cl)
+            print(f"HUB SCHEDULED {tr} for pair {pair}")
+        return res
 
 
 class Hub:
@@ -30,7 +56,10 @@ class Hub:
         self.last_plot = datetime.now()
         self._printed = set()
         self.aggregated_jobs = 0
-        # self.start_time: datetime.datetime = start_time
+        self.selection: Optional[
+            ClientModelSelection] = (ClientModelSelection([cl.id for cl in self.clients], self.args.T)
+                                     if self.args.local_scheduler == 'HubControlledScheduler'
+                                     else None)
 
     @call_5_sec
     def print_all_done(self):

@@ -28,6 +28,9 @@ class JournalRecord:
     deadline: datetime
     update_quality: float
 
+    def __repr__(self):
+        return f"Record(_)"
+
 
 FT_ID = int
 ROUND = int
@@ -55,7 +58,7 @@ class TrainingJournal:
             self.d[(ft_id, client_id, round_num)] = JournalRecord(model_state, deadline, update_quality)
             # print(f"HUB saved {(ft_id, client_id, round_num)}")
         else:
-            raise KeyError("Key already exists")
+            raise KeyError(f"Key {(ft_id, client_id, round_num)} already exists in {self.d.keys()}")
 
     # @timing
     def get_ft_ready_to_agr(self, client_ids):

@@ -9,7 +9,8 @@ from pprint import pprint
 import torch
 from typing import Dict, List, Optional, Tuple
 
-from message import MessageToHub, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient, PlanMessageToClient
+from message import MessageToHub, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient, \
+    PlanMessageToClient, TaskRound
 from utils import validate, setup_seed, combine_lists
 from utils import *
 from server_funct import *
@@ -54,12 +55,18 @@ class HubControlledScheduler(LocalScheduler):
         rounds = user_args.T
         self.plan = []
 
-    def set_plan(self, new_plan):
-        self.plan = new_plan
+    @call_5_sec
+    def print_plan(self):
+        print(f"CLIENT PLAN: {self.plan}")
 
     def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node], rounds_cnt):
         status = {}
-        for (r, ft_id) in self.plan:
+        self.print_plan()
+        for tr in self.plan:
+            ft_id = tr.ft_id
+            r = tr.round
+            if (ft_id, r) in self.trained_ft_id_round:
+                continue
             n: Node = node_by_ft_id[ft_id]
             has_prev_model = (ft_id, r - 1) in agr_model_by_ft_id_round
             data_available = n.data_for_round_is_available(r)
@@ -70,6 +77,12 @@ class HubControlledScheduler(LocalScheduler):
         # print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
         # pprint(status)
         return None, None
+
+    def delete_from_plan(self, ft_id, r):  # TODO twice
+        """It notifies the scheduler that round is performed successfully, so it should not be scheduled again"""
+        super().delete_from_plan(ft_id, r)
+        if (r, ft_id) in self.plan:
+            self.plan.remove((r, ft_id))
 
 
 class CyclicalScheduler(LocalScheduler):
@@ -194,8 +207,10 @@ class Client:
             if isinstance(mes, ControlMessageToClient):
                 self.start_time = mes.start_time
                 self.should_run = mes.should_run
-            elif isinstance(mes, PlanMessageToClient):
-                
+            elif isinstance(mes, TaskRound):
+                if not isinstance(self.scheduler, HubControlledScheduler):
+                    raise Exception("Scheduler is not HubControlledScheduler")
+                self.scheduler.plan.append(mes)
             else:
                 raise ValueError(f"Unknown message type {type(mes)}")
             del mes
@@ -242,9 +257,9 @@ class Client:
             print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
             time.sleep(delta)
 
-    def run(self, read_q, write_q, ags_q):
+    def run(self, hub_read_q, write_q, ags_q):
         print(f"Client {self.id} run")
-        self.idle_until_run_cmd(read_q, write_q)
+        self.idle_until_run_cmd(hub_read_q, write_q)
         self.idle_until_start_time()
         print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
         client_start_time = time.time()
@@ -252,11 +267,11 @@ class Client:
         self.set_deadlines()
         print("Client really running")
         while self.should_run:
-            self.handle_messages(read_q, write_q, ags_q)
+            self.handle_messages(hub_read_q, write_q, ags_q)
             ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)
             if ft_id is not None:
-                # print(f"Client {self.id} scheduled task {ft_id} with round {r}")
+                print(f"Client {self.id} scheduled task {ft_id} with round {r}")
                 agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
                 node = self.node_by_ft_id[ft_id]

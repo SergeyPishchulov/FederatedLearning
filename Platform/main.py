@@ -14,7 +14,7 @@ from federated_ml_task import FederatedMLTask
 from hub import Hub
 from message import MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub, \
     ValidatorShouldFinish, ControlMessageToClient, ControlValidatorMessage, MessageHubToAGS, ControlMessageHubToAGS, \
-    MessageAgsToHub, FinishMessageToAGS
+    MessageAgsToHub, FinishMessageToAGS, TaskRound
 from config.experiment_config import get_configs
 from config.args import args_parser
 from utils import *
@@ -99,6 +99,8 @@ def handle_messages(hub: Hub, ags_read_q):
                                                                        hub.latest_round_with_response_by_ft_id[r.ft_id])
                 # print(hub.latest_round_with_response_by_ft_id)
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
+                if hub.selection:
+                    hub.selection.idle_cl_ids.add(r.client_id)
             elif isinstance(r, MessageValidatorToHub):
                 hub.stat.save_agr_ac(r.ft_id,
                                      round_num=r.ag_round_num,
@@ -143,6 +145,12 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
         start_time = time.time()
         hub.print_progress()
         handle_messages(hub, ags_read_q)
+
+        plans = hub.selection.get_cl_plans(latest_round_with_response_by_ft_id=
+                                           hub.latest_round_with_response_by_ft_id)
+        for cl_id, tr in plans.items():
+            hub.write_q_by_cl_id[cl_id].put(tr)
+
         ready_jobs_dict = hub.journal.get_ft_to_aggregate(
             [c.id for c in clients], central_nodes_by_ft_id, tasks, hub.sent_jobs_ids)
         if ready_jobs_dict:

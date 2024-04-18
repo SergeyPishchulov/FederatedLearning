@@ -20,24 +20,24 @@ def get_configs(user_args):
         target_acc=55,
         # interdeadline_time_sec=30
     ))
-    custom_configs.append(dict(
-        dataset='cifar10',
-        local_model='ResNet56',
-        target_acc=55,
-        # interdeadline_time_sec=30
-    ))
-    custom_configs.append(dict(
-        dataset='cifar10',
-        local_model='ResNet56',#'WRN56_2',
-        target_acc=55,
-        # interdeadline_time_sec=30
-    ))
-    custom_configs.append(dict(
-        dataset='cifar100',
-        local_model='WRN56_2',
-        target_acc=55,
-        # interdeadline_time_sec=30
-    ))
+    # custom_configs.append(dict(
+    #     dataset='cifar10',
+    #     local_model='ResNet56',
+    #     target_acc=55,
+    #     # interdeadline_time_sec=30
+    # ))
+    # custom_configs.append(dict(
+    #     dataset='cifar10',
+    #     local_model='ResNet56',#'WRN56_2',
+    #     target_acc=55,
+    #     # interdeadline_time_sec=30
+    # ))
+    # custom_configs.append(dict(
+    #     dataset='cifar100',
+    #     local_model='WRN56_2',
+    #     target_acc=55,
+    #     # interdeadline_time_sec=30
+    # ))
 #######################################################################
     # custom_configs.append(dict(
     #     dataset='cifar100',

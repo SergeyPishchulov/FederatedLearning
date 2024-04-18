@@ -2,11 +2,18 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import torch
 from typing import Optional, Dict, List, Tuple
-
+from collections import namedtuple
 from model_cast import ModelTypedState
 from aggregation_station import Job
 from nodes import Node
 from utils import norm
+
+# @dataclass
+# class TaskRound:
+#     ft_id: int
+#     round: int
+
+TaskRound = namedtuple('TaskRound', ['ft_id', 'round'])
 
 
 @dataclass
