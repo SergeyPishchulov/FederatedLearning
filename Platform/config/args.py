@@ -56,6 +56,7 @@ def args_parser():
                         Options:
                         CyclicalScheduler. e.g. 3 tasks and 2 rounds. Schedule will be [t1, t2, t3, t1, t2, t3]
                         MinDeadlineScheduler
+                        HubControlledScheduler
                         """)
 
     # Server function

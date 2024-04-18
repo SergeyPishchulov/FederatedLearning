@@ -9,7 +9,7 @@ from pprint import pprint
 import torch
 from typing import Dict, List, Optional, Tuple
 
-from message import MessageToHub, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient
+from message import MessageToHub, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient, PlanMessageToClient
 from utils import validate, setup_seed, combine_lists
 from utils import *
 from server_funct import *
@@ -46,6 +46,30 @@ class MinDeadlineScheduler(LocalScheduler):
             return None, None
         deadline, ft_id = ready[0]
         return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
+
+
+class HubControlledScheduler(LocalScheduler):
+    def __init__(self, trained_ft_id_round, user_args, node_by_ft_id):
+        super().__init__(trained_ft_id_round)
+        rounds = user_args.T
+        self.plan = []
+
+    def set_plan(self, new_plan):
+        self.plan = new_plan
+
+    def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node], rounds_cnt):
+        status = {}
+        for (r, ft_id) in self.plan:
+            n: Node = node_by_ft_id[ft_id]
+            has_prev_model = (ft_id, r - 1) in agr_model_by_ft_id_round
+            data_available = n.data_for_round_is_available(r)
+            status[(r, ft_id)] = f"Data {int(data_available)}, prev_model {int(has_prev_model)}"
+            if has_prev_model and data_available:
+                # print(f"    Client task is chosen {r, ft_id}")
+                return ft_id, r
+        # print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
+        # pprint(status)
+        return None, None
 
 
 class CyclicalScheduler(LocalScheduler):
@@ -94,7 +118,10 @@ class Client:
         self.start_time: Optional[datetime] = None
 
     def get_scheduler(self, user_args):
-        if user_args.local_scheduler == "CyclicalScheduler":
+        if user_args.local_scheduler == "HubControlledScheduler":
+            print(f'    Client {self.id} SCHEDULER is set to HubControlledScheduler')
+            return HubControlledScheduler(self.trained_ft_id_round, user_args, self.node_by_ft_id)
+        elif user_args.local_scheduler == "CyclicalScheduler":
             print(f'    Client {self.id} SCHEDULER is set to CyclicalScheduler')
             return CyclicalScheduler(self.trained_ft_id_round, user_args, self.node_by_ft_id)
         elif user_args.local_scheduler == "MinDeadlineScheduler":
@@ -167,6 +194,8 @@ class Client:
             if isinstance(mes, ControlMessageToClient):
                 self.start_time = mes.start_time
                 self.should_run = mes.should_run
+            elif isinstance(mes, PlanMessageToClient):
+                
             else:
                 raise ValueError(f"Unknown message type {type(mes)}")
             del mes

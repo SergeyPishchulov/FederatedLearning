@@ -62,6 +62,11 @@ class MessageAgsToHub:
 
 
 @dataclass
+class PlanMessageToClient:
+    new_plan: List
+
+
+@dataclass
 class ControlMessageToClient:
     should_run: bool
     start_time: Optional[datetime]
