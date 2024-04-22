@@ -19,11 +19,11 @@ from client_funct import *
 
 class LocalScheduler:
     def __init__(self, trained_ft_id_round):
-        self.trained_ft_id_round: set = trained_ft_id_round
+        self.trained_ft_id_round: set[TaskRound] = trained_ft_id_round
 
-    def delete_from_plan(self, ft_id, r):
+    def mark_as_trained(self, tr):
         """It notifies the scheduler that round is performed successfully, so it should not be scheduled again"""
-        self.trained_ft_id_round.add((ft_id, r))
+        self.trained_ft_id_round.add(tr)
 
 
 class MinDeadlineScheduler(LocalScheduler):
@@ -53,7 +53,7 @@ class HubControlledScheduler(LocalScheduler):
     def __init__(self, trained_ft_id_round, user_args, node_by_ft_id):
         super().__init__(trained_ft_id_round)
         rounds = user_args.T
-        self.plan = []
+        self.plan: List[TaskRound] = []
 
     @call_5_sec
     def print_plan(self):
@@ -63,26 +63,25 @@ class HubControlledScheduler(LocalScheduler):
         status = {}
         self.print_plan()
         for tr in self.plan:
-            ft_id = tr.ft_id
-            r = tr.round
-            if (ft_id, r) in self.trained_ft_id_round:
-                continue
+            ft_id, r = tr
+            if tr in self.trained_ft_id_round:
+                raise Exception(f'{tr} in trained: {self.trained_ft_id_round}')
             n: Node = node_by_ft_id[ft_id]
             has_prev_model = (ft_id, r - 1) in agr_model_by_ft_id_round
             data_available = n.data_for_round_is_available(r)
             status[(r, ft_id)] = f"Data {int(data_available)}, prev_model {int(has_prev_model)}"
             if has_prev_model and data_available:
                 # print(f"    Client task is chosen {r, ft_id}")
-                return ft_id, r
+                return tr
         # print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
         # pprint(status)
-        return None, None
+        return None
 
-    def delete_from_plan(self, ft_id, r):  # TODO twice
+    def mark_as_trained(self, tr):  # TODO twice
         """It notifies the scheduler that round is performed successfully, so it should not be scheduled again"""
-        super().delete_from_plan(ft_id, r)
-        if (r, ft_id) in self.plan:
-            self.plan.remove((r, ft_id))
+        super().mark_as_trained(tr)
+        if tr in self.plan:
+            self.plan.remove(tr)
 
 
 class CyclicalScheduler(LocalScheduler):
@@ -107,10 +106,10 @@ class CyclicalScheduler(LocalScheduler):
         # pprint(status)
         return None, None
 
-    def delete_from_plan(self, ft_id, r):
+    def mark_as_trained(self, tr):
         """It notifies the scheduler that round is performed successfully, so it should not be scheduled again"""
-        super().delete_from_plan(ft_id, r)
-        self.plan.remove((r, ft_id))
+        super().mark_as_trained(tr)
+        self.plan.remove(tr)
 
 
 class Client:
@@ -268,9 +267,10 @@ class Client:
         print("Client really running")
         while self.should_run:
             self.handle_messages(hub_read_q, write_q, ags_q)
-            ft_id, r = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
+            tr: TaskRound = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                     self.node_by_ft_id, self.user_args.T)
-            if ft_id is not None:
+            if tr is not None:
+                ft_id, r = tr
                 print(f"Client {self.id} scheduled task {ft_id} with round {r}")
                 agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
                 ft_args = self.args_by_ft_id[ft_id]
@@ -300,7 +300,7 @@ class Client:
                 try:
                     write_q.put(response)
                     # print(f"Client {self.id} sent model for task {ft_id}, round {r}")
-                    self.scheduler.delete_from_plan(ft_id, r)
+                    self.scheduler.mark_as_trained(tr)
                 except Exception:
                     print(traceback.format_exc())
                 # print(f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
