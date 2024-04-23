@@ -78,20 +78,29 @@ def get_ags_proc(ags: AGS, read_q, write_q, ags_q_by_cli_id):
                    args=(write_q, read_q, ags_q_by_cli_id))
 
 
+@call_n_sec(1)
+def print_hm():
+    print(f"Hub handle_messages {datetime.now().isoformat()}")
+
+
 # @timing
 def handle_messages(hub: Hub, ags_read_q):
+    print_hm()
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
             r = q.get()
             if isinstance(r, MessageToHub):
-                # print(
-                #     f'Got update from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. DL is {r.deadline}')
+                print(
+                    f'Got model from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. {datetime.now().isoformat()}')
                 hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
                                        model_state=r.model_state,
                                        deadline=r.deadline,
                                        update_quality=r.update_quality)
                 hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
                 hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
+                if hub.selection:
+                    hub.selection.idle_cl_ids.add(r.client_id)
+                    print(f"HUB idle clients: {hub.selection.idle_cl_ids}")
                 # hub.stat.print_time_target_acc()
             elif isinstance(r, ResponseToHub):
                 # print(f'Received ResponseToHub: {r}')
@@ -99,8 +108,7 @@ def handle_messages(hub: Hub, ags_read_q):
                                                                        hub.latest_round_with_response_by_ft_id[r.ft_id])
                 # print(hub.latest_round_with_response_by_ft_id)
                 hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
-                if hub.selection:
-                    hub.selection.idle_cl_ids.add(r.client_id)
+
             elif isinstance(r, MessageValidatorToHub):
                 hub.stat.save_agr_ac(r.ft_id,
                                      round_num=r.ag_round_num,

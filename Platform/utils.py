@@ -41,7 +41,7 @@ def format_time(dt: datetime):
 
 
 def norm(dt: datetime, global_start_time):
-    # return dt
+    return dt
     return datetime(year=1970, month=1, day=1) + (dt - global_start_time)
 
 
@@ -71,6 +71,22 @@ def interpolate(jobs_cnt_in_time):
             res.append((cur_t - timedelta(seconds=0.00001), last_v))
         res.append((cur_t, cur_v))
     return res
+
+
+def call_n_sec(n):
+    def call_n_sec_aux(f):
+        setattr(f, "last_call", 0)
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if time() - f.last_call < n:
+                return
+            f.last_call = time()
+            result = f(*args, **kwargs)
+            return result
+
+        return wrapper
+
+    return call_n_sec_aux
 
 
 def call_5_sec(f):

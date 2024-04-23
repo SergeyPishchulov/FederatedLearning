@@ -168,6 +168,10 @@ class Client:
     def _load_state_to_model(self, ft_args, node, agr_model: ModelTypedState):
         ModelCast.to_model(agr_model, node.model)
 
+    @call_n_sec(1)
+    def print_idle(self):
+        print(f"    Client {self.id} idle")
+
     def _train_one_round(self, ft_args, node):
         start_time = datetime.now()
         if self.user_args.debug:
@@ -253,57 +257,58 @@ class Client:
     def idle_until_start_time(self):
         if datetime.now() < self.start_time:
             delta = (self.start_time - datetime.now()).total_seconds()
-            print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
+            # print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
             time.sleep(delta)
 
     def run(self, hub_read_q, write_q, ags_q):
         print(f"Client {self.id} run")
         self.idle_until_run_cmd(hub_read_q, write_q)
         self.idle_until_start_time()
-        print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
+        # print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
         client_start_time = time.time()
         self.setup()
         self.set_deadlines()
-        print("Client really running")
+        # print("Client really running")
         while self.should_run:
             self.handle_messages(hub_read_q, write_q, ags_q)
             tr: TaskRound = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
-                                                    self.node_by_ft_id, self.user_args.T)
-            if tr is not None:
-                ft_id, r = tr
-                print(f"Client {self.id} scheduled task {ft_id} with round {r}")
-                agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
-                ft_args = self.args_by_ft_id[ft_id]
-                node = self.node_by_ft_id[ft_id]
-                self._load_state_to_model(ft_args, node, agr_model_state)
-                # print(f"Client {self.id} set aggregated model for task {ft_id}, round {r}")
-                mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
-                self.data_lens_by_ft_id[ft_id].append(data_len)
-                acc = validate(ft_args, node)
-                node.model.cpu()
-                deadline = node.deadline_by_round[r]  # deadline to perform round r
-                data_lens = self.data_lens_by_ft_id[ft_id]
-                # update_quality = (data_lens[-1] - data_lens[-2])
-                update_quality = 1_000
-                # how much new data points was used in this training round
-                target_acc = self.args_by_ft_id[ft_id].target_acc
-                time_to_target_acc = -1 if (acc < target_acc) else (time.time() - client_start_time)
-                # print(f"    Client {self.id} acc is {acc} target_acc is {target_acc} time_to_target_acc is {time_to_target_acc}")
-                response = MessageToHub(ft_id=ft_id,
-                                        acc=acc, loss=mean_loss,
-                                        model_state=ModelCast.to_state(node.model),
-                                        client_id=self.id,
-                                        deadline=deadline,
-                                        update_quality=update_quality,
-                                        round_num=r,
-                                        period=Period(start_time, end_time))
-                try:
-                    write_q.put(response)
-                    # print(f"Client {self.id} sent model for task {ft_id}, round {r}")
-                    self.scheduler.mark_as_trained(tr)
-                except Exception:
-                    print(traceback.format_exc())
-                # print(f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
-            # time.sleep(5)
+                                                         self.node_by_ft_id, self.user_args.T)
+            if tr is None:
+                self.print_idle()
+                continue
 
+            ft_id, r = tr
+            print(f"Client {self.id} scheduled task {ft_id} with round {r}")
+            agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
+            ft_args = self.args_by_ft_id[ft_id]
+            node = self.node_by_ft_id[ft_id]
+            self._load_state_to_model(ft_args, node, agr_model_state)
+            print(f"    Client {self.id} training task {ft_id}, round {r}")
+            mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
+            self.data_lens_by_ft_id[ft_id].append(data_len)
+            acc = validate(ft_args, node)
+            node.model.cpu()
+            deadline = node.deadline_by_round[r]  # deadline to perform round r
+            data_lens = self.data_lens_by_ft_id[ft_id]
+            # update_quality = (data_lens[-1] - data_lens[-2])
+            update_quality = 1_000
+            # how much new data points was used in this training round
+            target_acc = self.args_by_ft_id[ft_id].target_acc
+            time_to_target_acc = -1 if (acc < target_acc) else (time.time() - client_start_time)
+            # print(f"    Client {self.id} acc is {acc} target_acc is {target_acc} time_to_target_acc is {time_to_target_acc}")
+            response = MessageToHub(ft_id=ft_id,
+                                    acc=acc, loss=mean_loss,
+                                    model_state=ModelCast.to_state(node.model),
+                                    client_id=self.id,
+                                    deadline=deadline,
+                                    update_quality=update_quality,
+                                    round_num=r,
+                                    period=Period(start_time, end_time))
+            try:
+                write_q.put(response)
+                print(f"Client {self.id} sent model for task {ft_id}, round {r}. {datetime.now().isoformat()}")
+                self.scheduler.mark_as_trained(tr)
+            except Exception:
+                print(traceback.format_exc())
+            # print(f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
         print(f'    Client {self.id}: CLIENT is DONE')
