@@ -84,7 +84,7 @@ def print_hm():
     print(f"Hub handle_messages {datetime.now().isoformat()}")
 
 
-@timing
+# @timing
 def handle_message_to_hub(hub, r):
     print(f'Hub got model from client {r.client_id}. {sys.getsizeof(r.model_state)} bytes '
           f'Round {r.round_num} for task {r.ft_id} is done. {datetime.now().isoformat()}')
@@ -100,7 +100,7 @@ def handle_message_to_hub(hub, r):
     # hub.stat.print_time_target_acc()
 
 
-@timing
+# @timing
 def handle_response_to_hub(hub, r):
     # print(f'Received ResponseToHub: {r}')
     hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
@@ -109,7 +109,7 @@ def handle_response_to_hub(hub, r):
     hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
 
 
-@timing
+# @timing
 def handle_message_validator_to_hub(hub, r):
     hub.stat.save_agr_ac(r.ft_id,
                          round_num=r.ag_round_num,
@@ -118,7 +118,7 @@ def handle_message_validator_to_hub(hub, r):
     hub.stat.save_time_to_target_acc_if_reached(ft, r.acc)
 
 
-@timing
+# @timing
 def handle_ags_to_hub(hub, r):
     hub.journal.mark_as_aggregated(ft_id=r.ft_id)
     hub.stat.set_round_done_ts(ft_id=r.ft_id, ag_round_num=r.round_num)
@@ -131,7 +131,7 @@ def handle_ags_to_hub(hub, r):
 
 # @timing
 def handle_messages(hub: Hub, ags_read_q):
-    print_hm()
+    # print_hm()
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
             r = q.get()

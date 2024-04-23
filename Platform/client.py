@@ -274,7 +274,7 @@ class Client:
             tr: TaskRound = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                          self.node_by_ft_id, self.user_args.T)
             if tr is None:
-                self.print_idle()
+                # self.print_idle()
                 continue
 
             ft_id, r = tr
