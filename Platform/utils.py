@@ -57,7 +57,7 @@ def timing(f):
         start = time()
         result = f(*args, **kwargs)
         end = time()
-        print(f"[T] {f.__name__} {int(end - start)}s")
+        print(f"[T] {f.__name__} {int(end - start)}s. {datetime.now().isoformat()}")
         return result
 
     return wrapper

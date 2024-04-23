@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import sys
 import traceback
 from datetime import timedelta
 
@@ -83,6 +84,51 @@ def print_hm():
     print(f"Hub handle_messages {datetime.now().isoformat()}")
 
 
+@timing
+def handle_message_to_hub(hub, r):
+    print(f'Hub got model from client {r.client_id}. {sys.getsizeof(r.model_state)} bytes '
+          f'Round {r.round_num} for task {r.ft_id} is done. {datetime.now().isoformat()}')
+    hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
+                           model_state=r.model_state,
+                           deadline=r.deadline,
+                           update_quality=r.update_quality)
+    hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+    hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
+    if hub.selection:
+        hub.selection.idle_cl_ids.add(r.client_id)
+        print(f"HUB idle clients: {hub.selection.idle_cl_ids}")
+    # hub.stat.print_time_target_acc()
+
+
+@timing
+def handle_response_to_hub(hub, r):
+    # print(f'Received ResponseToHub: {r}')
+    hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
+                                                           hub.latest_round_with_response_by_ft_id[r.ft_id])
+    # print(hub.latest_round_with_response_by_ft_id)
+    hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
+
+
+@timing
+def handle_message_validator_to_hub(hub, r):
+    hub.stat.save_agr_ac(r.ft_id,
+                         round_num=r.ag_round_num,
+                         acc=r.acc)
+    ft = hub.tasks[r.ft_id]
+    hub.stat.save_time_to_target_acc_if_reached(ft, r.acc)
+
+
+@timing
+def handle_ags_to_hub(hub, r):
+    hub.journal.mark_as_aggregated(ft_id=r.ft_id)
+    hub.stat.set_round_done_ts(ft_id=r.ft_id, ag_round_num=r.round_num)
+    hub.stat.save_ags_period(r.ft_id, r.period)
+    hub.stat.interpolated_jobs_cnt_in_time = interpolate(r.jobs_cnt_in_time)
+    hub.mark_ft_if_done(r.ft_id, r.round_num)
+    hub.send_to_validator(r.ft_id, r.round_num, r.agr_model_state)
+    hub.aggregated_jobs = r.aggregated_jobs
+
+
 # @timing
 def handle_messages(hub: Hub, ags_read_q):
     print_hm()
@@ -90,43 +136,17 @@ def handle_messages(hub: Hub, ags_read_q):
         while not q.empty():
             r = q.get()
             if isinstance(r, MessageToHub):
-                print(
-                    f'Got model from client {r.client_id}. Round {r.round_num} for task {r.ft_id} is done. {datetime.now().isoformat()}')
-                hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
-                                       model_state=r.model_state,
-                                       deadline=r.deadline,
-                                       update_quality=r.update_quality)
-                hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
-                hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
-                if hub.selection:
-                    hub.selection.idle_cl_ids.add(r.client_id)
-                    print(f"HUB idle clients: {hub.selection.idle_cl_ids}")
-                # hub.stat.print_time_target_acc()
+                handle_message_to_hub(hub, r)
             elif isinstance(r, ResponseToHub):
-                # print(f'Received ResponseToHub: {r}')
-                hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
-                                                                       hub.latest_round_with_response_by_ft_id[r.ft_id])
-                # print(hub.latest_round_with_response_by_ft_id)
-                hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
-
+                handle_response_to_hub(hub, r)
             elif isinstance(r, MessageValidatorToHub):
-                hub.stat.save_agr_ac(r.ft_id,
-                                     round_num=r.ag_round_num,
-                                     acc=r.acc)
-                ft = hub.tasks[r.ft_id]
-                hub.stat.save_time_to_target_acc_if_reached(ft, r.acc)
+                handle_message_validator_to_hub(hub, r)
             del r
         while not ags_read_q.empty():
-            m = ags_read_q.get()
-            if isinstance(m, MessageAgsToHub):
-                hub.journal.mark_as_aggregated(ft_id=m.ft_id)
-                hub.stat.set_round_done_ts(ft_id=m.ft_id, ag_round_num=m.round_num)
-                hub.stat.save_ags_period(m.ft_id, m.period)
-                hub.stat.interpolated_jobs_cnt_in_time = interpolate(m.jobs_cnt_in_time)
-                hub.mark_ft_if_done(m.ft_id, m.round_num)
-                hub.send_to_validator(m.ft_id, m.round_num, m.agr_model_state)
-                hub.aggregated_jobs = m.aggregated_jobs
-            del m
+            r = ags_read_q.get()
+            if isinstance(r, MessageAgsToHub):
+                handle_ags_to_hub(hub, r)
+            del r
 
 
 def finish(hub: Hub, val_write_q):

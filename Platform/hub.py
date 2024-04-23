@@ -6,10 +6,15 @@ from message import MessageToValidator, Period, TaskRound
 from model_cast import ModelTypedState
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
 from federated_ml_task import FederatedMLTask
-from utils import generate_selectlist, call_5_sec
+from utils import generate_selectlist, call_5_sec, call_n_sec, timing
 from training_journal import TrainingJournal
 from statistics_handler import Statistics
 from torch.multiprocessing import Pool, Process, set_start_method, Queue
+
+
+@call_n_sec(1)
+def print_planning():
+    print(f"Hub planning. {datetime.now().isoformat()}")
 
 
 class ClientModelSelection:
@@ -20,6 +25,7 @@ class ClientModelSelection:
 
     def get_cl_plans(self, latest_round_with_response_by_ft_id):
         res = {}
+        print_planning()
         for ft_id, trained_round in latest_round_with_response_by_ft_id.items():
             if len(self.idle_cl_ids) < 2:
                 break
@@ -76,6 +82,7 @@ class Hub:
         return all(ft.done for ft in self.tasks)
 
     @call_5_sec
+    @timing
     def mark_tasks(self):
         for ft in self.tasks:
             last_round_num = self.args.T - 1

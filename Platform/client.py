@@ -44,9 +44,9 @@ class MinDeadlineScheduler(LocalScheduler):
                 planning_round_by_ft_id[ft_id] = planning_round
         ready.sort()
         if not ready:
-            return None, None
+            return None
         deadline, ft_id = ready[0]
-        return ft_id, planning_round_by_ft_id[ft_id]  # task with min deadline
+        return TaskRound(ft_id, planning_round_by_ft_id[ft_id])  # task with min deadline
 
 
 class HubControlledScheduler(LocalScheduler):
@@ -101,10 +101,10 @@ class CyclicalScheduler(LocalScheduler):
             status[(r, ft_id)] = f"Data {int(data_available)}, prev_model {int(has_prev_model)}"
             if (has_prev_model and data_available):
                 # print(f"    Client task is chosen {r, ft_id}")
-                return ft_id, r
+                return TaskRound(ft_id, r)
         # print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
         # pprint(status)
-        return None, None
+        return None
 
     def mark_as_trained(self, tr):
         """It notifies the scheduler that round is performed successfully, so it should not be scheduled again"""
@@ -168,9 +168,9 @@ class Client:
     def _load_state_to_model(self, ft_args, node, agr_model: ModelTypedState):
         ModelCast.to_model(agr_model, node.model)
 
-    @call_n_sec(1)
+    @call_n_sec(3)
     def print_idle(self):
-        print(f"    Client {self.id} idle")
+        print(f"    Client {self.id} idle. {datetime.now().isoformat()}")
 
     def _train_one_round(self, ft_args, node):
         start_time = datetime.now()
