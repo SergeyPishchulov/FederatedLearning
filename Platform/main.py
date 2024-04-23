@@ -130,8 +130,8 @@ def finish(hub: Hub, val_write_q):
     hub.stat.plot_accuracy()
     hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr)
     end = datetime.now()
-    hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
-                              plotting_period=Period(end - timedelta(minutes=5), end))
+    # hub.stat.plot_system_load(first_time_ready_to_aggr=hub.journal.first_time_ready_to_aggr,
+    #                           plotting_period=Period(end - timedelta(minutes=5), end))
     hub.stat.print_flood_measure()
     # hub.stat.plot_jobs_cnt_in_ags()
     # hub.stat.print_jobs_cnt_in_ags_statistics()
@@ -167,7 +167,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
             val_write_q.put(ValidatorShouldFinish())
             hub.should_finish = True
 
-    hub.plot_stat()
+    # hub.plot_stat()
     finish(hub, val_write_q)
 
 

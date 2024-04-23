@@ -79,6 +79,7 @@ class AGS:
             last_record = self.jobs_cnt_in_time[-1]
             t, cnt = last_record
             if new_cnt == cnt:
+                print(f"DBG RJC {datetime.now().isoformat()} new_cnt={new_cnt}, replacing {self.jobs_cnt_in_time[-1]}")
                 self.jobs_cnt_in_time[-1] = new_record
                 return
         self.jobs_cnt_in_time.append(new_record)
@@ -95,14 +96,18 @@ class AGS:
                 best_job: Job = self.scheduler.plan_next(self.jobs)
                 central_node = self.central_node_by_ft_id[best_job.ft_id]
                 self.register_jobs_cnt()
+                print(f"DBG before update {datetime.now().isoformat()}, jc={len(self.jobs)}, repo={self.jobs_cnt_in_time}")
                 period = self.updater(self.user_args,
                                       central_node,
                                       best_job.model_states,
                                       best_job.size_weights)
+                print(f"DBG after update {datetime.now().isoformat()}, jc={len(self.jobs)}, repo={self.jobs_cnt_in_time}")
                 print(f"AGS Success for task {best_job.ft_id} round {best_job.round_num}")
                 self.jobs.remove(best_job)
+                print(f"DBG after removing {datetime.now().isoformat()}, jc={len(self.jobs)}, repo={self.jobs_cnt_in_time}")
                 self.aggregated_jobs += 1
                 self.register_jobs_cnt()
+                print(f"DBG after register {datetime.now().isoformat()}, jc={len(self.jobs)}, repo={self.jobs_cnt_in_time}")
                 self._send_to_clients(ft_id=best_job.ft_id, round_num=best_job.round_num,
                                       model=central_node.model, q_by_cl_id=q_by_cl_id)
                 self.register_jobs_cnt()
