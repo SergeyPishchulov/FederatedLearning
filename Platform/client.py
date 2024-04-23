@@ -61,7 +61,7 @@ class HubControlledScheduler(LocalScheduler):
 
     def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node], rounds_cnt):
         status = {}
-        self.print_plan()
+        # self.print_plan()
         for tr in self.plan:
             ft_id, r = tr
             if tr in self.trained_ft_id_round:

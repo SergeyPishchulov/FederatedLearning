@@ -137,6 +137,14 @@ def finish(hub: Hub, val_write_q):
     # hub.stat.print_jobs_cnt_in_ags_statistics()
 
 
+def send_client_plans(hub):
+    if hub.args.local_scheduler == 'HubControlledScheduler':
+        plans = hub.selection.get_cl_plans(latest_round_with_response_by_ft_id=
+                                           hub.latest_round_with_response_by_ft_id)
+        for cl_id, tr in plans.items():
+            hub.write_q_by_cl_id[cl_id].put(tr)
+
+
 def run(tasks: List[FederatedMLTask], hub: Hub,
         clients, user_args, val_read_q, val_write_q, ags_write_q, ags_read_q):
     central_nodes_by_ft_id = {t.id: t.central_node for t in tasks}
@@ -146,10 +154,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
         hub.print_progress()
         handle_messages(hub, ags_read_q)
 
-        plans = hub.selection.get_cl_plans(latest_round_with_response_by_ft_id=
-                                           hub.latest_round_with_response_by_ft_id)
-        for cl_id, tr in plans.items():
-            hub.write_q_by_cl_id[cl_id].put(tr)
+        send_client_plans(hub)
 
         ready_jobs_dict = hub.journal.get_ft_to_aggregate(
             [c.id for c in clients], central_nodes_by_ft_id, tasks, hub.sent_jobs_ids)
