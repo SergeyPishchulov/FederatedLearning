@@ -82,7 +82,7 @@ class Hub:
         return all(ft.done for ft in self.tasks)
 
     @call_5_sec
-    @timing
+    # @timing
     def mark_tasks(self):
         for ft in self.tasks:
             last_round_num = self.args.T - 1

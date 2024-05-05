@@ -306,7 +306,7 @@ class Client:
                                     period=Period(start_time, end_time))
             try:
                 write_q.put(response)
-                print(f"Client {self.id} sent model for task {ft_id}, round {r}. {datetime.now().isoformat()}")
+                # print(f"Client {self.id} sent model for task {ft_id}, round {r}. {datetime.now().isoformat()}")
                 self.scheduler.mark_as_trained(tr)
             except Exception:
                 print(traceback.format_exc())

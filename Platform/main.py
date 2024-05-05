@@ -86,8 +86,8 @@ def print_hm():
 
 # @timing
 def handle_message_to_hub(hub, r):
-    print(f'Hub got model from client {r.client_id}. {sys.getsizeof(r.model_state)} bytes '
-          f'Round {r.round_num} for task {r.ft_id} is done. {datetime.now().isoformat()}')
+    # print(f'Hub got model from client {r.client_id}. {sys.getsizeof(r.model_state)} bytes '
+    #       f'Round {r.round_num} for task {r.ft_id} is done. {datetime.now().isoformat()}')
     hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
                            model_state=r.model_state,
                            deadline=r.deadline,
