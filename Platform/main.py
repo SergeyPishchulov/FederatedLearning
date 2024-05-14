@@ -79,7 +79,7 @@ def get_ags_proc(ags: AGS, read_q, write_q, ags_q_by_cli_id):
                    args=(write_q, read_q, ags_q_by_cli_id))
 
 
-@call_n_sec(1)
+@call_n_sec(2)
 def print_hm():
     print(f"Hub handle_messages {datetime.now().isoformat()}")
 
@@ -96,7 +96,7 @@ def handle_message_to_hub(hub, r):
     hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
     if hub.selection:
         hub.selection.idle_cl_ids.add(r.client_id)
-        print(f"HUB idle clients: {hub.selection.idle_cl_ids}")
+        print(f"HUB idle clients: {sorted(list(hub.selection.idle_cl_ids))}")
     # hub.stat.print_time_target_acc()
 
 
@@ -131,7 +131,7 @@ def handle_ags_to_hub(hub, r):
 
 # @timing
 def handle_messages(hub: Hub, ags_read_q):
-    # print_hm()
+    print_hm()
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
             r = q.get()
@@ -173,11 +173,17 @@ def send_client_plans(hub):
             hub.write_q_by_cl_id[cl_id].put(tr)
 
 
+@call_n_sec(2)
+def print_working():
+    print(f"HUB working {datetime.now().isoformat()}")
+
+
 def run(tasks: List[FederatedMLTask], hub: Hub,
         clients, user_args, val_read_q, val_write_q, ags_write_q, ags_read_q):
     central_nodes_by_ft_id = {t.id: t.central_node for t in tasks}
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     while not hub.should_finish:
+        print_working()
         start_time = time.time()
         hub.print_progress()
         handle_messages(hub, ags_read_q)

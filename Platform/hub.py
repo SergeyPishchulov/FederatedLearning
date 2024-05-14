@@ -1,6 +1,6 @@
 import argparse
 from datetime import timedelta, datetime
-from typing import List, Set, Optional
+from typing import List, Set, Optional, Dict
 
 from message import MessageToValidator, Period, TaskRound
 from model_cast import ModelTypedState
@@ -13,8 +13,8 @@ from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
 
 @call_n_sec(1)
-def print_planning():
-    print(f"Hub planning. {datetime.now().isoformat()}")
+def print_planning(idle):
+    print(f"Hub planning. {datetime.now().isoformat()}. idle: {idle}")
 
 
 class ClientModelSelection:
@@ -23,10 +23,11 @@ class ClientModelSelection:
         self.idle_cl_ids = set(cl_ids)
         self.rounds_cnt = rounds_cnt
 
-    def get_cl_plans(self, latest_round_with_response_by_ft_id):
+    def get_cl_plans(self, latest_round_with_response_by_ft_id: Dict):
         res = {}
-        print_planning()
+        print_planning(self.idle_cl_ids)
         for ft_id, trained_round in latest_round_with_response_by_ft_id.items():
+            print_planning(self.idle_cl_ids)
             if len(self.idle_cl_ids) < 2:
                 break
             new_round = trained_round + 1
@@ -36,13 +37,30 @@ class ClientModelSelection:
             tr = TaskRound(ft_id, new_round)
             if tr in self.scheduled:
                 continue
+                # raise Exception(f"LRbyFTID: {latest_round_with_response_by_ft_id},"
+                #                 f"tr is {tr},"
+                #                 f"scheduled is {self.scheduled}")
             self.scheduled.add(tr)
             for cl in pair:
                 res[cl] = tr
                 self.idle_cl_ids.remove(cl)
         if res:
             print(f"HUB SCHEDULED {res}")
+        else:
+            print_empty_scheduled()
+        if all(x == self.rounds_cnt for x in latest_round_with_response_by_ft_id.values()):
+            print_nothing_scheduled()
         return res
+
+
+@call_n_sec(1)
+def print_nothing_scheduled():
+    print(f"HUB NOTHING TO SCHEDULE {datetime.now().isoformat()}")
+
+
+@call_n_sec(1)
+def print_empty_scheduled():
+    print(f"HUB SCHEDULED EMPTY {datetime.now().isoformat()}")
 
 
 class Hub:
