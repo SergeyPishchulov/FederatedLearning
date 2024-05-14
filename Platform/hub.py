@@ -14,6 +14,7 @@ from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
 @call_n_sec(1)
 def print_planning(idle, info=""):
+    return
     print(f"Hub planning. {datetime.now().isoformat()}. idle: {idle}, info: {info}")
 
 
@@ -22,6 +23,15 @@ class ClientModelSelection:
         self.scheduled = set()
         self.idle_cl_ids = set(cl_ids)
         self.rounds_cnt = rounds_cnt
+
+    def get_global_plan(self, cl_ids, rounds_cnt, tasks):
+        if len(tasks) * 2 != len(cl_ids):
+            raise Exception
+        global_plan = {}
+        for ft_id in tasks:
+            for cl_id in [2 * ft_id, 2 * ft_id + 1]:
+                global_plan[cl_id] = [TaskRound(ft_id, r) for r in range(rounds_cnt)]
+        return global_plan
 
     def get_cl_plans(self, latest_round_with_response_by_ft_id: Dict):
         res = {}
@@ -47,7 +57,8 @@ class ClientModelSelection:
         if res:
             print(f"HUB SCHEDULED {res}")
         else:
-            print_empty_scheduled()
+            # print_empty_scheduled()
+            pass
         if all(x == self.rounds_cnt for x in latest_round_with_response_by_ft_id.values()):
             print_nothing_scheduled()
         return res

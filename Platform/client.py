@@ -204,6 +204,10 @@ class Client:
     def save_aggregated_model(self, ft_id: int, round_num: int, agr_model_state: ModelTypedState):
         self.agr_model_by_ft_id_round[(ft_id, round_num)] = agr_model_state
 
+    @call_n_sec(3)
+    def print_hm(self):
+        print(f"Client hm {self.id} {datetime.now().isoformat()}")
+
     def handle_messages(self, hub_read_q, hub_write_q, ags_q=None):
         while not hub_read_q.empty():
             mes = hub_read_q.get()
@@ -219,10 +223,11 @@ class Client:
             del mes
         if ags_q is None:
             return
+        self.print_hm()
         while not ags_q.empty():
             mes = ags_q.get()
             if isinstance(mes, MessageAgsToClient):
-                print(f"Client {self.id} got MessageAgsToClient")
+                print(f"Client {self.id} got MessageAgsToClient {datetime.now().isoformat()}")
                 self.save_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model_state)
                 required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
                 delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
@@ -260,6 +265,10 @@ class Client:
             # print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
             time.sleep(delta)
 
+    @call_n_sec(2)
+    def print_run(self):
+        print(f"Client running. {self.id}")
+
     def run(self, hub_read_q, write_q, ags_q):
         print(f"Client {self.id} run")
         self.idle_until_run_cmd(hub_read_q, write_q)
@@ -270,6 +279,7 @@ class Client:
         self.set_deadlines()
         # print("Client really running")
         while self.should_run:
+            # self.print_run()
             self.handle_messages(hub_read_q, write_q, ags_q)
             tr: TaskRound = self.scheduler.get_next_task(self.agr_model_by_ft_id_round,
                                                          self.node_by_ft_id, self.user_args.T)

@@ -127,7 +127,7 @@ class AGS:
                 round_num=round_num,
                 agr_model_state=ModelCast.to_state(model)
             ))
-        # print(f"AGS sent model to clients")
+        print(f"AGS sent model to clients {ft_id}_{round_num}")
 
     # @timing
     def _notify_hub(self, ft_id, round_num, hub_write_q, period: Period, model):
