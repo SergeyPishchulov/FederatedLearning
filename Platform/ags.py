@@ -4,7 +4,7 @@ from torch.multiprocessing import Queue
 from datetime import datetime
 import time
 
-from utils import timing
+from utils import timing, call_n_sec
 from model_cast import ModelCast
 from nodes import Node
 from server_funct import Server_update_fedlaw, Server_update, debug_server_update
@@ -93,6 +93,7 @@ class AGS:
         self.idle_until_start_time()
         # print(f"AGS woke up")
         while not self.should_finish:
+            # print_ags_working()
             self.register_jobs_cnt()
             self.handle_messages(hub_read_q)
             if self.jobs:
@@ -104,9 +105,9 @@ class AGS:
                                       central_node,
                                       best_job.model_states,
                                       best_job.size_weights)
-                print(f"AGS Success for task {best_job.ft_id} round {best_job.round_num}")
                 self.jobs.remove(best_job)
                 self.aggregated_jobs += 1
+                print(f"AGS Success (№ {self.aggregated_jobs}) for task {best_job.ft_id} round {best_job.round_num}")
                 self.register_jobs_cnt()
                 self._send_to_clients(ft_id=best_job.ft_id, round_num=best_job.round_num,
                                       model=central_node.model, q_by_cl_id=q_by_cl_id)
@@ -139,3 +140,8 @@ class AGS:
 
     def finish(self):
         print(f"AGS finished")
+
+
+@call_n_sec(1)
+def print_ags_working():
+    print(f"AGS working {datetime.now().isoformat()}")

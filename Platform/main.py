@@ -65,18 +65,21 @@ def get_client_procs(clients, hub, ags_q_by_cli_id):
                     args=(hub.write_q_by_cl_id[client.id],
                           hub.read_q_by_cl_id[client.id],
                           ags_q_by_cli_id[client.id]))
+        p.name = f"FL client {client.id}"
         procs.append(p)
     return procs
 
 
 def get_validator_proc(validator: Validator, read_q, write_q):
     return Process(target=validator.run,
-                   args=(write_q, read_q))
+                   args=(write_q, read_q),
+                   name=f"FL validator")
 
 
 def get_ags_proc(ags: AGS, read_q, write_q, ags_q_by_cli_id):
     return Process(target=ags.run,
-                   args=(write_q, read_q, ags_q_by_cli_id))
+                   args=(write_q, read_q, ags_q_by_cli_id),
+                   name="FL ags")
 
 
 @call_n_sec(2)
@@ -102,7 +105,7 @@ def handle_message_to_hub(hub, r):
 
 # @timing
 def handle_response_to_hub(hub, r):
-    # print(f'Received ResponseToHub: {r}')
+    print(f'Received ResponseToHub: {r}')
     hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
                                                            hub.latest_round_with_response_by_ft_id[r.ft_id])
     # print(hub.latest_round_with_response_by_ft_id)

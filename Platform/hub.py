@@ -13,8 +13,8 @@ from torch.multiprocessing import Pool, Process, set_start_method, Queue
 
 
 @call_n_sec(1)
-def print_planning(idle):
-    print(f"Hub planning. {datetime.now().isoformat()}. idle: {idle}")
+def print_planning(idle, info=""):
+    print(f"Hub planning. {datetime.now().isoformat()}. idle: {idle}, info: {info}")
 
 
 class ClientModelSelection:
@@ -25,9 +25,9 @@ class ClientModelSelection:
 
     def get_cl_plans(self, latest_round_with_response_by_ft_id: Dict):
         res = {}
-        print_planning(self.idle_cl_ids)
+        print_planning(self.idle_cl_ids, info='before loop')
         for ft_id, trained_round in latest_round_with_response_by_ft_id.items():
-            print_planning(self.idle_cl_ids)
+            print_planning(self.idle_cl_ids, info='in loop')
             if len(self.idle_cl_ids) < 2:
                 break
             new_round = trained_round + 1
