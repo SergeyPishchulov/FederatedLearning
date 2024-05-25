@@ -275,7 +275,7 @@ class Statistics:
         self.delay_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = delay
 
     def save_agr_ac(self, ft_id, round_num, acc):
-        print("Saved agg_acc")
+        # print("Saved agg_acc")
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
     def save_time_to_target_acc_if_reached(self, ft, acc):

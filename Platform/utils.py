@@ -41,7 +41,7 @@ def format_time(dt: datetime):
 
 
 def norm(dt: datetime, global_start_time):
-    return dt
+    # return dt
     return datetime(year=1970, month=1, day=1) + (dt - global_start_time)
 
 
