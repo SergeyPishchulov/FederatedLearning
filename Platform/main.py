@@ -114,7 +114,7 @@ def handle_response_to_hub(hub, r: ResponseToHub):
 
 # @timing
 def handle_message_validator_to_hub(hub, r: MessageValidatorToHub):
-    print(f"Got MessageValidatorToHub")
+    # print(f"Got MessageValidatorToHub")
     hub.stat.save_agr_ac(r.ft_id,
                          round_num=r.ag_round_num,
                          acc=r.acc)
@@ -162,6 +162,7 @@ def finish(hub: Hub, val_write_q):
     print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
+    hub.stat.print_total_time()
     hub.stat.print_mean_result_acc()
     hub.stat.print_time_target_acc()
     hub.stat.plot_accuracy()

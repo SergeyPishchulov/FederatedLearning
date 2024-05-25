@@ -221,6 +221,9 @@ class Statistics:
         )
         return fig
 
+    def print_total_time(self):
+        print(f"TOTAL EXPERIMENT TIME: {(datetime.now() - self.start_time).total_seconds()}s")
+
     @timing
     def plot_system_load(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
         """
