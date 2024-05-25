@@ -63,7 +63,7 @@ class AGS:
         while not hub_read_q.empty():  # 🍒
             mes = hub_read_q.get()
             if isinstance(mes, MessageHubToAGS):
-                print(f"AGS got {len(mes.jobs_by_ft_id)} jobs")
+                # print(f"AGS got {len(mes.jobs_by_ft_id)} jobs")
                 self.jobs.update(mes.jobs_by_ft_id.values())
             elif isinstance(mes, ControlMessageHubToAGS):
                 self.start_time = mes.start_time
@@ -127,7 +127,7 @@ class AGS:
                 round_num=round_num,
                 agr_model_state=ModelCast.to_state(model)
             ))
-        print(f"AGS sent model to clients {ft_id}_{round_num}")
+        # print(f"AGS sent model to clients {ft_id}_{round_num}")
 
     # @timing
     def _notify_hub(self, ft_id, round_num, hub_write_q, period: Period, model):

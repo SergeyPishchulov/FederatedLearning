@@ -223,7 +223,7 @@ class Client:
             del mes
         if ags_q is None:
             return
-        self.print_hm()
+        # self.print_hm()
         while not ags_q.empty():
             mes = ags_q.get()
             if isinstance(mes, MessageAgsToClient):
@@ -288,7 +288,7 @@ class Client:
                 continue
 
             ft_id, r = tr
-            print(f"Client {self.id} scheduled task {ft_id} with round {r}")
+            # print(f"Client {self.id} scheduled task {ft_id} with round {r}")
             agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
             ft_args = self.args_by_ft_id[ft_id]
             node = self.node_by_ft_id[ft_id]

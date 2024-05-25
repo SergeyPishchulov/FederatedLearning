@@ -55,7 +55,8 @@ class ClientModelSelection:
                 res[cl] = tr
                 self.idle_cl_ids.remove(cl)
         if res:
-            print(f"HUB SCHEDULED {res}")
+            pass
+            # print(f"HUB SCHEDULED {res}")
         else:
             # print_empty_scheduled()
             pass
