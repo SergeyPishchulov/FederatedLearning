@@ -105,7 +105,7 @@ def handle_message_to_hub(hub, r):
 
 # @timing
 def handle_response_to_hub(hub, r: ResponseToHub):
-    print(f'Received ResponseToHub: {r}')
+    # print(f'Received ResponseToHub: {r}')
     hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
                                                            hub.latest_round_with_response_by_ft_id[r.ft_id])
     # print(hub.latest_round_with_response_by_ft_id)

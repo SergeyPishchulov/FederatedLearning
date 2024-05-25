@@ -227,7 +227,7 @@ class Client:
         while not ags_q.empty():
             mes = ags_q.get()
             if isinstance(mes, MessageAgsToClient):
-                print(f"Client {self.id} got MessageAgsToClient {datetime.now().isoformat()}")
+                # print(f"Client {self.id} got MessageAgsToClient {datetime.now().isoformat()}")
                 self.save_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model_state)
                 required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
                 delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
