@@ -150,7 +150,7 @@ def handle_messages(hub: Hub, ags_read_q, val_read_q):
                 handle_ags_to_hub(hub, r)
             del r
         while not val_read_q.empty():
-            r = ags_read_q.get()
+            r = val_read_q.get()
             if isinstance(r, MessageValidatorToHub):
                 handle_message_validator_to_hub(hub, r)
             else:
