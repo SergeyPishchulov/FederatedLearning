@@ -2,7 +2,7 @@ import argparse
 from datetime import timedelta, datetime
 from typing import List, Set, Optional, Dict
 
-from log import logging_print
+from fl_log import logging_print
 from message import MessageToValidator, Period, TaskRound
 from model_cast import ModelTypedState
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler

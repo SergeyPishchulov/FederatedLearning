@@ -8,7 +8,7 @@ from datetime import timedelta
 from torch.multiprocessing import Process, set_start_method, Queue
 from typing import List
 
-from log import logging_print
+from fl_log import logging_print
 from validator import Validator
 from ags import AGS
 from aggregation_station import Job

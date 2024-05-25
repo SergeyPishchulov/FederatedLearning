@@ -3,7 +3,7 @@ import gc
 import os
 import time
 import traceback
-from log import logging_print
+from fl_log import logging_print
 from typing import Dict, List, Optional, Tuple
 
 from message import MessageToHub, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient, \
