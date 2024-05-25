@@ -95,5 +95,5 @@ def args_parser():
 
     args = parser.parse_args()
     if args.local_scheduler == 'HubControlledScheduler' and args.aggregation_on == 'all_received':
-        raise ValueError
+        raise ValueError("HubControlledScheduler with all_received")
     return args
