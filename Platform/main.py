@@ -113,7 +113,7 @@ def handle_response_to_hub(hub, r: ResponseToHub):
 
 
 # @timing
-def handle_message_validator_to_hub(hub, r):
+def handle_message_validator_to_hub(hub, r: MessageValidatorToHub):
     print(f"Got MessageValidatorToHub")
     hub.stat.save_agr_ac(r.ft_id,
                          round_num=r.ag_round_num,
@@ -134,7 +134,7 @@ def handle_ags_to_hub(hub, r):
 
 
 # @timing
-def handle_messages(hub: Hub, ags_read_q):
+def handle_messages(hub: Hub, ags_read_q, val_read_q):
     # print_hm()
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
@@ -143,13 +143,18 @@ def handle_messages(hub: Hub, ags_read_q):
                 handle_message_to_hub(hub, r)
             elif isinstance(r, ResponseToHub):
                 handle_response_to_hub(hub, r)
-            elif isinstance(r, MessageValidatorToHub):
-                handle_message_validator_to_hub(hub, r)
             del r
         while not ags_read_q.empty():
             r = ags_read_q.get()
             if isinstance(r, MessageAgsToHub):
                 handle_ags_to_hub(hub, r)
+            del r
+        while not val_read_q.empty():
+            r = ags_read_q.get()
+            if isinstance(r, MessageValidatorToHub):
+                handle_message_validator_to_hub(hub, r)
+            else:
+                raise Exception
             del r
 
 
@@ -190,7 +195,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
         # print_working()
         start_time = time.time()
         hub.print_progress()
-        handle_messages(hub, ags_read_q)
+        handle_messages(hub, ags_read_q, val_read_q)
 
         send_client_plans(hub)
 
