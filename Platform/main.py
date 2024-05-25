@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import logging
 import sys
 import traceback
 from datetime import timedelta
@@ -7,6 +8,7 @@ from datetime import timedelta
 from torch.multiprocessing import Process, set_start_method, Queue
 from typing import List
 
+from log import logging_print
 from validator import Validator
 from ags import AGS
 from aggregation_station import Job
@@ -84,12 +86,12 @@ def get_ags_proc(ags: AGS, read_q, write_q, ags_q_by_cli_id):
 
 @call_n_sec(2)
 def print_hm():
-    print(f"Hub handle_messages {datetime.now().isoformat()}")
+    logging_print(f"Hub handle_messages {datetime.now().isoformat()}")
 
 
 # @timing
 def handle_message_to_hub(hub: Hub, r):
-    # print(f'Hub got model from client {r.client_id}. {sys.getsizeof(r.model_state)} bytes '
+    # logging_print(f'Hub got model from client {r.client_id}. {sys.getsizeof(r.model_state)} bytes '
     #       f'Round {r.round_num} for task {r.ft_id} is done. {datetime.now().isoformat()}')
     hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
                            model_state=r.model_state,
@@ -99,22 +101,22 @@ def handle_message_to_hub(hub: Hub, r):
     hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
     if hub.selection:
         hub.selection.idle_cl_ids.add(r.client_id)
-        # print(f"HUB idle clients: {sorted(list(hub.selection.idle_cl_ids))}")
+        # logging_print(f"HUB idle clients: {sorted(list(hub.selection.idle_cl_ids))}")
     # hub.stat.print_time_target_acc()
 
 
 # @timing
 def handle_response_to_hub(hub, r: ResponseToHub):
-    # print(f'Received ResponseToHub: {r}')
+    # logging_print(f'Received ResponseToHub: {r}')
     hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
                                                            hub.latest_round_with_response_by_ft_id[r.ft_id])
-    # print(hub.latest_round_with_response_by_ft_id)
+    # logging_print(hub.latest_round_with_response_by_ft_id)
     hub.stat.save_client_delay(r.client_id, r.ft_id, r.round_num, r.delay)
 
 
 # @timing
 def handle_message_validator_to_hub(hub, r: MessageValidatorToHub):
-    # print(f"Got MessageValidatorToHub")
+    # logging_print(f"Got MessageValidatorToHub")
     hub.stat.save_agr_ac(r.ft_id,
                          round_num=r.ag_round_num,
                          acc=r.acc)
@@ -159,7 +161,7 @@ def handle_messages(hub: Hub, ags_read_q, val_read_q):
 
 
 def finish(hub: Hub, val_write_q):
-    print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
+    logging_print('<<<<<<<<<<<<<<<<All tasks are done>>>>>>>>>>>>>>>>')
     hub.stat.print_delay()
     hub.stat.print_sum_round_duration()
     hub.stat.print_total_time()
@@ -185,7 +187,7 @@ def send_client_plans(hub):
 
 @call_n_sec(2)
 def print_working():
-    print(f"HUB working {datetime.now().isoformat()}")
+    logging_print(f"HUB working {datetime.now().isoformat()}")
 
 
 def run(tasks: List[FederatedMLTask], hub: Hub,
@@ -203,7 +205,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
         ready_jobs_dict = hub.journal.get_ft_to_aggregate(
             [c.id for c in clients], central_nodes_by_ft_id, tasks, hub.sent_jobs_ids)
         if ready_jobs_dict:
-            # print(f"HUB sent to AGS {len(ready_jobs_dict)} jobs")
+            # logging_print(f"HUB sent to AGS {len(ready_jobs_dict)} jobs")
             ags_write_q.put(MessageHubToAGS(ready_jobs_dict))
             for j in ready_jobs_dict.values():
                 hub.sent_jobs_ids.add(j.id)
@@ -239,7 +241,7 @@ def get_interdeadline_periods(tasks: List[FederatedMLTask], clients_cnt: int):
 
 def wait_while_procs_start(procs):
     while not all(p.is_alive() for p in procs):
-        print(f"Hub is waiting while all processes start")
+        logging_print(f"Hub is waiting while all processes start")
         time.sleep(2)
 
 
@@ -254,6 +256,7 @@ def set_start_time(client_pipes, val_write_q, ags_write_q, fl_start_time):
 def main():
     # global_start = time.time()
     user_args = args_parser()
+    logging_print(user_args)
     setup_seed(user_args.random_seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = user_args.device
     if not user_args.debug:
@@ -290,7 +293,7 @@ def main():
 
     # seconds = round((datetime.now() - wakeup_time).total_seconds())
     # # NOTE we can not trust this time because it includes 1 minute untill all clients will wake up
-    # print(f"TOTAL FL TIME IS {seconds} s == {round(seconds / 60., 1)} min")
+    # logging_print(f"TOTAL FL TIME IS {seconds} s == {round(seconds / 60., 1)} min")
 
 
 if __name__ == '__main__':

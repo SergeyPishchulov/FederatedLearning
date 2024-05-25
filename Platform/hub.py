@@ -2,6 +2,7 @@ import argparse
 from datetime import timedelta, datetime
 from typing import List, Set, Optional, Dict
 
+from log import logging_print
 from message import MessageToValidator, Period, TaskRound
 from model_cast import ModelTypedState
 from aggregation_station import RandomAggregationStationScheduler, SFAggregationStationScheduler
@@ -15,7 +16,7 @@ from torch.multiprocessing import Pool, Process, set_start_method, Queue
 @call_n_sec(1)
 def print_planning(idle, info=""):
     return
-    print(f"Hub planning. {datetime.now().isoformat()}. idle: {idle}, info: {info}")
+    logging_print(f"Hub planning. {datetime.now().isoformat()}. idle: {idle}, info: {info}")
 
 
 class ClientModelSelection:
@@ -56,7 +57,7 @@ class ClientModelSelection:
                 self.idle_cl_ids.remove(cl)
         if res:
             pass
-            # print(f"HUB SCHEDULED {res}")
+            # logging_print(f"HUB SCHEDULED {res}")
         else:
             # print_empty_scheduled()
             pass
@@ -100,12 +101,12 @@ class Hub:
 
     @call_5_sec
     def print_all_done(self):
-        print(f"DONE {[ft.done for ft in self.tasks]}")
+        logging_print(f"DONE {[ft.done for ft in self.tasks]}")
 
     @call_5_sec
     def print_progress(self):
         total_aggregations = len(self.tasks) * self.args.T
-        print(f"Progress: {self.aggregated_jobs}/{total_aggregations}")
+        logging_print(f"Progress: {self.aggregated_jobs}/{total_aggregations}")
 
     def all_done(self) -> bool:
         # self.print_all_done()
@@ -117,16 +118,15 @@ class Hub:
         for ft in self.tasks:
             last_round_num = self.args.T - 1
             all_aggregation_done = (ft.latest_agg_round == last_round_num)
-            # print(f"FINAL? ft_id={ft.id}, r={ft.latest_agg_round} {self.some_client_got_aggregated_model(ft, last_round_num)}")
+            # logging_print(f"FINAL? ft_id={ft.id}, r={ft.latest_agg_round} {self.some_client_got_aggregated_model(ft, last_round_num)}")
             somebody_received = self.some_client_got_aggregated_model(ft, last_round_num)
-            # self.debug_print(all_aggregation_done, somebody_received)
             if all_aggregation_done and somebody_received:
                 ft.done = True
                 mes = f'HUB: Task {ft.id} is done'
             else:
                 mes = f'HUB: Performed {ft.latest_agg_round + 1}/{self.args.T} rounds in task {ft.id}'
             if mes not in self._printed:
-                print(mes)
+                logging_print(mes)
                 self._printed.add(mes)
 
     def receive_server_model(self, ft_id):
@@ -136,8 +136,8 @@ class Hub:
         return self.latest_round_with_response_by_ft_id[ft.id] == round_num
 
     @call_5_sec
-    def debug_print(self, all_aggregation_done, somebody_received):
-        print(f"all_aggregation_done={all_aggregation_done}; somebody_received={somebody_received}")
+    def debug_prin4t(self, all_aggregation_done, somebody_received):
+        logging_print(f"all_aggregation_done={all_aggregation_done}; somebody_received={somebody_received}")
 
     def mark_ft_if_done(self, ft_id, ag_round_num):
         ft = self.tasks[ft_id]

@@ -3,10 +3,7 @@ import gc
 import os
 import time
 import traceback
-from datetime import datetime, timedelta
-from pprint import pprint
-
-import torch
+from log import logging_print
 from typing import Dict, List, Optional, Tuple
 
 from message import MessageToHub, ControlMessageToClient, ResponseToHub, Period, MessageAgsToClient, \
@@ -57,7 +54,7 @@ class HubControlledScheduler(LocalScheduler):
 
     @call_5_sec
     def print_plan(self):
-        print(f"CLIENT PLAN: {self.plan}")
+        logging_print(f"CLIENT PLAN: {self.plan}")
 
     def get_next_task(self, agr_model_by_ft_id_round, node_by_ft_id: Dict[int, Node], rounds_cnt):
         status = {}
@@ -71,10 +68,10 @@ class HubControlledScheduler(LocalScheduler):
             data_available = n.data_for_round_is_available(r)
             status[(r, ft_id)] = f"Data {int(data_available)}, prev_model {int(has_prev_model)}"
             if has_prev_model and data_available:
-                # print(f"    Client task is chosen {r, ft_id}")
+                # logging_print(f"    Client task is chosen {r, ft_id}")
                 return tr
-        # print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
-        # pprint(status)
+        # logging_print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
+        # plogging_print(status)
         return None
 
     def mark_as_trained(self, tr):  # TODO twice
@@ -100,10 +97,10 @@ class CyclicalScheduler(LocalScheduler):
             data_available = n.data_for_round_is_available(r)
             status[(r, ft_id)] = f"Data {int(data_available)}, prev_model {int(has_prev_model)}"
             if (has_prev_model and data_available):
-                # print(f"    Client task is chosen {r, ft_id}")
+                # logging_print(f"    Client task is chosen {r, ft_id}")
                 return TaskRound(ft_id, r)
-        # print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
-        # pprint(status)
+        # logging_print(f"    Client plan is {self.plan}. Can not choose task. Status: ")
+        # plogging_print(status)
         return None
 
     def mark_as_trained(self, tr):
@@ -131,13 +128,13 @@ class Client:
 
     def get_scheduler(self, user_args):
         if user_args.local_scheduler == "HubControlledScheduler":
-            print(f'    Client {self.id} SCHEDULER is set to HubControlledScheduler')
+            logging_print(f'    Client {self.id} SCHEDULER is set to HubControlledScheduler')
             return HubControlledScheduler(self.trained_ft_id_round, user_args, self.node_by_ft_id)
         elif user_args.local_scheduler == "CyclicalScheduler":
-            print(f'    Client {self.id} SCHEDULER is set to CyclicalScheduler')
+            logging_print(f'    Client {self.id} SCHEDULER is set to CyclicalScheduler')
             return CyclicalScheduler(self.trained_ft_id_round, user_args, self.node_by_ft_id)
         elif user_args.local_scheduler == "MinDeadlineScheduler":
-            print(f'    Client {self.id} SCHEDULER is set to MinDeadlineScheduler')
+            logging_print(f'    Client {self.id} SCHEDULER is set to MinDeadlineScheduler')
             return MinDeadlineScheduler(self.trained_ft_id_round)
         raise argparse.ArgumentError(user_args.local_scheduler, "Unknown value")
 
@@ -170,7 +167,7 @@ class Client:
 
     @call_n_sec(3)
     def print_idle(self):
-        print(f"    Client {self.id} idle. {datetime.now().isoformat()}")
+        logging_print(f"    Client {self.id} idle. {datetime.now().isoformat()}")
 
     def _train_one_round(self, ft_args, node):
         start_time = datetime.now()
@@ -180,7 +177,7 @@ class Client:
         epoch_losses = []
         data_len = -1
         if ft_args.client_method == 'local_train':
-            # print(f'Node {node.num_id} has available batches: {len(node.local_data)}')
+            # logging_print(f'Node {node.num_id} has available batches: {len(node.local_data)}')
             for epoch in range(ft_args.E):
                 loss, data_len = self.client_localTrain(ft_args, node)
                 epoch_losses.append(loss)
@@ -199,14 +196,14 @@ class Client:
 
     @call_5_sec
     def print_hash(self, ags_q):
-        print(f"Client hash {self.id} hash {hash(ags_q)}")
+        logging_print(f"Client hash {self.id} hash {hash(ags_q)}")
 
     def save_aggregated_model(self, ft_id: int, round_num: int, agr_model_state: ModelTypedState):
         self.agr_model_by_ft_id_round[(ft_id, round_num)] = agr_model_state
 
     @call_n_sec(3)
     def print_hm(self):
-        print(f"Client hm {self.id} {datetime.now().isoformat()}")
+        logging_print(f"Client hm {self.id} {datetime.now().isoformat()}")
 
     def handle_messages(self, hub_read_q, hub_write_q, ags_q=None):
         while not hub_read_q.empty():
@@ -227,13 +224,13 @@ class Client:
         while not ags_q.empty():
             mes = ags_q.get()
             if isinstance(mes, MessageAgsToClient):
-                # print(f"Client {self.id} got MessageAgsToClient {datetime.now().isoformat()}")
+                # logging_print(f"Client {self.id} got MessageAgsToClient {datetime.now().isoformat()}")
                 self.save_aggregated_model(mes.ft_id, mes.round_num, mes.agr_model_state)
                 required_deadline = self.node_by_ft_id[mes.ft_id].deadline_by_round[mes.round_num]
                 delay = max((datetime.now() - required_deadline), timedelta(seconds=0))
                 hub_write_q.put(ResponseToHub(self.id, mes.ft_id, mes.round_num, delay))
             elif isinstance(mes, str):
-                print(f"Client {self.id} got from AGS: {mes}")
+                logging_print(f"Client {self.id} got from AGS: {mes}")
             else:
                 raise ValueError(mes)
             del mes
@@ -250,34 +247,34 @@ class Client:
                 n.set_datasets(n.deadline_by_round)  # node will get data gradually through DatasetPartiallyAvailable
             else:
                 n.set_datasets(None)  # node have all the date initially
-            # print(f"client {self.id} task {ft_id} data sizes: for train {len(n.local_data.dataset)} for val {len(n.validate_set.dataset)}")
+            # logging_print(f"client {self.id} task {ft_id} data sizes: for train {len(n.local_data.dataset)} for val {len(n.validate_set.dataset)}")
         # exit()
 
     def idle_until_run_cmd(self, read_q, write_q):
         while self.start_time is None:
             self.handle_messages(read_q, write_q)
-            # print(f"Client {self.id} waiting run_cmd")
+            # logging_print(f"Client {self.id} waiting run_cmd")
             time.sleep(1)
 
     def idle_until_start_time(self):
         if datetime.now() < self.start_time:
             delta = (self.start_time - datetime.now()).total_seconds()
-            # print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
+            # logging_print(f"client {self.id} WILL WAKE UP in {int(delta)}s")
             time.sleep(delta)
 
     @call_n_sec(2)
     def print_run(self):
-        print(f"Client running. {self.id}")
+        logging_print(f"Client running. {self.id}")
 
     def run(self, hub_read_q, write_q, ags_q):
-        print(f"Client {self.id} run")
+        logging_print(f"Client {self.id} run")
         self.idle_until_run_cmd(hub_read_q, write_q)
         self.idle_until_start_time()
-        # print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
+        # logging_print(f"client {self.id} WOKE UP {format_time(datetime.now())}")
         client_start_time = time.time()
         self.setup()
         self.set_deadlines()
-        # print("Client really running")
+        # logging_print("Client really running")
         while self.should_run:
             # self.print_run()
             self.handle_messages(hub_read_q, write_q, ags_q)
@@ -288,12 +285,12 @@ class Client:
                 continue
 
             ft_id, r = tr
-            # print(f"Client {self.id} scheduled task {ft_id} with round {r}")
+            # logging_print(f"Client {self.id} scheduled task {ft_id} with round {r}")
             agr_model_state = self.agr_model_by_ft_id_round[(ft_id, r - 1)]
             ft_args = self.args_by_ft_id[ft_id]
             node = self.node_by_ft_id[ft_id]
             self._load_state_to_model(ft_args, node, agr_model_state)
-            print(f"    Client {self.id} training task {ft_id}, round {r}")
+            logging_print(f"    Client {self.id} training task {ft_id}, round {r}")
             mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
             self.data_lens_by_ft_id[ft_id].append(data_len)
             acc = validate(ft_args, node)
@@ -305,7 +302,7 @@ class Client:
             # how much new data points was used in this training round
             target_acc = self.args_by_ft_id[ft_id].target_acc
             time_to_target_acc = -1 if (acc < target_acc) else (time.time() - client_start_time)
-            # print(f"    Client {self.id} acc is {acc} target_acc is {target_acc} time_to_target_acc is {time_to_target_acc}")
+            # logging_print(f"    Client {self.id} acc is {acc} target_acc is {target_acc} time_to_target_acc is {time_to_target_acc}")
             response = MessageToHub(ft_id=ft_id,
                                     acc=acc, loss=mean_loss,
                                     model_state=ModelCast.to_state(node.model),
@@ -316,9 +313,9 @@ class Client:
                                     period=Period(start_time, end_time))
             try:
                 write_q.put(response)
-                # print(f"Client {self.id} sent model for task {ft_id}, round {r}. {datetime.now().isoformat()}")
+                # logging_print(f"Client {self.id} sent model for task {ft_id}, round {r}. {datetime.now().isoformat()}")
                 self.scheduler.mark_as_trained(tr)
             except Exception:
-                print(traceback.format_exc())
-            # print(f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
-        print(f'    Client {self.id}: CLIENT is DONE')
+                logging_print(traceback.format_exc())
+            # logging_print(f'    Client {self.id} sent local model for round {response.round_num}, task {response.ft_id}')
+        logging_print(f'    Client {self.id}: CLIENT is DONE')

@@ -8,6 +8,8 @@ import os
 from datetime import timedelta, datetime
 from pprint import pprint
 from typing import List, Set, Optional
+
+from log import logging_print
 from utils import timing, norm, normalize_cntr, interpolate
 import numpy as np
 import pandas as pd
@@ -81,7 +83,7 @@ class Statistics:
 
     def print_flood_measure(self):
         fm = self.get_flood_measure()
-        print(f"Flood measure: {round(fm, 3)}")
+        logging_print(f"Flood measure: {round(fm, 3)}")
 
     # @timing
     # def plot_jobs_cnt_in_ags(self):
@@ -110,18 +112,18 @@ class Statistics:
             tss = (list(ts_by_round.values()))
             all_rounds_duration = max(tss) - min(tss)
             res += all_rounds_duration
-        print(f"All rounds duration (sum by all tasks) {res.total_seconds()} s")
+        logging_print(f"All rounds duration (sum by all tasks) {res.total_seconds()} s")
 
     def save_client_ac(self, client_id, ft_id, round_num, acc, tasks):
         self.acc_by_ft_id[ft_id].loc[round_num, f'client_{client_id}'] = acc
         self.save_time_to_target_acc_if_reached(tasks[ft_id], acc, client=True)
-        # print(f"Saved acc for {f'client_{client_id}'} is {round(acc, 3)}")
+        # logging_print(f"Saved acc for {f'client_{client_id}'} is {round(acc, 3)}")
         # if (time_to_target_acc_sec != -1):
-        # print("Target acc is reached")
+        # logging_print("Target acc is reached")
         # if (pd.isnull(self.time_to_target_acc.loc[ft_id, f'client_{client_id}'])):
         #     self.time_to_target_acc.loc[ft_id, f'client_{client_id}'] = time_to_target_acc_sec
-        # print("SAVED")
-        # print(self.time_to_target_acc)
+        # logging_print("SAVED")
+        # logging_print(self.time_to_target_acc)
 
     def save_client_period(self, client_id, ft_id, period: Period):
         entity = f'client_{client_id}'
@@ -186,7 +188,7 @@ class Statistics:
             return
         uniq_times = set()
         first_time = True
-        # pprint({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
+        # plogging_print({k: format_time(v) for k, v in first_time_ready_to_aggr.items()})
         for (ft_id, r), dt_orig in first_time_ready_to_aggr.items():
             dt = self.get_distinguishable_times(norm(dt_orig, self.start_time), uniq_times)
             if (normed_plot_period is None) or (normed_plot_period.start < dt < normed_plot_period.end):
@@ -225,7 +227,7 @@ class Statistics:
         return fig
 
     def print_total_time(self):
-        print(f"TOTAL EXPERIMENT TIME: {(datetime.now() - self.start_time).total_seconds()}s")
+        logging_print(f"TOTAL EXPERIMENT TIME: {(datetime.now() - self.start_time).total_seconds()}s")
 
     @timing
     def plot_system_load(self, first_time_ready_to_aggr=None, plotting_period: Period = None):
@@ -278,7 +280,7 @@ class Statistics:
         self.delay_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = delay
 
     def save_agr_ac(self, ft_id, round_num, acc):
-        # print("Saved agg_acc")
+        # logging_print("Saved agg_acc")
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
     def save_time_to_target_acc_if_reached(self, ft, acc, client=False):
@@ -294,23 +296,23 @@ class Statistics:
     def print_mean_result_acc(self):
         mean_accs = [df.mean(axis=1).iloc[-1] for df in self.acc_by_ft_id.values()]
         res = round(np.mean(mean_accs))
-        print(f"MEAN RESULT ACCURACY IS {res}")
+        logging_print(f"MEAN RESULT ACCURACY IS {res}")
 
     def print_time_target_acc(self):
         """Prints time required to reach target accuracy for the all tasks"""
         metric_value = pd.Series(self.time_to_target_acc_by_ft_id).mean(skipna=False).round()
         metric_value_client = pd.Series(self.client_time_to_target_acc_by_ft_id).mean(skipna=False).round()
-        print(f"TIME TO TARGET ACC = {metric_value}")
-        print(f"TIME TO CLIENT TARGET ACC = {metric_value_client}")
+        logging_print(f"TIME TO TARGET ACC = {metric_value}")
+        logging_print(f"TIME TO CLIENT TARGET ACC = {metric_value_client}")
 
     def print_delay(self):
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
-            # print(df)
+            # logging_print(df)
             name = f"{self.pngs_directory}/delay_{self.experiment_name}" + f'|ft_id{ft_id}.csv'
             df[self.client_cols].to_csv(name)
             res += df[self.client_cols].sum().sum()
-        print(f'SUM_DELAY: {round(res.total_seconds())} s')
+        logging_print(f'SUM_DELAY: {round(res.total_seconds())} s')
 
     def plot_delay(self):
         fig, axes = plt.subplots(1, figsize=(10, 8))
