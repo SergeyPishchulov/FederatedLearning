@@ -99,7 +99,7 @@ def handle_message_to_hub(hub, r):
     hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
     if hub.selection:
         hub.selection.idle_cl_ids.add(r.client_id)
-        print(f"HUB idle clients: {sorted(list(hub.selection.idle_cl_ids))}")
+        # print(f"HUB idle clients: {sorted(list(hub.selection.idle_cl_ids))}")
     # hub.stat.print_time_target_acc()
 
 
@@ -114,6 +114,7 @@ def handle_response_to_hub(hub, r: ResponseToHub):
 
 # @timing
 def handle_message_validator_to_hub(hub, r):
+    print(f"Got MessageValidatorToHub")
     hub.stat.save_agr_ac(r.ft_id,
                          round_num=r.ag_round_num,
                          acc=r.acc)
@@ -196,7 +197,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
         ready_jobs_dict = hub.journal.get_ft_to_aggregate(
             [c.id for c in clients], central_nodes_by_ft_id, tasks, hub.sent_jobs_ids)
         if ready_jobs_dict:
-            print(f"HUB sent to AGS {len(ready_jobs_dict)} jobs")
+            # print(f"HUB sent to AGS {len(ready_jobs_dict)} jobs")
             ags_write_q.put(MessageHubToAGS(ready_jobs_dict))
             for j in ready_jobs_dict.values():
                 hub.sent_jobs_ids.add(j.id)
