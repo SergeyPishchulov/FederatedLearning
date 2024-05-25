@@ -17,7 +17,7 @@ def get_configs(user_args):
     custom_configs.append(dict(
         dataset='cifar100',
         local_model='ResNet20',
-        target_acc=55,
+        target_acc=20,
         # interdeadline_time_sec=30
     ))
     custom_configs.append(dict(
