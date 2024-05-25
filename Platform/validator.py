@@ -33,7 +33,7 @@ class Validator:
                 response = MessageValidatorToHub(mes.ft_id,
                                                  mes.ag_round_num,
                                                  acc)
-                # print(f"Validator acc is {acc}")
+                print(f"Validator acc is {acc} for task {mes.ft_id} round {mes.ag_round_num}")
                 write_q.put(response)
             elif isinstance(mes, ValidatorShouldFinish):
                 self.should_finish = True
