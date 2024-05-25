@@ -98,7 +98,7 @@ class TrainingJournal:
                 participants_cnt += 1
         # print(
         # f"JOURNAL: Quality reached/required = {round(sum_quality / self.required_quality_by_ft_id[ft_id], 3)}. SUM is{sum_quality}")
-        if (sum_quality >= 2000  # self.required_quality_by_ft_id[ft_id]
+        if (sum_quality >= self.required_quality_by_ft_id[ft_id]
                 and participants_cnt >= 2):
             # print(f"JOURNAL: Quality reached.")
             return True
