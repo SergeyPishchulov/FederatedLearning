@@ -134,7 +134,7 @@ def handle_ags_to_hub(hub, r):
 
 # @timing
 def handle_messages(hub: Hub, ags_read_q):
-    print_hm()
+    # print_hm()
     for cl_id, q in hub.read_q_by_cl_id.items():
         while not q.empty():
             r = q.get()
@@ -186,7 +186,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
     central_nodes_by_ft_id = {t.id: t.central_node for t in tasks}
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
     while not hub.should_finish:
-        print_working()
+        # print_working()
         start_time = time.time()
         hub.print_progress()
         handle_messages(hub, ags_read_q)
