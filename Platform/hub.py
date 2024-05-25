@@ -148,15 +148,15 @@ class Hub:
             model_state=model_state
         ))
 
+    # @call_n_sec(30)
     def plot_stat(self):
-        if (datetime.now() - self.last_plot) > timedelta(seconds=30):
-            self.last_plot = datetime.now()
-            self.stat.to_csv()
-            self.stat.plot_system_load(first_time_ready_to_aggr=self.journal.first_time_ready_to_aggr)
-            # self.stat.plot_jobs_cnt_in_ags()
-            # self.stat.print_jobs_cnt_in_ags_statistics()
-            self.stat.plot_system_load(plotting_period=Period(self.stat.start_time,
-                                                              self.stat.start_time + timedelta(minutes=1)))
+        self.last_plot = datetime.now()
+        self.stat.to_csv()
+        self.stat.plot_system_load(first_time_ready_to_aggr=self.journal.first_time_ready_to_aggr)
+        # self.stat.plot_jobs_cnt_in_ags()
+        # self.stat.print_jobs_cnt_in_ags_statistics()
+        self.stat.plot_system_load(plotting_period=Period(self.stat.start_time,
+                                                          self.stat.start_time + timedelta(minutes=1)))
 
     # def get_select_list(self, ft, client_ids):
     #     if ft.args.select_ratio == 1.0:

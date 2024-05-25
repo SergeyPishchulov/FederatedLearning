@@ -104,7 +104,7 @@ def handle_message_to_hub(hub, r):
 
 
 # @timing
-def handle_response_to_hub(hub, r):
+def handle_response_to_hub(hub, r: ResponseToHub):
     print(f'Received ResponseToHub: {r}')
     hub.latest_round_with_response_by_ft_id[r.ft_id] = max(r.round_num,
                                                            hub.latest_round_with_response_by_ft_id[r.ft_id])
@@ -209,7 +209,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
             val_write_q.put(ValidatorShouldFinish())
             hub.should_finish = True
 
-    # hub.plot_stat()
+    hub.plot_stat()
     finish(hub, val_write_q)
 
 

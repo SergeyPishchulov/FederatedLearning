@@ -272,6 +272,7 @@ class Statistics:
         self.delay_by_ft_id[ft_id].loc[round, f'client_{client_id}'] = delay
 
     def save_agr_ac(self, ft_id, round_num, acc):
+        print("Saved agg_acc")
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
     def save_time_to_target_acc_if_reached(self, ft, acc):
@@ -294,7 +295,7 @@ class Statistics:
         res = timedelta(0)
         for ft_id, df in self.delay_by_ft_id.items():
             # print(df)
-            name = f"{self.pngs_directory}/{self.experiment_name}" + f'|ft_id{ft_id}.csv'
+            name = f"{self.pngs_directory}/delay_{self.experiment_name}" + f'|ft_id{ft_id}.csv'
             df[self.client_cols].to_csv(name)
             res += df[self.client_cols].sum().sum()
         print(f'SUM_DELAY: {round(res.total_seconds())} s')
@@ -318,7 +319,7 @@ class Statistics:
     # @timing
     def to_csv(self):
         for ft_id, stat_df in self.acc_by_ft_id.items():
-            stat_df.to_csv(self.directory + f'/{ft_id}.csv')
+            stat_df.to_csv(self.directory + f'/acc_{ft_id}.csv')
         for ft_id, df in self.delay_by_ft_id.items():
             df.to_csv(self.directory + f'/delay_{ft_id}.csv')
 
