@@ -22,8 +22,7 @@ def get_configs(user_args):
     ))
     custom_configs.append(dict(
         dataset='cifar10',
-        local_model='CNN',
-        # local_model='ResNet56',
+        local_model='ResNet56',
         target_acc=65,
         # interdeadline_time_sec=30
     ))
