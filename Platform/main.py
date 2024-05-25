@@ -88,14 +88,14 @@ def print_hm():
 
 
 # @timing
-def handle_message_to_hub(hub, r):
+def handle_message_to_hub(hub: Hub, r):
     # print(f'Hub got model from client {r.client_id}. {sys.getsizeof(r.model_state)} bytes '
     #       f'Round {r.round_num} for task {r.ft_id} is done. {datetime.now().isoformat()}')
     hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
                            model_state=r.model_state,
                            deadline=r.deadline,
                            update_quality=r.update_quality)
-    hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc)
+    hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc, hub.tasks)
     hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
     if hub.selection:
         hub.selection.idle_cl_ids.add(r.client_id)
@@ -119,7 +119,7 @@ def handle_message_validator_to_hub(hub, r: MessageValidatorToHub):
                          round_num=r.ag_round_num,
                          acc=r.acc)
     ft = hub.tasks[r.ft_id]
-    hub.stat.save_time_to_target_acc_if_reached(ft, r.acc)
+    hub.stat.save_time_to_target_acc_if_reached(ft, r.acc, client=False)
 
 
 # @timing

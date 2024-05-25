@@ -52,6 +52,8 @@ class Statistics:
         #                                        columns=self.client_cols)
 
         self.time_to_target_acc_by_ft_id = [np.nan] * len(tasks)
+        self.client_time_to_target_acc_by_ft_id = [np.nan] * len(
+            tasks)  # first time when one of the clients reached the threshold
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         if not os.path.exists(self.pngs_directory):
@@ -110,8 +112,9 @@ class Statistics:
             res += all_rounds_duration
         print(f"All rounds duration (sum by all tasks) {res.total_seconds()} s")
 
-    def save_client_ac(self, client_id, ft_id, round_num, acc):
+    def save_client_ac(self, client_id, ft_id, round_num, acc, tasks):
         self.acc_by_ft_id[ft_id].loc[round_num, f'client_{client_id}'] = acc
+        self.save_time_to_target_acc_if_reached(tasks[ft_id], acc, client=True)
         # print(f"Saved acc for {f'client_{client_id}'} is {round(acc, 3)}")
         # if (time_to_target_acc_sec != -1):
         # print("Target acc is reached")
@@ -278,11 +281,15 @@ class Statistics:
         # print("Saved agg_acc")
         self.acc_by_ft_id[ft_id].loc[round_num, 'agr'] = acc
 
-    def save_time_to_target_acc_if_reached(self, ft, acc):
+    def save_time_to_target_acc_if_reached(self, ft, acc, client=False):
         if acc > ft.args.target_acc:
             seconds_spent = int((datetime.now() - self.start_time).total_seconds())
-            if self.time_to_target_acc_by_ft_id[ft.id] is np.nan:  # we are going do it for the first time
-                self.time_to_target_acc_by_ft_id[ft.id] = seconds_spent
+            if client:
+                if self.client_time_to_target_acc_by_ft_id[ft.id] is np.nan:  # we are going do it for the first time
+                    self.client_time_to_target_acc_by_ft_id[ft.id] = seconds_spent
+            else:
+                if self.time_to_target_acc_by_ft_id[ft.id] is np.nan:  # we are going do it for the first time
+                    self.time_to_target_acc_by_ft_id[ft.id] = seconds_spent
 
     def print_mean_result_acc(self):
         mean_accs = [df.mean(axis=1).iloc[-1] for df in self.acc_by_ft_id.values()]
@@ -292,7 +299,9 @@ class Statistics:
     def print_time_target_acc(self):
         """Prints time required to reach target accuracy for the all tasks"""
         metric_value = pd.Series(self.time_to_target_acc_by_ft_id).mean(skipna=False).round()
+        metric_value_client = pd.Series(self.client_time_to_target_acc_by_ft_id).mean(skipna=False).round()
         print(f"TIME TO TARGET ACC = {metric_value}")
+        print(f"TIME TO CLIENT TARGET ACC = {metric_value_client}")
 
     def print_delay(self):
         res = timedelta(0)
