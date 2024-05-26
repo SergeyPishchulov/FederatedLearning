@@ -98,7 +98,8 @@ class Data(object):
                 self.groups = groups
                 self.proportion = proportion
             else:
-                data_num = [int(50000 / args.node_num) for _ in range(args.node_num)]
+                # data_num = [int(50000 / args.node_num) for _ in range(args.node_num)]
+                data_num = divide_almost_equally(50000, args.node_num)
                 splited_set = torch.utils.data.random_split(self.train_set, data_num)
                 self.train_loader = splited_set
 
@@ -138,7 +139,8 @@ class Data(object):
                 self.groups = groups
                 self.proportion = proportion
             else:
-                data_num = [int(50000/args.node_num) for _ in range(args.node_num)]
+                # data_num = [int(50000/args.node_num) for _ in range(args.node_num)]
+                data_num = divide_almost_equally(50000, args.node_num)
                 splited_set = torch.utils.data.random_split(self.train_set, data_num)
                 self.train_loader = splited_set
 
@@ -173,7 +175,8 @@ class Data(object):
                 self.groups = groups
                 self.proportion = proportion
             else:
-                data_num = [int(60000/args.node_num) for _ in range(args.node_num)]
+                # data_num = [int(60000/args.node_num) for _ in range(args.node_num)]
+                data_num = divide_almost_equally(60000, args.node_num)
                 splited_set = torch.utils.data.random_split(self.train_set, data_num)
                 self.train_loader = splited_set
 
