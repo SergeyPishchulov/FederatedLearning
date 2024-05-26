@@ -58,19 +58,15 @@ class Node(object):
         return True
 
     def set_datasets(self, input_tss):
-        if self.num_id == -1:
-        # if self.args.iid == 1 or self.num_id == -1:
-            # for the server, use the validate_set as the training data, and use local_data for testing
-            pass
+        # for the server, use the validate_set as the training data, and use local_data for testing
+        # TODO [sp] even with iid=1 we use method for non-iid
+        if isinstance(self._local_data, torch.utils.data.dataset.Subset):
+            ld = self._local_data.indices
         else:
-            # TODO [sp] even with iid=1 we use method for non-iid
-            if isinstance(self._local_data, torch.utils.data.dataset.Subset):
-                ld = self._local_data.indices
-            else:
-                ld = self._local_data
-            self.local_data, self.validate_set = self.train_val_split(ld, self._train_set,
-                                                                      self.valid_ratio,
-                                                                      input_tss)
+            ld = self._local_data
+        self.local_data, self.validate_set = self.train_val_split(ld, self._train_set,
+                                                                  self.valid_ratio,
+                                                                  input_tss)
 
     def zero_weights(self, model):
         for n, p in model.named_parameters():

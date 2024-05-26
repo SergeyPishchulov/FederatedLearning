@@ -45,9 +45,9 @@ class ClientModelSelection:
             new_round = trained_round + 1
             if new_round == self.rounds_cnt:
                 continue
-            if {0, 1, 2}.issubset(self.idle_cl_ids):  # TODO delete mock
+            if {0, 1, 2}.issubset(self.idle_cl_ids) and ft_id == 0:  # TODO delete mock
                 pair = [0, 1, 2]
-            elif {3, 4, 5}.issubset(self.idle_cl_ids):
+            elif {3, 4, 5}.issubset(self.idle_cl_ids) and ft_id == 1:
                 pair = [3, 4, 5]
             else:
                 continue
