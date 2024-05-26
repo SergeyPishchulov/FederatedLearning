@@ -24,6 +24,11 @@ class Node(object):
         elif self.args.dataset == 'cifar100':
             self.num_classes = 100
 
+        if num_id == -1:
+            self.local_data, self.validate_set = self.train_val_split_forServer(self._local_data.indices,
+                                                                                self._train_set,
+                                                                                self.valid_ratio, self.num_classes,
+                                                                                input_tss=None)
         # if args.iid == 1 or num_id == -1:
         #     pass  # TODO [sp] even with iid arg we use method for non-iid
         #     # for the server, use the validate_set as the training data, and use local_data for testing
@@ -56,10 +61,7 @@ class Node(object):
         if self.num_id == -1:
         # if self.args.iid == 1 or self.num_id == -1:
             # for the server, use the validate_set as the training data, and use local_data for testing
-            self.local_data, self.validate_set = self.train_val_split_forServer(self._local_data.indices,
-                                                                                self._train_set,
-                                                                                self.valid_ratio, self.num_classes,
-                                                                                input_tss=input_tss)
+            pass
         else:
             # TODO [sp] even with iid=1 we use method for non-iid
             if isinstance(self._local_data, torch.utils.data.dataset.Subset):
