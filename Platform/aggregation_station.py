@@ -27,6 +27,10 @@ class Job:
     def __hash__(self):
         return self.id
 
+    def __post_init__(self):
+        if len(self.model_states) != len(self.size_weights):
+            raise ValueError(f"size_weights should be the same length as model_states")
+
 
 class SFAggregationStationScheduler:
     # @timing

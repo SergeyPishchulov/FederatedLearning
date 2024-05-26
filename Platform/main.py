@@ -96,7 +96,8 @@ def handle_message_to_hub(hub: Hub, r):
     hub.journal.save_local(r.ft_id, r.client_id, r.round_num,
                            model_state=r.model_state,
                            deadline=r.deadline,
-                           update_quality=r.update_quality)
+                           update_quality=r.update_quality,
+                           sample_size=r.sample_size)
     hub.stat.save_client_ac(r.client_id, r.ft_id, r.round_num, r.acc, hub.tasks)
     hub.stat.save_client_period(r.client_id, r.ft_id, r.period)
     if hub.selection:

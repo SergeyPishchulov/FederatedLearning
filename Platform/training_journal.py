@@ -2,6 +2,8 @@ import argparse
 import copy
 from dataclasses import dataclass, astuple
 import time
+
+from fl_log import logging_print
 from model_cast import ModelCast, ModelTypedState
 from federated_ml_task import FederatedMLTask
 from aggregation_station import Job
@@ -27,6 +29,7 @@ class JournalRecord:
     model_state: ModelTypedState
     deadline: datetime
     update_quality: float
+    sample_size: int
 
     def __repr__(self):
         return f"Record(_)"
@@ -53,9 +56,10 @@ class TrainingJournal:
     def mark_as_aggregated(self, ft_id):
         self.latest_aggregated_round[ft_id] += 1
 
-    def save_local(self, ft_id, client_id, round_num, model_state: ModelTypedState, deadline, update_quality):
+    def save_local(self, ft_id, client_id, round_num, model_state: ModelTypedState, deadline, update_quality,
+                   sample_size):
         if (ft_id, client_id, round_num) not in self.d:
-            self.d[(ft_id, client_id, round_num)] = JournalRecord(model_state, deadline, update_quality)
+            self.d[(ft_id, client_id, round_num)] = JournalRecord(model_state, deadline, update_quality, sample_size)
             # print(f"HUB saved {(ft_id, client_id, round_num)}")
         else:
             raise KeyError(f"Key {(ft_id, client_id, round_num)} already exists in {self.d.keys()}")
@@ -122,13 +126,15 @@ class TrainingJournal:
                 if (ft_id, cl_id, round_num) in self.d:
                     records.append(self.d[(ft_id, cl_id, round_num)])
             model_states = [r.model_state for r in records]
+            weights = [r.sample_size for r in records]
             min_d = min([r.deadline for r in records])  # feature of the task
             c_node = central_nodes_by_ft_id[ft_id]
             ft = tasks[ft_id]
+            # logging_print(f"#### Creating Job ft_id={ft_id}, r={round_num}, {len(model_states)} models")
             job = Job(ft_id, min_d, round_num,
                       processing_time_coef=model_states[0].params_cnt,  # TODO is it good approximation?
                       model_states=model_states,
-                      size_weights=ft.size_weights)
+                      size_weights=weights)
             if job.id in sent_jobs_ids:
                 continue
             res_jobs[ft_id] = job

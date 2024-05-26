@@ -313,6 +313,8 @@ def Server_update(args, central_node, client_states: List[ModelTypedState], size
     agr_model = central_node.model
     # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
     agg_weights = normalize_weights(size_weights)
+    # raise Exception(f"&&&& weights are: {agg_weights}, {len(client_states)} models")
+    # assert len(client_states) == len(size_weights)
 
     # update the global model
     parameters = typed_states_to_states(client_states)

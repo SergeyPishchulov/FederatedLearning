@@ -311,7 +311,8 @@ class Client:
                                     deadline=deadline,
                                     update_quality=update_quality,
                                     round_num=r,
-                                    period=Period(start_time, end_time))
+                                    period=Period(start_time, end_time),
+                                    sample_size=data_len)
             try:
                 write_q.put(response)
                 # logging_print(f"Client {self.id} sent model for task {ft_id}, round {r}. {datetime.now().isoformat()}")

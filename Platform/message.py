@@ -49,6 +49,7 @@ class MessageToHub:
     round_num: int  # In which round client want to participate in.
     # model is fine-tuned model from prev round.
     period: Period
+    sample_size: int
 
 
 @dataclass
