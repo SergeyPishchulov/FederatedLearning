@@ -2,17 +2,20 @@ import copy
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+
+from fl_log import logging_print
 from datasets import DatasetSplit, DatasetPartiallyAvailable
 from utils import init_model
 from utils import init_optimizer, model_parameter_vector
 
 
 class Node(object):
-    def __init__(self, num_id, local_data, train_set, args):
+    def __init__(self, num_id, local_data, train_set, args, ft_id):
         self.num_id = num_id
         self.args = args
         self._local_data = local_data
         self._train_set = train_set
+        logging_print(f"--- --- DATA for client {self.num_id} task {ft_id} is {len(train_set)}")
         self.deadline_by_round = None  # max time to perform round №r
         if num_id == -1:
             self.valid_ratio = args.server_valid_ratio

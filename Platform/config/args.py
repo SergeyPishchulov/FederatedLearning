@@ -9,6 +9,8 @@ def args_parser():
                         help="iid or dirichlet")
     parser.add_argument('--iid', type=int, default=1,
                         help='set 1 for iid')
+    parser.add_argument('--same_data', type=int, default=1,
+                        help='clients will have same data')
     parser.add_argument('--batchsize', type=int, default=128,
                         help="batchsize")
     parser.add_argument('--validate_batchsize', type=int, default=128,
