@@ -1,5 +1,6 @@
 import argparse
 from datetime import timedelta, datetime
+import random
 from typing import List, Set, Optional, Dict
 
 from fl_log import logging_print
@@ -44,7 +45,7 @@ class ClientModelSelection:
             new_round = trained_round + 1
             if new_round == self.rounds_cnt:
                 continue
-            pair = sorted(list(self.idle_cl_ids))[:2]
+            pair = sorted(list(self.idle_cl_ids), key=lambda x: random.random())[:2]
             tr = TaskRound(ft_id, new_round)
             if tr in self.scheduled:
                 continue
