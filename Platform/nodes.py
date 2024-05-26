@@ -24,14 +24,14 @@ class Node(object):
         elif self.args.dataset == 'cifar100':
             self.num_classes = 100
 
-        if args.iid == 1 or num_id == -1:
-            pass # TODO [sp] even with iid arg we use method for non-iid
-            # for the server, use the validate_set as the training data, and use local_data for testing
-            #self.local_data, self.validate_set = self.train_val_split_forServer(local_data.indices, train_set,
-                                                                                # self.valid_ratio, self.num_classes)
-        else:
-            pass
-            # self.local_data, self.validate_set = self.train_val_split(local_data, train_set, self.valid_ratio)
+        # if args.iid == 1 or num_id == -1:
+        #     pass  # TODO [sp] even with iid arg we use method for non-iid
+        #     # for the server, use the validate_set as the training data, and use local_data for testing
+        #     self.local_data, self.validate_set = self.train_val_split_forServer(local_data.indices, train_set,
+        #                                                                         self.valid_ratio, self.num_classes)
+        # else:
+        #     pass
+        #     # self.local_data, self.validate_set = self.train_val_split(local_data, train_set, self.valid_ratio)
 
         self.model = init_model(self.args.local_model, self.args)
         if not self.args.debug:
@@ -53,8 +53,22 @@ class Node(object):
         return True
 
     def set_datasets(self, input_tss):
-        self.local_data, self.validate_set = self.train_val_split(self._local_data, self._train_set, self.valid_ratio,
-                                                                  input_tss)
+        if self.num_id == -1:
+        # if self.args.iid == 1 or self.num_id == -1:
+            # for the server, use the validate_set as the training data, and use local_data for testing
+            self.local_data, self.validate_set = self.train_val_split_forServer(self._local_data.indices,
+                                                                                self._train_set,
+                                                                                self.valid_ratio, self.num_classes,
+                                                                                input_tss=input_tss)
+        else:
+            # TODO [sp] even with iid=1 we use method for non-iid
+            if isinstance(self._local_data, torch.utils.data.dataset.Subset):
+                ld = self._local_data.indices
+            else:
+                ld = self._local_data
+            self.local_data, self.validate_set = self.train_val_split(ld, self._train_set,
+                                                                      self.valid_ratio,
+                                                                      input_tss)
 
     def zero_weights(self, model):
         for n, p in model.named_parameters():
@@ -81,7 +95,7 @@ class Node(object):
 
         return train_loader, test_loader
 
-    def train_val_split_forServer(self, idxs, train_set, valid_ratio, num_classes=10):  # local data index, trainset
+    def train_val_split_forServer(self, idxs, train_set, valid_ratio, num_classes=10, input_tss=None):  # local data index, trainset
 
         np.random.shuffle(idxs)
 
@@ -111,7 +125,12 @@ class Node(object):
 
         idxs_train = [idx for idx in idxs if idx not in idxs_test]
 
-        train_loader = DataLoader(DatasetSplit(train_set, idxs_train),
+        ds_train = DatasetSplit(train_set, idxs_train)
+        if input_tss is not None:
+            ds_train = DatasetPartiallyAvailable(ds_train, input_tss)
+        self.ds_train = ds_train
+
+        train_loader = DataLoader(ds_train,
                                   batch_size=self.args.batchsize, num_workers=0, shuffle=True)
         test_loader = DataLoader(DatasetSplit(train_set, idxs_test),
                                  batch_size=self.args.validate_batchsize, num_workers=0, shuffle=True)
