@@ -45,13 +45,16 @@ class ClientModelSelection:
             new_round = trained_round + 1
             if new_round == self.rounds_cnt:
                 continue
-            pair = sorted(list(self.idle_cl_ids), key=lambda x: random.random())[:2]
+            if {0, 1, 2}.issubset(self.idle_cl_ids):  # TODO delete mock
+                pair = [0, 1, 2]
+            elif {3, 4, 5}.issubset(self.idle_cl_ids):
+                pair = [3, 4, 5]
+            else:
+                continue
+            # pair = sorted(list(self.idle_cl_ids), key=lambda x: random.random())[:2]
             tr = TaskRound(ft_id, new_round)
             if tr in self.scheduled:
                 continue
-                # raise Exception(f"LRbyFTID: {latest_round_with_response_by_ft_id},"
-                #                 f"tr is {tr},"
-                #                 f"scheduled is {self.scheduled}")
             self.scheduled.add(tr)
             for cl in pair:
                 res[cl] = tr
