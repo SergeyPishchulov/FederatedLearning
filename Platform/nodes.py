@@ -25,9 +25,10 @@ class Node(object):
             self.num_classes = 100
 
         if args.iid == 1 or num_id == -1:
+            pass # TODO [sp] even with iid arg we use method for non-iid
             # for the server, use the validate_set as the training data, and use local_data for testing
-            self.local_data, self.validate_set = self.train_val_split_forServer(local_data.indices, train_set,
-                                                                                self.valid_ratio, self.num_classes)
+            #self.local_data, self.validate_set = self.train_val_split_forServer(local_data.indices, train_set,
+                                                                                # self.valid_ratio, self.num_classes)
         else:
             pass
             # self.local_data, self.validate_set = self.train_val_split(local_data, train_set, self.valid_ratio)
