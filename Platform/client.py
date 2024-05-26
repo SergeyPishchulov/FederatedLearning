@@ -294,7 +294,7 @@ class Client:
             mean_loss, data_len, start_time, end_time = self._train_one_round(ft_args, node)
             self.data_lens_by_ft_id[ft_id].append(data_len)
             acc = validate(ft_args, node)
-            logging_print(f"****Client {self.id} acc is {round(acc, 2)} task {ft_id}, round {r}")
+            logging_print(f"****Client {self.id} acc is {round(acc, 2)} for task {ft_id}, round {r}")
             node.model.cpu()
             deadline = node.deadline_by_round[r]  # deadline to perform round r
             data_lens = self.data_lens_by_ft_id[ft_id]

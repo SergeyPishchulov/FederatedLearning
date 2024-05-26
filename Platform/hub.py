@@ -47,8 +47,8 @@ class ClientModelSelection:
                 continue
             if {0, 1, 2}.issubset(self.idle_cl_ids):# and ft_id == 0:  # TODO delete mock
                 pair = [0, 1, 2]
-            # elif {3, 4, 5}.issubset(self.idle_cl_ids) and ft_id == 1:
-            #     pair = [3, 4, 5]
+            elif {3, 4, 5}.issubset(self.idle_cl_ids):
+                pair = [3, 4, 5]
             else:
                 continue
             # pair = sorted(list(self.idle_cl_ids), key=lambda x: random.random())[:2]
