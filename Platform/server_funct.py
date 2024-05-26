@@ -297,7 +297,7 @@ def Server_update_fedlaw(args, central_node, client_states: List[ModelTypedState
     start_time = datetime.now()
     central_node.model.cuda()
     parameters = [s.cuda() for s in typed_states_to_states(client_states)]
-
+    assert len(client_states) == len(size_weights)
     # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
     agg_weights = normalize_weights(size_weights)
     gamma, optmized_weights = fedlaw_optimization(args, agg_weights, parameters, central_node)
@@ -314,7 +314,7 @@ def Server_update(args, central_node, client_states: List[ModelTypedState], size
     # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
     agg_weights = normalize_weights(size_weights)
     # raise Exception(f"&&&& weights are: {agg_weights}, {len(client_states)} models")
-    # assert len(client_states) == len(size_weights)
+    assert len(client_states) == len(size_weights)
 
     # update the global model
     parameters = typed_states_to_states(client_states)
