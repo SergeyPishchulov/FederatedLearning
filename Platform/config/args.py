@@ -7,7 +7,7 @@ def args_parser():
     # Data
     parser.add_argument('--noniid_type', type=str, default='dirichlet',
                         help="iid or dirichlet")
-    parser.add_argument('--iid', type=int, default=0,
+    parser.add_argument('--iid', type=int, default=1,
                         help='set 1 for iid')
     parser.add_argument('--batchsize', type=int, default=128,
                         help="batchsize")
