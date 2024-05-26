@@ -15,7 +15,7 @@ class Node(object):
         self.args = args
         self._local_data = local_data
         self._train_set = train_set
-        logging_print(f"--- --- DATA for client {self.num_id} task {ft_id} is {len(train_set)}")
+        logging_print(f"--- --- DATA for node {self.num_id} task {ft_id} is {len(local_data)}")
         self.deadline_by_round = None  # max time to perform round №r
         if num_id == -1:
             self.valid_ratio = args.server_valid_ratio
