@@ -58,7 +58,7 @@ class DatasetPartiallyAvailable(Dataset):
 
 def get_parts(train_set, args, size):
     if args.same_data:
-        return [torch.utils.data.random_split(train_set, [int(len(train_set))])
+        return [torch.utils.data.random_split(train_set, [int(len(train_set))])[0]
                 for _ in range(args.node_num)]
     data_num = divide_almost_equally(size, args.node_num)
     splited_set = torch.utils.data.random_split(train_set, data_num)
