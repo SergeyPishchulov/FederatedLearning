@@ -11,7 +11,9 @@ class Node(object):
     def __init__(self, num_id, local_data, train_set, args):
         self.num_id = num_id
         self.args = args
-        self._local_data = local_data
+        if not isinstance(local_data, list):
+            raise TypeError(f"local_data of type {type(local_data)}")
+        self._local_data = local_data # list of indecies
         self._train_set = train_set
         self.deadline_by_round = None  # max time to perform round №r
         if num_id == -1:
@@ -27,8 +29,8 @@ class Node(object):
         if args.iid == 1 or num_id == -1:
             pass # TODO [sp] even with iid arg we use method for non-iid
             # for the server, use the validate_set as the training data, and use local_data for testing
-            #self.local_data, self.validate_set = self.train_val_split_forServer(local_data.indices, train_set,
-                                                                                # self.valid_ratio, self.num_classes)
+            self.local_data, self.validate_set = self.train_val_split_forServer(local_data, train_set,
+                                                                                self.valid_ratio, self.num_classes)
         else:
             pass
             # self.local_data, self.validate_set = self.train_val_split(local_data, train_set, self.valid_ratio)
@@ -61,7 +63,7 @@ class Node(object):
             p.data.zero_()
 
     def train_val_split(self, idxs, train_set, valid_ratio, input_tss=None):
-
+        raise Exception(type(idxs))
         np.random.shuffle(idxs)
 
         validate_size = valid_ratio * len(idxs)

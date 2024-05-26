@@ -39,7 +39,8 @@ def create_clients(tasks, user_args) -> List[Client]:
     for client_id in range(user_args.node_num):
         ft: FederatedMLTask
         node_by_ft_id = {ft.id:
-                             Node(client_id, ft.data.train_loader[client_id],
+                             Node(client_id,
+                                  ft.data.train_loader[client_id],
                                   ft.data.train_set, ft.args)
                          for ft in tasks}
         client = Client(client_id,

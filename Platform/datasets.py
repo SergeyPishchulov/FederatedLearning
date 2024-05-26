@@ -94,20 +94,24 @@ class Data(object):
                                                                         non_iid_alpha=0.5,  # args.dirichlet_alpha,
                                                                         num_classes=10, num_indices=num_indices,
                                                                         n_workers=args.node_num)
-                self.train_loader = groups
+                self.train_loader = groups  # Dict/ client_num -> list_of_indecies
                 self.groups = groups
                 self.proportion = proportion
             else:
                 # data_num = [int(50000 / args.node_num) for _ in range(args.node_num)]
                 data_num = divide_almost_equally(50000, args.node_num)
                 splited_set = torch.utils.data.random_split(self.train_set, data_num)
-                self.train_loader = splited_set
+                self.train_loader = [list(x.indices) for x in splited_set]
+                # self.train_loader = splited_set
 
             self.test_set = torchvision.datasets.CIFAR10(
                 root="/tmp/cifar/", train=False, download=True, transform=val_transformer
             )
 
-            self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
+            # self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
+            self.test_loader = [list(x.indices)
+                                for x in
+                                torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])]
 
         elif args.dataset == 'cifar100':
             # Data enhancement
@@ -130,11 +134,15 @@ class Data(object):
             if args.iid == 0:  # noniid
                 random_state = np.random.RandomState(int(args.random_seed))
                 num_indices = len(self.train_set)
-                if False:#args.dirichlet_alpha2:
+                if False:  # args.dirichlet_alpha2:
                     # groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state, dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=100, num_indices=num_indices, n_workers=node_num)
                     pass
                 else:
-                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set, non_iid_alpha=args.dirichlet_alpha, num_classes=100, num_indices=num_indices, n_workers=args.node_num)
+                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state,
+                                                                        dataset=self.train_set,
+                                                                        non_iid_alpha=args.dirichlet_alpha,
+                                                                        num_classes=100, num_indices=num_indices,
+                                                                        n_workers=args.node_num)
                 self.train_loader = groups
                 self.groups = groups
                 self.proportion = proportion
@@ -142,12 +150,16 @@ class Data(object):
                 # data_num = [int(50000/args.node_num) for _ in range(args.node_num)]
                 data_num = divide_almost_equally(50000, args.node_num)
                 splited_set = torch.utils.data.random_split(self.train_set, data_num)
-                self.train_loader = splited_set
+                self.train_loader = [list(x.indices) for x in splited_set]
+                # self.train_loader = splited_set
 
             self.test_set = torchvision.datasets.CIFAR100(
                 root="/tmp/cifar/", train=False, download=True, transform=val_transformer
             )
-            self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
+            # self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
+            self.test_loader = [list(x.indices)
+                                for x in
+                                torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])]
 
         elif args.dataset == 'fmnist':
             # Data enhancement
@@ -167,10 +179,19 @@ class Data(object):
             if args.iid == 0:  # noniid
                 random_state = np.random.RandomState(int(args.random_seed))
                 num_indices = len(self.train_set)
-                if False: #args.dirichlet_alpha2:
-                    groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state, dataset=self.train_set, non_iid_alpha1=args.dirichlet_alpha,non_iid_alpha2=args.dirichlet_alpha2 ,num_classes=100, num_indices=num_indices, n_workers=node_num)
+                if False:  # args.dirichlet_alpha2:
+                    groups, proportion = build_non_iid_by_dirichlet_hybrid(random_state=random_state,
+                                                                           dataset=self.train_set,
+                                                                           non_iid_alpha1=args.dirichlet_alpha,
+                                                                           non_iid_alpha2=args.dirichlet_alpha2,
+                                                                           num_classes=100, num_indices=num_indices,
+                                                                           n_workers=node_num)
                 else:
-                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state, dataset=self.train_set, non_iid_alpha=args.dirichlet_alpha, num_classes=100, num_indices=num_indices, n_workers=args.node_num)
+                    groups, proportion = build_non_iid_by_dirichlet_new(random_state=random_state,
+                                                                        dataset=self.train_set,
+                                                                        non_iid_alpha=args.dirichlet_alpha,
+                                                                        num_classes=100, num_indices=num_indices,
+                                                                        n_workers=args.node_num)
                 self.train_loader = groups
                 self.groups = groups
                 self.proportion = proportion
@@ -178,12 +199,14 @@ class Data(object):
                 # data_num = [int(60000/args.node_num) for _ in range(args.node_num)]
                 data_num = divide_almost_equally(60000, args.node_num)
                 splited_set = torch.utils.data.random_split(self.train_set, data_num)
-                self.train_loader = splited_set
+                self.train_loader = [list(x.indices) for x in splited_set]
 
             self.test_set = torchvision.datasets.FashionMNIST(
                 root="/tmp/FashionMNIST", train=False, download=True, transform=val_transformer
             )
-            self.test_loader = torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])
+            self.test_loader = [list(x.indices)
+                                for x in
+                                torch.utils.data.random_split(self.test_set, [int(len(self.test_set))])]
 
 
 ### Dirichlet noniid functions ###
