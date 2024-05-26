@@ -29,7 +29,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 ##############################################################################
 
 def normalize_weights(size_weights):
-    res = np.array(size_weights, dtype=float)
+    res = np.array(size_weights, dtype=float)# TODO be careful. is it float?
     res /= sum(res)
     return res
 
