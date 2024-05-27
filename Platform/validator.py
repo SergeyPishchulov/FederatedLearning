@@ -2,7 +2,8 @@ import time
 
 from model_cast import ModelCast
 from utils import validate
-from message import MessageToValidator, MessageValidatorToHub, ValidatorShouldFinish, ControlValidatorMessage
+from message import MessageToValidator, MessageValidatorToHub, ValidatorShouldFinish, ControlValidatorMessage, \
+    ValidatorFinishMessageToHub
 import torch
 import os
 from utils import setup_seed
@@ -24,6 +25,7 @@ class Validator:
                 if self.start_time is None:
                     raise ValueError("Got MessageToValidator when validator is not started")
                 if self.should_finish:
+                    del mes
                     return
                 node = self.node_by_ft_id[mes.ft_id]
                 ModelCast.to_model(mes.model_state, node.model)
@@ -61,4 +63,5 @@ class Validator:
         print("Validator started")
         while not self.should_finish:
             self.handle_messages(read_q, write_q)
+        write_q.put(ValidatorFinishMessageToHub())
         print("Validator stopped")

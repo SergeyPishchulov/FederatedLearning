@@ -17,7 +17,7 @@ from federated_ml_task import FederatedMLTask
 from hub import Hub
 from message import MessageToHub, ResponseToHub, MessageToValidator, MessageValidatorToHub, \
     ValidatorShouldFinish, ControlMessageToClient, ControlValidatorMessage, MessageHubToAGS, ControlMessageHubToAGS, \
-    MessageAgsToHub, FinishMessageToAGS, TaskRound
+    MessageAgsToHub, FinishMessageToAGS, TaskRound, ValidatorFinishMessageToHub
 from config.experiment_config import get_configs
 from config.args import args_parser
 from utils import *
@@ -147,18 +147,20 @@ def handle_messages(hub: Hub, ags_read_q, val_read_q):
             elif isinstance(r, ResponseToHub):
                 handle_response_to_hub(hub, r)
             del r
-        while not ags_read_q.empty():
-            r = ags_read_q.get()
-            if isinstance(r, MessageAgsToHub):
-                handle_ags_to_hub(hub, r)
-            del r
-        while not val_read_q.empty():
-            r = val_read_q.get()
-            if isinstance(r, MessageValidatorToHub):
-                handle_message_validator_to_hub(hub, r)
-            else:
-                raise Exception
-            del r
+    while not ags_read_q.empty():
+        r = ags_read_q.get()
+        if isinstance(r, MessageAgsToHub):
+            handle_ags_to_hub(hub, r)
+        del r
+    while not val_read_q.empty():
+        r = val_read_q.get()
+        if isinstance(r, MessageValidatorToHub):
+            handle_message_validator_to_hub(hub, r)
+        elif isinstance(r, ValidatorFinishMessageToHub):
+            hub.validator_finished = True
+        else:
+            raise Exception
+        del r
 
 
 def finish(hub: Hub, val_write_q):
@@ -195,7 +197,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
         clients, user_args, val_read_q, val_write_q, ags_write_q, ags_read_q):
     central_nodes_by_ft_id = {t.id: t.central_node for t in tasks}
     hub.stat.set_init_round_beginning([ft.id for ft in tasks])
-    while not hub.should_finish:
+    while not (hub.should_finish and hub.validator_finished):
         # print_working()
         start_time = time.time()
         hub.print_progress()
@@ -212,7 +214,7 @@ def run(tasks: List[FederatedMLTask], hub: Hub,
                 hub.sent_jobs_ids.add(j.id)
 
         hub.mark_tasks()
-        if hub.all_done():
+        if hub.all_done() and not hub.should_finish:
             for cl_id, q in hub.write_q_by_cl_id.items():
                 q.put(ControlMessageToClient(should_run=False, start_time=None))
             ags_write_q.put(FinishMessageToAGS())

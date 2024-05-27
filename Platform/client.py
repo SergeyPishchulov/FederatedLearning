@@ -300,7 +300,7 @@ class Client:
             data_lens = self.data_lens_by_ft_id[ft_id]
             true_update_quality = (data_lens[-1] - data_lens[-2])
             logging_print(f"    Client {self.id} true update_quality is {round(true_update_quality, 2)}")
-            update_quality = 1_000
+            update_quality = 1_000  # TODO it is mock. But it's ok for our purposes of studying scheduling.
             # how much new data points was used in this training round
             target_acc = self.args_by_ft_id[ft_id].target_acc
             time_to_target_acc = -1 if (acc < target_acc) else (time.time() - client_start_time)

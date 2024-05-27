@@ -96,6 +96,7 @@ class Hub:
             ClientModelSelection] = (ClientModelSelection([cl.id for cl in self.clients], self.args.T)
                                      if self.args.local_scheduler == 'HubControlledScheduler'
                                      else None)
+        self.validator_finished = False
 
     @call_5_sec
     def print_all_done(self):

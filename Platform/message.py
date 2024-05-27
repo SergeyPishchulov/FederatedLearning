@@ -137,3 +137,8 @@ class ControlMessageHubToAGS:
 @dataclass
 class FinishMessageToAGS:
     pass
+
+
+@dataclass
+class ValidatorFinishMessageToHub:
+    pass
