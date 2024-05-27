@@ -326,7 +326,7 @@ def Server_update(args, central_node, client_states: List[ModelTypedState]):
     return Period(start_time, end_time)
 
 
-def debug_server_update(args, central_node, client_states: List[ModelTypedState], size_weights):
+def debug_server_update(args, central_node, client_states: List[ModelTypedState]):
     start_time = datetime.now()
     time.sleep(1)
     return Period(start_time, datetime.now())
