@@ -298,7 +298,8 @@ class Client:
             node.model.cpu()
             deadline = node.deadline_by_round[r]  # deadline to perform round r
             data_lens = self.data_lens_by_ft_id[ft_id]
-            # update_quality = (data_lens[-1] - data_lens[-2])
+            true_update_quality = (data_lens[-1] - data_lens[-2])
+            logging_print(f"    Client {self.id} true update_quality is {round(true_update_quality, 2)}")
             update_quality = 1_000
             # how much new data points was used in this training round
             target_acc = self.args_by_ft_id[ft_id].target_acc
