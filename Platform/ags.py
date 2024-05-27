@@ -103,8 +103,8 @@ class AGS:
                 self.register_jobs_cnt()
                 period = self.updater(self.user_args,
                                       central_node,
-                                      best_job.model_states,
-                                      best_job.size_weights)
+                                      best_job.model_states
+                                      )
                 self.jobs.remove(best_job)
                 self.aggregated_jobs += 1
                 print(f"AGS Success (№ {self.aggregated_jobs}) for task {best_job.ft_id} round {best_job.round_num}")

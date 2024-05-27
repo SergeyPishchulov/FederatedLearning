@@ -133,8 +133,8 @@ class TrainingJournal:
             # logging_print(f"#### Creating Job ft_id={ft_id}, r={round_num}, {len(model_states)} models")
             job = Job(ft_id, min_d, round_num,
                       processing_time_coef=model_states[0].params_cnt,  # TODO is it good approximation?
-                      model_states=model_states,
-                      size_weights=weights)
+                      model_states=model_states
+                      )
             if job.id in sent_jobs_ids:
                 continue
             res_jobs[ft_id] = job

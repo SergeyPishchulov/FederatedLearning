@@ -29,7 +29,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 ##############################################################################
 
 def normalize_weights(size_weights):
-    res = np.array(size_weights, dtype=float)# TODO be careful. is it float?
+    res = np.array(size_weights, dtype=float)  # TODO be careful. is it float?
     res /= sum(res)
     return res
 
@@ -293,9 +293,10 @@ def fedlaw_optimization(args, size_weights, parameters, central_node):
 # Baselines function (FedAvg, FedDF, FedBE, FedDyn, FedAdam, Finetune, etc.)
 ##############################################################################
 
-def Server_update_fedlaw(args, central_node, client_states: List[ModelTypedState], size_weights):
+def Server_update_fedlaw(args, central_node, client_states: List[ModelTypedState]):
     start_time = datetime.now()
     central_node.model.cuda()
+    size_weights = [1] * len(client_states)
     parameters = [s.cuda() for s in typed_states_to_states(client_states)]
     assert len(client_states) == len(size_weights)
     # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
@@ -307,10 +308,11 @@ def Server_update_fedlaw(args, central_node, client_states: List[ModelTypedState
 
 
 # @timing
-def Server_update(args, central_node, client_states: List[ModelTypedState], size_weights):
+def Server_update(args, central_node, client_states: List[ModelTypedState]):
     start_time = datetime.now()
     central_node.model.cpu()
     agr_model = central_node.model
+    size_weights = [1] * len(client_states)
     # agg_weights, client_params = receive_client_models(args, client_models, select_list, size_weights)
     agg_weights = normalize_weights(size_weights)
     # raise Exception(f"&&&& weights are: {agg_weights}, {len(client_states)} models")
