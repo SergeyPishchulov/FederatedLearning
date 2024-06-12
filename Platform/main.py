@@ -244,7 +244,6 @@ def get_interdeadline_periods(tasks: List[FederatedMLTask], clients_cnt: int):
             if cl_id not in res:
                 res[cl_id] = {}
             res[cl_id][ft.id] = interdeadline_periods
-    raise Exception(res)
     return res
 
 
