@@ -15,6 +15,7 @@ def get_configs(user_args):
         expon_loc=20,
         expon_scale=4,
     ))
+    #1
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='ResNet56',
@@ -22,6 +23,7 @@ def get_configs(user_args):
         expon_loc=20,
         expon_scale=3,
     ))
+    #2
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='ResNet56',  # 'WRN56_2',
@@ -29,6 +31,7 @@ def get_configs(user_args):
         expon_loc=25,
         expon_scale=5,
     ))
+    #3
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='CNN',
@@ -36,10 +39,11 @@ def get_configs(user_args):
         expon_loc=25,
         expon_scale=5,
     ))
+    #4
     custom_configs.append(dict(
         dataset='cifar10',
         local_model='WRN56_2',
-        target_acc=40,
+        target_acc=30,
         expon_loc=25,
         expon_scale=5,
     ))
