@@ -14,7 +14,6 @@ def get_configs(user_args):
         target_acc=40,
         expon_loc=20,
         expon_scale=4,
-        # interdeadline_time_sec=25
     ))
     custom_configs.append(dict(
         dataset='cifar10',
@@ -22,7 +21,6 @@ def get_configs(user_args):
         target_acc=40,
         expon_loc=20,
         expon_scale=3,
-        # interdeadline_time_sec=30
     ))
     custom_configs.append(dict(
         dataset='cifar10',
@@ -30,7 +28,20 @@ def get_configs(user_args):
         target_acc=40,
         expon_loc=25,
         expon_scale=5,
-        # interdeadline_time_sec=30
+    ))
+    custom_configs.append(dict(
+        dataset='cifar10',
+        local_model='CNN',
+        target_acc=40,
+        expon_loc=25,
+        expon_scale=5,
+    ))
+    custom_configs.append(dict(
+        dataset='cifar10',
+        local_model='WRN56_2',
+        target_acc=40,
+        expon_loc=25,
+        expon_scale=5,
     ))
 
     return [Namespace(**(vars(user_args) | common_config | cc))
