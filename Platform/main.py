@@ -5,6 +5,7 @@ import sys
 import traceback
 from datetime import timedelta
 
+from scipy.stats import expon
 from torch.multiprocessing import Process, set_start_method, Queue
 from typing import List
 
@@ -234,11 +235,16 @@ def get_interdeadline_periods(tasks: List[FederatedMLTask], clients_cnt: int):
         task_mean = ft.args.interdeadline_time_sec  # task's characteristics
         client_means = [task_mean] * clients_cnt  # np.linspace(task_mean - 6, task_mean + 6, clients_cnt)
         for cl_id, cl_m in enumerate(client_means):
-
-            interdeadline_periods = np.random.normal(loc=cl_m, scale=INTERDEADLINE_SIGMA, size=ft.args.T)
+            if ft.args.expon_iddl_time:
+                args = {"loc": ft.args.expon_loc,
+                        "scale": ft.args.expon_scale}
+                interdeadline_periods = expon.rvs(**args, size=ft.args.T)
+            else:
+                interdeadline_periods = np.random.normal(loc=cl_m, scale=INTERDEADLINE_SIGMA, size=ft.args.T)
             if cl_id not in res:
                 res[cl_id] = {}
             res[cl_id][ft.id] = interdeadline_periods
+    raise Exception(res)
     return res
 
 

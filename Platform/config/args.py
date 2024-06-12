@@ -26,6 +26,11 @@ def args_parser():
     parser.add_argument('--partially_available', type=int, default=0,
                         help="If this flag is raised the clients" +
                              " will get the data gradually by one portion after each deadline")
+    parser.add_argument('--expon_iddl_time', type=int, default=0,
+                        help="If this flag is raised " +
+                             " interdeadline_time_sec becomes random variable from exponential distribution"
+                             " with "
+                             "properties defined in each task. expon_loc & expon_scale")
 
     # System
     parser.add_argument('--device', type=str, default='0',
