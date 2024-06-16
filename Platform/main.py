@@ -184,7 +184,8 @@ def finish(hub: Hub, val_write_q):
 def send_client_plans(hub):
     if hub.args.local_scheduler == 'HubControlledScheduler':
         plans = hub.selection.get_cl_plans(latest_round_with_response_by_ft_id=
-                                           hub.latest_round_with_response_by_ft_id)
+                                           hub.latest_round_with_response_by_ft_id,
+                                           args=hub.args)
         for cl_id, tr in plans.items():
             hub.write_q_by_cl_id[cl_id].put(tr)
 

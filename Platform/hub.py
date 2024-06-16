@@ -26,26 +26,29 @@ class ClientModelSelection:
         self.idle_cl_ids = set(cl_ids)
         self.rounds_cnt = rounds_cnt
 
-    def get_global_plan(self, cl_ids, rounds_cnt, tasks):
-        if len(tasks) * 2 != len(cl_ids):
-            raise Exception
-        global_plan = {}
-        for ft_id in tasks:
-            for cl_id in [2 * ft_id, 2 * ft_id + 1]:
-                global_plan[cl_id] = [TaskRound(ft_id, r) for r in range(rounds_cnt)]
-        return global_plan
+    # def get_global_plan(self, cl_ids, rounds_cnt, tasks):
+    #     if len(tasks) * 2 != len(cl_ids):
+    #         raise Exception
+    #     global_plan = {}
+    #     for ft_id in tasks:
+    #         for cl_id in [2 * ft_id, 2 * ft_id + 1]:
+    #             global_plan[cl_id] = [TaskRound(ft_id, r) for r in range(rounds_cnt)]
+    #     return global_plan
 
-    def get_cl_plans(self, latest_round_with_response_by_ft_id: Dict):
+    def get_cl_plans(self, latest_round_with_response_by_ft_id: Dict, args):
         res = {}
         print_planning(self.idle_cl_ids, info='before loop')
+        ts = args.team_size
+
         for ft_id, trained_round in latest_round_with_response_by_ft_id.items():
             print_planning(self.idle_cl_ids, info='in loop')
-            if len(self.idle_cl_ids) < 2:
+            if len(self.idle_cl_ids) < args.team_size:
                 break
+            # logging_print(f"team_size is {ts}")
             new_round = trained_round + 1
             if new_round == self.rounds_cnt:
                 continue
-            pair = sorted(list(self.idle_cl_ids), key=lambda x: random.random())[:2]
+            pair = sorted(list(self.idle_cl_ids), key=lambda x: random.random())[:args.team_size]
             tr = TaskRound(ft_id, new_round)
             if tr in self.scheduled:
                 continue

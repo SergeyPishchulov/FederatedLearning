@@ -65,6 +65,8 @@ def args_parser():
                         MinDeadlineScheduler
                         HubControlledScheduler
                         """)
+    parser.add_argument('--team_size', type=int, default=2,
+                        help="""The number of clients that will participate in the round together.""")
 
     # Server function
     parser.add_argument('--server_method', type=str, default='fedavg',
